@@ -44,7 +44,9 @@ Set NASA Earthdata credentials for use in \code{chewie} functions.
 The NASA Earthdata API requires a username and password to access data. This
 is provided via the config settings in the form of a \code{.netrc} file. The
 \code{chewie_creds} function can help to generate this file and set its location
-as an environment variable for use in \code{chewie} functions.
+as an environment variable for use in \code{chewie} functions. In theory this
+should only need to be done once, but if you need to change your credentials
+you can use the \code{force} argument to overwrite the existing \code{.netrc} file.
 
 \code{chewie_set_env} is most likely not required but can be used to
 manually set the \code{CHEWIE_NETRC} environment variable which is used for
