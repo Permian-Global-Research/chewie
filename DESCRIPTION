@@ -12,3 +12,5 @@ RoxygenNote: 7.2.3
 Imports: 
     cli,
     getPass
+URL: https://github.com/Permian-Global-Research/chewie
+BugReports: https://github.com/Permian-Global-Research/chewie/issues
