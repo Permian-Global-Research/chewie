@@ -19,16 +19,65 @@ chew_bold_cyan <- function(x) {
 }
 
 # ---- abort ----
-#' @noRd
-abort_netrc_val <- function() {
+
+abort_netrc_gen <- function(x) {
     cli::cli_abort(c(
-        "Your .netrc file is not formatted correctly.",
-        ">" = "Check your '.netrc' file or rebuild it with:
+        x,
+        ">" = "Check the '.netrc' file(path) or rebuild it with:
         `chewie::chewie_creds(.force=TRUE)`",
         "i" = "The .netrc should have the following format:",
         "machine urs.earthdata.nasa.gov",
         "login [USERNAME]",
         "password [PASSWORD]"
+    ))
+}
+#' @noRd
+abort_netrc_val <- function() {
+    abort_netrc_gen(
+        "Your .netrc file is not formatted correctly."
+    )
+}
+#' @noRd
+abort_netrc_no_exist <- function() {
+    abort_netrc_gen(
+        "The porvided .netrc file does not exist."
+    )
+}
+
+#' @noRd
+abort_netrc_exists <- function(x) {
+    cli::cli_abort(c(
+        ".netrc file already exists at:",
+        chew_bold_red(x),
+        "i" = paste0(
+            "Use ", chew_bold_cyan("`.force=TRUE`"),
+            " to overwrite it."
+        )
+    ))
+}
+#' @noRd
+abort_netrc_env_exists <- function(x) {
+    cli::cli_abort(c(
+        "`CHEWIE_NETRC` environment variable is already set to:",
+        chew_bold_red(x),
+        "i" = paste0(
+            "Use ", chew_bold_cyan("`.force=TRUE`"),
+            " to overwrite it."
+        )
+    ))
+}
+
+abort_non_interactive_creds <- function() {
+    cli::cli_abort(c(
+        "Password and username must be provided in non-interactive mode.",
+        "i" = "When running `chewie::chewie_creds()` in non-interactive mode,",
+        " " = paste0(
+            "you must use the",
+            chew_bold_mag("`.usr`"),
+            "and",
+            chew_bold_cyan("`.pwd`"),
+            "arguments."
+        )
     ))
 }
 
@@ -60,9 +109,11 @@ inform_reg_account <- function() {
     return(FALSE)
 }
 
-inform_env_success <- function(x) {
-    cli::cli_inform(c(
-        "v" = "NASA Earthdata Login Credentials Set!",
-        "i" = "The '.netrc' file is located here: {x}"
-    ))
+inform_env_success <- function(x, .quiet) {
+    if (isFALSE(.quiet)) {
+        cli::cli_inform(c(
+            "v" = "NASA Earthdata Login Credentials Set!",
+            "i" = "The '.netrc' file is located here: {x}"
+        ))
+    }
 }
