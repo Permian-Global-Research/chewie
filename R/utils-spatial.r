@@ -11,3 +11,58 @@ sf_rbindlist <- function(x) {
     sf::st_geometry(x) <- "geometry"
     return(x)
 }
+
+
+
+
+#' @title Get spatial outline of object
+#' @description Used internally to create an sfc object of the requesed aoi.
+#' @param x object of class `sf`, `spatVector`, `spatRaster`, `sfc`, `stars`,
+#' `stars_proxy`, or `numeric`.
+#' @return sfc object
+#' @noRd
+#' @export
+get_spat_outline <- function(x) {
+    UseMethod("get_spat_outline")
+}
+#' @noRd
+#' @export
+get_spat_outline.sfc <- function(x) {
+    sf::st_union(x)
+}
+#' @noRd
+#' @export
+get_spat_outline.sf <- function(x) {
+    sf::st_union(x)
+}
+#' @noRd
+#' @export
+get_spat_outline.spatVector <- function(x) {
+    sf::st_as_sf(x) |>
+        sf::st_union()
+}
+#' @noRd
+#' @export
+get_spat_outline.spatRaster <- function(x) {
+    box_outline(x)
+}
+#' @noRd
+#' @export
+get_spat_outline.stars <- function(x) {
+    box_outline(x)
+}
+#' @noRd
+#' @export
+get_spat_outline.stars_proxy <- function(x) {
+    box_outline(x)
+}
+#' @noRd
+#' @export
+get_spat_outline.numeric <- function(x) {
+    box_outline(x)
+}
+
+box_outline <- function(x) {
+    chewie_bbox(x) |>
+        sf::st_as_sfc()
+}

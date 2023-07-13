@@ -52,14 +52,14 @@ chewie_bbox.sfc <- function(x, ...) {
 #'
 #' @export
 chewie_bbox.stars <- function(x, ...) {
-    stars_ext(x)
+    sf_ext(x)
 }
 
 #' @rdname chewie_bbox
 #'
 #' @export
 chewie_bbox.stars_proxy <- function(x, ...) {
-    stars_ext(x)
+    sf_ext(x)
 }
 
 #' @rdname chewie_bbox
@@ -67,16 +67,11 @@ chewie_bbox.stars_proxy <- function(x, ...) {
 #' @export
 #' @details where x is numeric it should be avector of length for with
 #' cordinates orderd as xmin, ymin, xmax, ymax.
-chewie_bbox.numerc <- function(x, ...) {
+chewie_bbox.numeric <- function(x, ...) {
     if (length(x) != 4) {
         abort_numeric_bbox(x)
     }
     c("xmin" = x[1], "ymin" = x[2], "xmax" = x[3], "ymax" = x[4])
-}
-
-
-stars_ext <- function(x) {
-    sf::st_bbox(x)
 }
 
 terra_ext <- function(x) {
