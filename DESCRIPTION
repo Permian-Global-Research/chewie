@@ -13,8 +13,14 @@ Imports:
     cli,
     crayon,
     curl,
+    data.table,
     getPass,
     jsonify,
+    lubridate,
     sf
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
+Suggests: 
+    mapview,
+    stars,
+    terra

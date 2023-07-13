@@ -8,7 +8,7 @@
 \alias{chewie_bbox.sfc}
 \alias{chewie_bbox.stars}
 \alias{chewie_bbox.stars_proxy}
-\alias{chewie_bbox.numerc}
+\alias{chewie_bbox.numeric}
 \title{Get spatial extent}
 \usage{
 chewie_bbox(x, ...)
@@ -25,7 +25,7 @@ chewie_bbox(x, ...)
 
 \method{chewie_bbox}{stars_proxy}(x, ...)
 
-\method{chewie_bbox}{numerc}(x, ...)
+\method{chewie_bbox}{numeric}(x, ...)
 }
 \arguments{
 \item{x}{A spatial object, file path or source}
