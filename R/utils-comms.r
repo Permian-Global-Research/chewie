@@ -89,6 +89,22 @@ abort_reg <- function() {
     ))
 }
 
+#' @noRd
+abort_gedi_request <- function(.err) {
+    cli::cli_abort(c(
+        "The following error occurred during the GEDI search request:",
+        "i" = chew_bold_red(.err)
+    ))
+}
+
+#' @noRd
+abort_numeric_bbox <- function(x) {
+    cli::cli_abort(c(
+        "Incorrect number of coordinates for numeric chewie_bbox.",
+        "i" = "x must be a numeric vector of length 4 not {length(x)}"
+    ))
+}
+
 
 # ---- inform ----
 #' @noRd
