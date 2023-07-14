@@ -73,5 +73,7 @@ gedi_nc_2a <- chewie_find(nc_sf,
 
 
 swaths_img <- chewie_show(gedi_nc_2a, interactive=FALSE)
-knitr::include_graphics(swaths_img)
 ```
+![map](inst/imgs/map.png)
+
+

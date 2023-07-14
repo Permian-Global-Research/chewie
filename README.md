@@ -69,7 +69,6 @@ swaths_img <- chewie_show(gedi_nc_2a, interactive=FALSE)
 #> Registered S3 method overwritten by 'jsonlite':
 #>   method     from   
 #>   print.json jsonify
-knitr::include_graphics(swaths_img)
 ```
 
-<img src="../../../../tmp/RtmpsqGxxk/file76a356c2459f.png" width="100%" />
+![map](inst/imgs/map.png)
