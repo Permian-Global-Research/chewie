@@ -37,13 +37,13 @@ get_spat_outline.sf <- function(x) {
 }
 #' @noRd
 #' @export
-get_spat_outline.spatVector <- function(x) {
+get_spat_outline.SpatVector <- function(x) {
     sf::st_as_sf(x) |>
         sf::st_union()
 }
 #' @noRd
 #' @export
-get_spat_outline.spatRaster <- function(x) {
+get_spat_outline.SpatRaster <- function(x) {
     box_outline(x)
 }
 #' @noRd

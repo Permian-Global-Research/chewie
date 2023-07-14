@@ -105,6 +105,26 @@ abort_numeric_bbox <- function(x) {
     ))
 }
 
+abort_date_range <- function() {
+    cli::cli_abort(
+        c("The provided date range is invaid!",
+            "i" = paste0(
+                "Make sure that `date_start` and/or `date_end` are",
+                " provided as either a valid ",
+                chew_bold_mag("POSIXCt"),
+                " or chacter with the form ", chew_bold_mag("'YYYY-MM-DD'.")
+            )
+        )
+    )
+}
+
+abort_no_mapview <- function() {
+    cli::cli_abort(c(
+        "The `mapview` package is required to use `chewie_show()`.",
+        "i" = "Please install `mapview` with:",
+        " " = chew_bold_cyan("`install.packages('mapview')`.")
+    ))
+}
 
 # ---- inform ----
 #' @noRd
@@ -132,4 +152,18 @@ inform_env_success <- function(x, .quiet) {
             "i" = "The '.netrc' file is located here: {x}"
         ))
     }
+}
+
+
+#---- warn ----
+chewie_show_warn <- function(x) {
+    cli::cli_alert_warning(
+        c(
+            paste0(
+                "No `chewie_show()` method for class ",
+                chew_bold_red(class(x))
+            ),
+            "i" = "Only objects of class `chewie.*` are supported."
+        )
+    )
 }

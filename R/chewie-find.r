@@ -4,8 +4,10 @@
 #' `stars_proxy`, or `numeric` see details.
 #' @param gedi_product character of GEDI product to search for.
 #' @param gedi_version character of GEDI version to search for.
-#' @param date_range character vector of length 2, with start and end dates
-#' in the format "YYYY-MM-DD".
+#' @param date_start character or `POSIXct` of the start date to search for GEDI
+#' data. If `NULL` defaults to the start of GEDI operations (2019-03-25).
+#' @param date_end character or `POSIXct` of the end date to search for GEDI
+#' data. If `NULL` defaults to the current date.
 #' @details
 #' Where x is a numeric it must be of length 4 with values corresponding to the
 #' bounding box coordinates in the order xmin, ymin, xmax, ymax.
@@ -15,8 +17,11 @@ chewie_find <- function(
     x,
     gedi_product = c("1B", "2A", "2B"),
     gedi_version = c("v2", "v1"),
-    date_range = NULL) {
+    date_start = NULL,
+    date_end = NULL) {
     bbox <- paste(chewie_bbox(x), collapse = ",")
+
+    date_range <- build_date_range(date_start, date_end)
 
     request_url <- build_req_url(
         gedi_product[1],
@@ -37,7 +42,7 @@ chewie_find <- function(
 
     sf_list <- sf_rbindlist(sf_list)
     attr(sf_list, "aoi") <- get_spat_outline(x)
-    attr(sf_list, "class") <- c("chewie_search", class(sf_list))
+    attr(sf_list, "class") <- c("chewie.find", class(sf_list))
     return(sf_list)
 }
 
@@ -113,4 +118,26 @@ build_req_url <- function(.gprod, .gver, .bbox, .dr) {
     }
 
     return(req_url)
+}
+
+
+build_date_range <- function(.sd, .ed) {
+    if (is.null(.sd) && is.null(.ed)) {
+        return(NULL)
+    } else if (is.null(.ed)) {
+        .ed <- lubridate::format_ISO8601(lubridate::now())
+        .sd <- lubridate::format_ISO8601(lubridate::as_datetime(.sd))
+    } else if (is.null(.sd)) {
+        .sd <- lubridate::format_ISO8601(
+            lubridate::as_datetime("2019-03-25") # GEDI official ops start
+        )
+        .ed <- lubridate::format_ISO8601(lubridate::as_datetime(.ed))
+    }
+    .dr <- c(.sd, .ed)
+    if (any(is.na(.dr))) {
+        abort_date_range()
+    }
+
+
+    return(c(.sd, .ed))
 }
