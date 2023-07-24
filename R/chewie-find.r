@@ -8,6 +8,9 @@
 #' data. If `NULL` defaults to the start of GEDI operations (2019-03-25).
 #' @param date_end character or `POSIXct` of the end date to search for GEDI
 #' data. If `NULL` defaults to the current date.
+#' @param intersects logical indicating whether to return only swaths that
+#' intersect with the given spatial object. If FALSE all swaths that are
+#' contained within the bounding box of the spatial object are returned.
 #' @details
 #' Where x is a numeric it must be of length 4 with values corresponding to the
 #' bounding box coordinates in the order xmin, ymin, xmax, ymax.
@@ -18,7 +21,8 @@ chewie_find <- function(
     gedi_product = c("1B", "2A", "2B"),
     gedi_version = c("v2", "v1"),
     date_start = NULL,
-    date_end = NULL) {
+    date_end = NULL,
+    intersects = TRUE) {
     bbox <- paste(chewie_bbox(x), collapse = ",")
 
     date_range <- build_date_range(date_start, date_end)
@@ -41,6 +45,16 @@ chewie_find <- function(
     }
 
     sf_list <- sf_rbindlist(sf_list)
+    data.table::setcolorder(
+        sf_list,
+        c("id", "time_start", "time_end", "url", "geometry")
+    )
+
+
+    if (isTRUE(intersects)) {
+        sf_list <- get_swath_intersect(x, sf_list)
+    }
+
     attr(sf_list, "aoi") <- get_spat_outline(x)
     attr(sf_list, "class") <- c("chewie.find", class(sf_list))
     return(sf_list)
@@ -91,24 +105,25 @@ build_sf_set <- function(gedi_response) {
 }
 
 
-build_req_url <- function(.gprod, .gver, .bbox, .dr) {
-    concept_ids <- list(
-        GEDI1Bv1 = "C1656765475-LPDAAC_ECS",
-        GEDI2Av1 = "C1656766463-LPDAAC_ECS",
-        GEDI2Bv1 = "C1656767133-LPDAAC_ECS",
-        GEDI1Bv2 = "C1908344278-LPDAAC_ECS",
-        GEDI2Av2 = "C1908348134-LPDAAC_ECS",
-        GEDI2Bv2 = "C1908350066-LPDAAC_ECS"
+gedi_code_lookup <- function(.gprod, .gver) {
+    switch(paste0("G", .gprod, .gver),
+        G1Bv1 = "C1656765475-LPDAAC_ECS",
+        G2Av1 = "C1656766463-LPDAAC_ECS",
+        G2Bv1 = "C1656767133-LPDAAC_ECS",
+        G1Bv2 = "C1908344278-LPDAAC_ECS",
+        G2Av2 = "C1908348134-LPDAAC_ECS",
+        G2Bv2 = "C1908350066-LPDAAC_ECS",
+        abort_gedi_opts()
     )
-    url_format <- paste0(
-        "https://cmr.earthdata.nasa.gov/search/granules.json?",
-        "pretty=true&provider=LPDAAC_ECS&page_size=2000&concept_id=%s",
-        "&bounding_box=%s"
-    )
+}
 
-    req_url <- sprintf(
-        url_format,
-        concept_ids[paste0("GEDI", .gprod, .gver)],
+
+build_req_url <- function(.gprod, .gver, .bbox, .dr) {
+    req_url <- paste0(
+        "https://cmr.earthdata.nasa.gov/search/granules.json?",
+        "pretty=true&provider=LPDAAC_ECS&page_size=2000&concept_id=",
+        gedi_code_lookup(.gprod, .gver),
+        "&bounding_box=",
         .bbox
     )
 
@@ -140,4 +155,12 @@ build_date_range <- function(.sd, .ed) {
 
 
     return(c(.sd, .ed))
+}
+
+#' @title print a `chewie.find` object
+#' @param x chewie.find object to print
+#' @param ... additional arguments passed to `print.data.table`
+#' @export
+print.chewie.find <- function(x, ...) {
+    chewie_print(x)
 }

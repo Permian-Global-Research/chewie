@@ -66,3 +66,63 @@ box_outline <- function(x) {
     chewie_bbox(x) |>
         sf::st_as_sfc()
 }
+
+
+
+#' @title Get only intersecting swaths for the aoi
+#' @description Used internally to get only the intersecting swaths for the
+#' requested aoi.
+#' @param aoi object of class `sf`, `spatVector`, `spatRaster`, `sfc`, `stars`,
+#' `stars_proxy`, or `numeric` representing the area of interest.
+#' @param swaths object of class `sf` or `sfc` representing the swaths.
+#' @return sf object
+#' @noRd
+#' @export
+get_swath_intersect <- function(aoi, swaths) {
+    UseMethod("get_swath_intersect")
+}
+
+#' @noRd
+#' @export
+get_swath_intersect.sfc <- function(aoi, swaths) {
+    sf::st_filter(swaths, sf::st_transform(aoi, sf::st_crs(swaths)))
+}
+
+#' @noRd
+#' @export
+get_swath_intersect.sf <- function(aoi, swaths) {
+    sf::st_filter(swaths, sf::st_transform(aoi, sf::st_crs(swaths)))
+}
+
+#' @noRd
+#' @export
+get_swath_intersect.SpatVector <- function(swaths, aoi) {
+    sf::st_filter(
+        swaths,
+        sf::st_transform(sf::st_as_sf(aoi), sf::st_crs(swaths))
+    )
+}
+
+#' @noRd
+#' @export
+get_swath_intersect.SpatRaster <- function(swaths, aoi) {
+    swaths
+}
+
+#' @noRd
+#' @export
+get_swath_intersect.stars <- function(swaths, aoi) {
+    swaths
+}
+
+#' @noRd
+#' @export
+get_swath_intersect.stars_proxy <- function(swaths, aoi) {
+    swaths
+}
+
+#' @noRd
+#' @export
+get_swath_intersect.numeric <- function(swaths, aoi) {
+    swaths
+}

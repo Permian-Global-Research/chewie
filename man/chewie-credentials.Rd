@@ -2,9 +2,9 @@
 % Please edit documentation in R/chewie-creds.r
 \name{chewie_creds}
 \alias{chewie_creds}
-\alias{chewie_set_env}
 \alias{chewie_get_env}
 \alias{chewie_env_clean}
+\alias{chewie_set_env}
 \title{Set NASA Earthdata Credentials}
 \usage{
 chewie_creds(
@@ -16,11 +16,11 @@ chewie_creds(
   .quiet = FALSE
 )
 
-chewie_set_env(.netrc)
-
 chewie_get_env(.netrc)
 
-chewie_env_clean()
+chewie_env_clean(renviron = "global")
+
+chewie_set_env(.netrc, renviron = "global")
 }
 \arguments{
 \item{.netrc}{character path to an existing \code{.netrc} file.}
@@ -36,6 +36,9 @@ chewie_env_clean()
 
 \item{.quiet}{logical whether to suppress the registration prompt and
 messaging.}
+
+\item{renviron}{character either 'global', 'local' or path to the directory
+containing the \code{.Renviron} file to set the \code{CHEWIE_NETRC} environment.}
 }
 \description{
 Set NASA Earthdata credentials for use in \code{chewie} functions.
@@ -48,15 +51,15 @@ as an environment variable for use in \code{chewie} functions. In theory this
 should only need to be done once, but if you need to change your credentials
 you can use the \code{force} argument to overwrite the existing \code{.netrc} file.
 
-\code{chewie_set_env} is most likely not required but can be used to
-manually set the \code{CHEWIE_NETRC} environment variable which is used for
-authenticating downloads from the NASA Earthdata API.
-
 \code{chewie_get_env} can be used to manually get the \code{CHEWIE_NETRC}
 environment, providing the file path to the \code{.netrc} file.
 
 \code{chewie_env_clean} can be used to manually remove the \code{CHEWIE_NETRC}
 environment and delete the associated \code{.netrc} file.
+
+\code{chewie_set_env} is most likely not required but can be used to
+manually set the \code{CHEWIE_NETRC} environment variable which is used for
+authenticating downloads from the NASA Earthdata API.
 }
 \concept{manage credentials}
 \concept{manage credentials

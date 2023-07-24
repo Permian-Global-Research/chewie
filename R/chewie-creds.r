@@ -172,18 +172,6 @@ chewie_creds <- function(
     inform_env_success(.path, .quiet)
 }
 
-#' @title Set NASA Earthdata Credentials environment
-#' @param .netrc character path to an existing `.netrc` file.
-#' @rdname chewie-credentials
-#' @family manage credentials
-#' @export
-#' @details `chewie_set_env` is most likely not required but can be used to
-#' manually set the `CHEWIE_NETRC` environment variable which is used for
-#' authenticating downloads from the NASA Earthdata API.
-chewie_set_env <- function(.netrc) {
-    Sys.setenv(CHEWIE_NETRC = .netrc)
-}
-
 #' @title Get NASA Earthdata Credentials environment
 #' @rdname chewie-credentials
 #' @family manage credentials
@@ -201,7 +189,7 @@ chewie_get_env <- function(.netrc) {
 #' @export
 #' @details `chewie_env_clean` can be used to manually remove the `CHEWIE_NETRC`
 #' environment and delete the associated `.netrc` file.
-chewie_env_clean <- function() {
+chewie_env_clean <- function(renviron = "global") {
     check_n_del <- function(x) {
         if (file.exists(x)) {
             file.remove(x)
@@ -210,6 +198,69 @@ chewie_env_clean <- function() {
     check_n_del(chewie_get_env())
     check_n_del(chewie_default_netrc())
     if (!is.na(chewie_get_env())) {
-        Sys.unsetenv("CHEWIE_NETRC")
+        rr <- read_renv(renviron)
+        on.exit(close(rr$con), add = TRUE)
+        system_vars <- rr$lines[!grepl("CHEWIE_NETRC", rr$lines)]
+        file_con <- file(rr$renv)
+        writeLines(system_vars, file_con)
+        on.exit(close(file_con), add = TRUE)
     }
+}
+
+
+#' @title Set NASA Earthdata Credentials environment
+#' @param .netrc character path to an existing `.netrc` file.
+#' @param renviron character either 'global', 'local' or path to the directory
+#' containing the `.Renviron` file to set the `CHEWIE_NETRC` environment.
+#' @rdname chewie-credentials
+#' @family manage credentials
+#' @export
+#' @details `chewie_set_env` is most likely not required but can be used to
+#' manually set the `CHEWIE_NETRC` environment variable which is used for
+#' authenticating downloads from the NASA Earthdata API.
+chewie_set_env <- function(.netrc, renviron = "global") {
+    Sys.setenv(CHEWIE_NETRC = .netrc)
+
+    rr <- read_renv(renviron)
+
+    system_vars <- c(rr$lines, paste0("CHEWIE_NETRC=", .netrc))
+    writeLines(system_vars, rr$con)
+    on.exit(close(rr$con), add = TRUE)
+}
+
+
+read_renv <- function(renviron) {
+    # Get the .Renviron on their system
+    if (tolower(renviron) == "global") {
+        home <- Sys.getenv("HOME")
+    } else if (tolower(renviron) == "local") {
+        home <- getwd()
+    } else {
+        if (dir.exists(renviron)) {
+            home <- renviron
+        } else {
+            stop(sprintf("The directory %s does not exist!", renviron))
+        }
+    }
+
+    renv_path <- file.path(home, ".Renviron")
+
+    con <- file(renv_path, open = "r+")
+    lines <- as.character()
+    ii <- 1
+
+    while (TRUE) {
+        line <- readLines(con, n = 1, warn = FALSE)
+        if (length(line) == 0) {
+            break()
+        }
+        lines[ii] <- line
+        ii <- ii + 1
+    }
+
+    return(list(
+        con = con,
+        lines = lines,
+        renv = renv_path
+    ))
 }

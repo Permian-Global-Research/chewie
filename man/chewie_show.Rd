@@ -8,10 +8,32 @@ chewie_show(x, ...)
 }
 \arguments{
 \item{x}{object of class \code{chewie_find} or \code{chewie_grab}.}
+
+\item{...}{additional arguments passed to \code{mapview::mapview}.}
+
+\item{interactive}{logical; if \code{TRUE} (default), return an interactive map.
+If \code{FALSE}, return a static map.}
+
+\item{file}{character; if \code{interactive = FALSE}, save the static map to this
+file.}
+
+\item{time_group}{character; if \code{interactive = TRUE}, group the swaths by
+this time unit. Must be one of \code{"year"} or \code{"month"}.}
+
+\item{alpha}{numeric; transparency of the swaths.}
+
+\item{swath_pal}{character; name of the color palette to use for the swaths.
+see \code{hcl.pals()} for a list of available palettes.}
+
+\item{aoi_color}{character; color of the AOI polygon.}
 }
 \value{
 interactive leaflet map
 }
 \description{
 Show an interactive map of a chewie_* object.
+}
+\details{
+This function is a wrapper around \code{mapview::mapview()}. It is designed to
+work with \code{chewie_find()} and \code{chewie_grab()} objects.
 }

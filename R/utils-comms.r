@@ -126,6 +126,22 @@ abort_no_mapview <- function() {
     ))
 }
 
+abort_gedi_opts <- function() {
+    cli::cli_abort(c("Invalid GEDI product and/or version!",
+        "i" = paste0(
+            "Valid GEDI products are: ",
+            chew_bold_cyan("1B"), ", ",
+            chew_bold_cyan("2A"), ", and ",
+            chew_bold_cyan("2B"), "."
+        ),
+        " " = paste0(
+            "Valid GEDI versions are: ",
+            chew_bold_cyan("v1"), " and ",
+            chew_bold_cyan("v2"), "."
+        )
+    ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {

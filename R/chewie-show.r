@@ -38,33 +38,48 @@ chewie_show.chewie.find <- function(
     file = tempfile(fileext = ".png")) {
     if (isFALSE(interactive)) {
         mapview::mapviewOptions(fgb = FALSE)
+        on.exit(mapview::mapviewOptions(fgb = TRUE))
     }
+
+    bm_opts <- basemap_opts()
+
+    on.exit(mapview::mapviewOptions(basemaps = bm_opts))
 
     x$time <- switch(time_group[1],
         year = lubridate::year(x$time_start),
         month = lubridate::month(x$time_start)
     )
-    # browser()
-    .mv <- mapview::mapview(x,
-        layer.name = sprintf("GEDI swaths (%s)", time_group[1]),
-        zcol = "time",
-        col.regions = grDevices::hcl.colors(
-            n = length(unique(x$time)), palette = swath_pal
-        ),
-        alpha.regions = alpha,
-        alpha = 0
+
+    .mv <- mapview::mapview(attributes(x)$aoi,
+        layer.name = "AOI",
+        alpha.regions = 0, color = aoi_color, lwd = 2
     ) +
-        mapview::mapview(attributes(x)$aoi,
-            layer.name = "AOI",
-            alpha.regions = 0, color = aoi_color, lwd = 2
+        mapview::mapview(x,
+            layer.name = sprintf("GEDI swaths (%s)", time_group[1]),
+            zcol = "time",
+            col.regions = grDevices::hcl.colors(
+                n = length(unique(x$time)), palette = swath_pal
+            ),
+            alpha.regions = alpha,
+            alpha = 0
         )
+
 
     if (interactive) {
         return(.mv)
     } else {
         mapview::mapshot2(.mv, file = file)
         utils::browseURL(file)
-        mapview::mapviewOptions(fgb = FALSE)
         return(file)
     }
+}
+
+basemap_opts <- function() {
+    bm_opts <- mapview::mapviewGetOption("basemaps")
+    mapview::mapviewOptions(basemaps = c(
+        "OpenStreetMap",
+        "CartoDB.Positron",
+        "Esri.WorldImagery"
+    ))
+    return(bm_opts)
 }
