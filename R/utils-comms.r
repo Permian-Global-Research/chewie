@@ -142,6 +142,12 @@ abort_gedi_opts <- function() {
     ))
 }
 
+abort_env_set <- function(env_name) {
+    cli::cli_abort(c(
+        "Environment variable `{env_name}` is already set."
+    ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {
@@ -170,6 +176,21 @@ inform_env_success <- function(x, .quiet) {
     }
 }
 
+inform_ask_env_overwrite <- function(x) {
+    cli::cli_inform(c(
+        "!" = "Environment variable  `{x}` is already set.",
+        ">" = "Do you want to overwrite it?"
+    ))
+}
+
+inform_cache_set_success <- function(x) {
+    cli::cli_inform(c(
+        "v" = "GEDI cache location set!",
+        "i" = paste0(
+            "The cache is located here: {x} "
+        )
+    ))
+}
 
 #---- warn ----
 chewie_show_warn <- function(x) {
