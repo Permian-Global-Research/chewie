@@ -2,13 +2,24 @@
 % Please edit documentation in R/chewie-find.r
 \name{print.chewie.find}
 \alias{print.chewie.find}
-\title{print a chewie object}
+\title{print a \code{chewie.find} object}
 \usage{
 \method{print}{chewie.find}(x, ...)
 }
 \arguments{
-\item{x}{chewie object to print}
+\item{x}{chewie.find object to print}
+
+\item{...}{additional arguments passed to \code{print.data.table}}
 }
 \description{
-print a chewie object
+\code{print.chewie.find} is a method for printing \code{chewie.find}
+objects. Essentially a wrapper for \code{print.data.table} with some custom
+options. See details for options.
+}
+\details{
+Edit the following options to change the default printing behaviour
+of \code{chewie.find} objects: \code{chewie.print.class}, \code{chewie.print.keys},
+\code{chewie.print.topn}, \code{chewie.print.nrows}, \code{chewie.print.trunc.cols},
+\code{chewie.prettyprint.char}, \code{chewie.print.width}. Additonal options for
+\code{print.data.table} can also be set to alter the print layout.
 }
