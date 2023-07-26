@@ -26,7 +26,7 @@ chewie_validate_netrc <- function(.netrc) {
 
 #' @title Create default `.netrc` file location
 #' @noRd
-chewie_default_netrc <- function() {
+chewie_default_dir <- function() {
     usr <- c(
         Sys.getenv("USERPROFILE", unset = NA),
         Sys.getenv("HOME", unset = NA)
@@ -37,7 +37,7 @@ chewie_default_netrc <- function() {
         dir.create(.dir)
     }
 
-    return(file.path(.dir, ".netrc"))
+    return(.dir)
 }
 
 #' @title User interactive input for NASA Earthdata Login credentials
@@ -144,7 +144,7 @@ chewie_creds <- function(
     }
 
     if (is.null(.path)) {
-        .path <- chewie_default_netrc()
+        .path <- file.path(chewie_default_dir(), ".netrc")
     }
 
     if (file.exists(.path)) {
@@ -196,14 +196,9 @@ chewie_env_clean <- function(renviron = "global") {
         }
     }
     check_n_del(chewie_get_env())
-    check_n_del(chewie_default_netrc())
+    check_n_del(file.path(chewie_default_dir(), ".netrc"))
     if (!is.na(chewie_get_env())) {
-        rr <- read_renv(renviron)
-        on.exit(close(rr$con), add = TRUE)
-        system_vars <- rr$lines[!grepl("CHEWIE_NETRC", rr$lines)]
-        file_con <- file(rr$renv)
-        writeLines(system_vars, file_con)
-        on.exit(close(file_con), add = TRUE)
+        remove_env_var("CHEWIE_NETRC", renviron)
     }
 }
 
@@ -219,14 +214,10 @@ chewie_env_clean <- function(renviron = "global") {
 #' manually set the `CHEWIE_NETRC` environment variable which is used for
 #' authenticating downloads from the NASA Earthdata API.
 chewie_set_env <- function(.netrc, renviron = "global") {
-    Sys.setenv(CHEWIE_NETRC = .netrc)
-
-    rr <- read_renv(renviron)
-
-    system_vars <- c(rr$lines, paste0("CHEWIE_NETRC=", .netrc))
-    writeLines(system_vars, rr$con)
-    on.exit(close(rr$con), add = TRUE)
+    add_env_var("CHEWIE_NETRC", .netrc, renviron)
 }
+
+
 
 
 read_renv <- function(renviron) {
@@ -239,7 +230,7 @@ read_renv <- function(renviron) {
         if (dir.exists(renviron)) {
             home <- renviron
         } else {
-            stop(sprintf("The directory %s does not exist!", renviron))
+            cli::cli_abort(".Renviron parent directory does not exist!")
         }
     }
 
