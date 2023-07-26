@@ -56,6 +56,10 @@ chewie_find <- function(
     }
 
     attr(sf_list, "aoi") <- get_spat_outline(x)
+    attr(sf_list, "gedi_product") <- paste("GEDI",
+        gedi_product[1], gedi_version[1],
+        sep = "-"
+    )
     attr(sf_list, "class") <- c("chewie.find", class(sf_list))
     return(sf_list)
 }
@@ -158,9 +162,17 @@ build_date_range <- function(.sd, .ed) {
 }
 
 #' @title print a `chewie.find` object
+#' @description `print.chewie.find` is a method for printing `chewie.find`
+#' objects. Essentially a wrapper for `print.data.table` with some custom
+#' options. See details for options.
 #' @param x chewie.find object to print
 #' @param ... additional arguments passed to `print.data.table`
 #' @export
+#' @details Edit the following options to change the default printing behaviour
+#' of `chewie.find` objects: `chewie.print.class`, `chewie.print.keys`,
+#' `chewie.print.topn`, `chewie.print.nrows`, `chewie.print.trunc.cols`,
+#' `chewie.prettyprint.char`, `chewie.print.width`. Additonal options for
+#' `print.data.table` can also be set to alter the print layout.
 print.chewie.find <- function(x, ...) {
-    chewie_print(x)
+    chewie_print(x, ...)
 }
