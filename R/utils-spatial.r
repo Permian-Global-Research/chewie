@@ -28,18 +28,19 @@ get_spat_outline <- function(x) {
 #' @noRd
 #' @export
 get_spat_outline.sfc <- function(x) {
-    sf::st_union(x)
+    sf::st_transform(sf::st_union(x), "EPSG:4326")
 }
 #' @noRd
 #' @export
 get_spat_outline.sf <- function(x) {
-    sf::st_union(x)
+    sf::st_transform(sf::st_union(x), "EPSG:4326")
 }
 #' @noRd
 #' @export
 get_spat_outline.SpatVector <- function(x) {
     sf::st_as_sf(x) |>
-        sf::st_union()
+        sf::st_union() |>
+        sf::st_transform("EPSG:4326")
 }
 #' @noRd
 #' @export
