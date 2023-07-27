@@ -3,19 +3,19 @@
 #' @param x string to be printed
 #' @noRd
 chew_bold_green <- function(x) {
-    crayon::green(crayon::bold(x))
+    cli::col_green(cli::style_bold(x))
 }
 
 chew_bold_red <- function(x) {
-    crayon::red(crayon::bold(x))
+    cli::col_red(cli::style_bold(x))
 }
 
 chew_bold_mag <- function(x) {
-    crayon::magenta(crayon::bold(x))
+    cli::col_magenta(cli::style_bold(x))
 }
 
 chew_bold_cyan <- function(x) {
-    crayon::cyan(crayon::bold(x))
+    cli::col_cyan(cli::style_bold(x))
 }
 
 # ---- abort ----
@@ -192,6 +192,34 @@ inform_cache_set_success <- function(x) {
     ))
 }
 
+inform_env_health <- function(x) {
+    cli::cli_inform(c(
+        "x" = x,
+        "i" = paste0(
+            "Please run `",
+            chew_bold_mag("chewie::chewie_creds()"),
+            "` to set up your credentials."
+        )
+    ))
+}
+
+inform_cache_health <- function(x) {
+    cli::cli_inform(c(
+        "x" = x,
+        "i" = paste0(
+            "Please run `",
+            chew_bold_mag("chewie::chewie_setup_parquet_cache()"),
+            "` to set up your cache."
+        )
+    ))
+}
+
+inform_time <- function(st, type) {
+    tot_time <- Sys.time() - st
+    time_units <- attr(tot_time, "units")
+    num_time <- round(as.numeric(tot_time, units = time_units), 1)
+    cli::cli_alert_info("{type} time: {num_time} {time_units}")
+}
 #---- warn ----
 chewie_show_warn <- function(x) {
     cli::cli_alert_warning(

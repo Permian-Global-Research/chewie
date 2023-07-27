@@ -200,6 +200,7 @@ chewie_env_clean <- function(renviron = "global") {
     if (!is.na(chewie_get_env())) {
         remove_env_var("CHEWIE_NETRC", renviron)
     }
+    return(invisible())
 }
 
 

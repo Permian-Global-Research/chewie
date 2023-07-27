@@ -47,6 +47,7 @@ remove_env_var <- function(env_name, renviron = "global") {
     writeLines(system_vars, file_con)
     on.exit(close(file_con), add = TRUE)
     Sys.unsetenv(env_name)
+    return(TRUE)
 }
 
 #' @title Check if environment variable is set in `.Renviron`

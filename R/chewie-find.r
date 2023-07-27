@@ -72,6 +72,7 @@ request_gedi <- function(.url, .page) {
         "&pageNum=",
         .page
     ))
+
     content <- rawToChar(response$content)
     result <- jsonify::from_json(content, simplify = FALSE)
     if (response$status_code != 200) {

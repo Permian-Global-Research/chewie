@@ -12,14 +12,13 @@ RoxygenNote: 7.2.3
 Imports: 
     arrow,
     cli,
-    crayon,
     curl,
     data.table,
     dplyr,
     getPass,
+    jsonify,
     lubridate,
-    sf,
-    jsonify
+    sf
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
 Suggests: 
