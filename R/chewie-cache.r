@@ -19,12 +19,9 @@ chewie_setup_cache <- function(.dir, renviron = "global") {
     }
 
     .subdir_list <- list(
-        "GEDI-1B-v1" = file.path(.dir, "GEDI-1B-v1"),
-        "GEDI-1B-v2" = file.path(.dir, "GEDI-1B-v2"),
-        "GEDI-2A-v1" = file.path(.dir, "GEDI-2A-v1"),
-        "GEDI-2A-v2" = file.path(.dir, "GEDI-2A-v2"),
-        "GEDI-2B-v1" = file.path(.dir, "GEDI-2B-v1"),
-        "GEDI-2B-v2" = file.path(.dir, "GEDI-2B-v2")
+        "GEDI-1B" = file.path(.dir, "GEDI-1B"),
+        "GEDI-2A" = file.path(.dir, "GEDI-2A"),
+        "GEDI-2B" = file.path(.dir, "GEDI-2B")
     )
 
     check_n_make_dir <- function(x) {

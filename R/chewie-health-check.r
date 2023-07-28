@@ -16,14 +16,12 @@ chewie_health_check <- function() {
     }
 
     if (is.na(chewie_get_cache())) {
-        inform_cache_health("No GEDI Parquet Cache set.")
+        inform_cache_health("No GEDI Cache set.")
     } else {
         if (!dir.exists(chewie_get_cache())) {
-            inform_cache_health("GEDI Parquet Cache directory does not exist.")
+            inform_cache_health("GEDI Cache directory does not exist.")
         } else {
-            cli::cli_alert_success(c(
-                "GEDI Parquet Cache already set."
-            ))
+            inform_cache_set_success(chewie_get_cache())
         }
     }
 }

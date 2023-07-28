@@ -127,17 +127,12 @@ abort_no_mapview <- function() {
 }
 
 abort_gedi_opts <- function() {
-    cli::cli_abort(c("Invalid GEDI product and/or version!",
+    cli::cli_abort(c("Invalid GEDI product",
         "i" = paste0(
             "Valid GEDI products are: ",
             chew_bold_cyan("1B"), ", ",
             chew_bold_cyan("2A"), ", and ",
             chew_bold_cyan("2B"), "."
-        ),
-        " " = paste0(
-            "Valid GEDI versions are: ",
-            chew_bold_cyan("v1"), " and ",
-            chew_bold_cyan("v2"), "."
         )
     ))
 }
@@ -185,10 +180,8 @@ inform_ask_env_overwrite <- function(x) {
 
 inform_cache_set_success <- function(x) {
     cli::cli_inform(c(
-        "v" = "GEDI cache location set!",
-        "i" = paste0(
-            "The cache is located here: {x} "
-        )
+        "v" = "GEDI cache set in the following directory:",
+        ">" = cli::style_italic(paste0('"', x, '"'))
     ))
 }
 
@@ -208,7 +201,7 @@ inform_cache_health <- function(x) {
         "x" = x,
         "i" = paste0(
             "Please run `",
-            chew_bold_mag("chewie::chewie_setup_parquet_cache()"),
+            chew_bold_mag("chewie::chewie_setup_cache()"),
             "` to set up your cache."
         )
     ))
@@ -220,6 +213,7 @@ inform_time <- function(st, type) {
     num_time <- round(as.numeric(tot_time, units = time_units), 1)
     cli::cli_alert_info("{type} time: {num_time} {time_units}")
 }
+
 #---- warn ----
 chewie_show_warn <- function(x) {
     cli::cli_alert_warning(
