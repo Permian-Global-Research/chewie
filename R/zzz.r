@@ -1,12 +1,16 @@
 .onLoad <- function(lib, pkg) {
     op <- options()
     op_chewie <- list(
-        chewie.print.class = TRUE,
-        chewie.print.keys = TRUE,
+        # data.table options...
         chewie.print.topn = 5L,
         chewie.print.nrows = 10L,
+        chewie.print.class = TRUE,
+        chewie.print.rownames = TRUE,
+        chewie.print.colnames = TRUE,
+        chewie.print.keys = TRUE,
         chewie.print.trunc.cols = TRUE,
         chewie.prettyprint.char = 50L,
+        # chewie options...
         chewie.print.width = 130L,
         chewie.session.cache = tempdir()
     )
