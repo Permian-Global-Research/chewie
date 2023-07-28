@@ -11,28 +11,69 @@ chewie_download <- function(
     x, progress = TRUE, timeout = Inf,
     .dir = getOption("chewie.session.cache")) {
     st_time <- Sys.time()
+    if (!dir.exists(.dir)) {
+        dir.create(.dir, recursive = TRUE)
+    }
 
     #---- download ----
 
-    dl_df <- purrr::map(
-        .x = cli::cli_progress_along(
-            x$url,
-            paste0("Downloading GEDI ", attributes(x)$gedi_product, " data")
-        ),
-        function(idx = .x) {
-            # browser()
-            curl::multi_download(
-                x$url[idx],
-                file.path(.dir, basename(x$url[idx])),
-                resume = TRUE,
-                progress = FALSE,
-                timeout = timeout,
-                netrc = TRUE,
-                netrc_file = Sys.getenv("CHEWIE_NETRC")
-            )
+
+
+    dl_func <- function(.url) {
+        dest_file <- file.path(.dir, basename(.url))
+        # Check if the file already exists
+        if (file.exists(dest_file)) {
+            # Get the file size of the partially downloaded file
+            partial_size <- file.info(dest_file)$size
+        } else {
+            # If the file doesn't exist, set the partial size to 0
+            partial_size <- 0
         }
+
+        gedi_handle <- curl::new_handle(
+            timeout = timeout,
+            netrc = TRUE,
+            netrc_file = Sys.getenv("CHEWIE_NETRC")
+        )
+
+        # Download the file using the curl handle
+        curl::curl_download(
+            url,
+            destfile = dest_file,
+            handle = curl_handle
+        )
+
+
+        curl::multi_download(
+            .url,
+            file.path(.dir, basename(.url)),
+            resume = TRUE,
+            progress = FALSE,
+            timeout = timeout,
+            netrc = TRUE,
+            netrc_file = Sys.getenv("CHEWIE_NETRC")
+        )
+    }
+
+    if (isTRUE(progress)) {
+        progress <- list(
+            clear = TRUE,
+            format = paste0(
+                "{cli::pb_bar} {pb_current_bytes}/{pb_total_bytes} ",
+                "[{ansi_trimws(pb_rate_bytes)}]"
+            ),
+            name = paste0("Downloading GEDI ", attributes(x)$product, " data"),
+            type = "download"
+        )
+    }
+
+
+    dl_df <- purrr::map(
+        .x = x$url,
+        ~ dl_func(.x),
+        .progress = progress,
     ) |>
-        data.table::rbindlist()
+        purrr::list_rbind()
 
     check_staus_codes(dl_df)
 
