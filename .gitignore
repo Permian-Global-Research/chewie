@@ -6,5 +6,7 @@
 
 DEV/
 dev-cache/
+test-DB/
+download-cache/
 
 README.html

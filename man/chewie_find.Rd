@@ -7,7 +7,6 @@
 chewie_find(
   x,
   gedi_product = c("1B", "2A", "2B"),
-  gedi_version = c("v2", "v1"),
   date_start = NULL,
   date_end = NULL,
   intersects = TRUE
@@ -19,8 +18,6 @@ chewie_find(
 
 \item{gedi_product}{character of GEDI product to search for.}
 
-\item{gedi_version}{character of GEDI version to search for.}
-
 \item{date_start}{character or \code{POSIXct} of the start date to search for GEDI
 data. If \code{NULL} defaults to the start of GEDI operations (2019-03-25).}
 
@@ -30,6 +27,8 @@ data. If \code{NULL} defaults to the current date.}
 \item{intersects}{logical indicating whether to return only swaths that
 intersect with the given spatial object. If FALSE all swaths that are
 contained within the bounding box of the spatial object are returned.}
+
+\item{gedi_version}{character of GEDI version to search for.}
 }
 \description{
 Find GEDI swaths that intersect with a given spatial object.

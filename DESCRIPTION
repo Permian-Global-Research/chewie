@@ -18,6 +18,7 @@ Imports:
     getPass,
     jsonify,
     lubridate,
+    purrr,
     sf
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
