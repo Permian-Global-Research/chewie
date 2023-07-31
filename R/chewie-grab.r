@@ -21,7 +21,7 @@ chewie_download <- function(
 
     dl_func <- function(.url, id) {
         cli::cli_progress_message(paste0(
-            "   Downloading {qty(id)}file{?s}:",
+            "   Downloading {cli::qty(id)}file{?s}:",
             chew_bold_cyan("{id}"),
             "/",
             chew_bold_green("{nfiles}")
@@ -74,14 +74,12 @@ check_staus_codes <- function(x, n) {
 
         saveRDS(x, log_path)
 
-        rds_quote <- paste0('"', log_path, '"')
-
         cli::cli_inform(c(
             "x" = "Some Downloads have not completed successfully.",
             "i" = "Saving log to cache. To read the log, use:",
             ">" = paste0(
                 chew_bold_cyan("readRDS("),
-                chew_bold_yel("{rds_quote}"),
+                chew_bold_yel(paste0('"', log_path, '"')),
                 chew_bold_cyan(")")
             )
         ))
@@ -95,10 +93,11 @@ check_staus_codes <- function(x, n) {
 }
 
 
-l2a_h5_to_dt <- function(groups_id, h5_con) {
-    l2a_beam <- h5_con[[groups_id]]
+l2a_h5_to_dt <- function(beam_id, h5_con) {
+    # browser()
+    l2a_beam <- h5_con[[beam_id]]
 
-    if ("shot_number" %in% hdf5r::list.datasets(l2a_beam[[groups_id[1]]])) {
+    if ("shot_number" %in% hdf5r::list.datasets(l2a_beam)) {
         if (length(l2a_beam[["rh"]]$dims) == 2) {
             rh <- t(l2a_beam[["rh"]][, ])
         } else {
@@ -106,7 +105,7 @@ l2a_h5_to_dt <- function(groups_id, h5_con) {
         }
 
         data.table::data.table(
-            beam <- rep(i, length(l2a_beam[["shot_number"]][])),
+            beam = rep(beam_id, length(l2a_beam[["shot_number"]][])),
             shot_number = l2a_beam[["shot_number"]][],
             degrade_flag = l2a_beam[["degrade_flag"]][],
             quality_flag = l2a_beam[["quality_flag"]][],
@@ -127,13 +126,18 @@ chewie_convert_2A <- function(h5_src) {
     grps <- hdf5r::list.groups(h5_open, recursive = FALSE)
     beam_ids <- grps[startsWith(grps, "BEAM")]
 
-    purrr::map(beam_ids, )
 
-    colnames(rh.dt) <- c(
+    rh_dt <- purrr::map(beam_ids,
+        ~ l2a_h5_to_dt(.x, h5_open),
+        .progress = TRUE
+    ) |>
+        data.table::rbindlist()
+
+    colnames(rh_dt) <- c(
         "beam", "shot_number", "degrade_flag", "quality_flag", "delta_time",
         "sensitivity", "solar_elevation", "lat_lowestmode", "lon_lowestmode",
         "elev_highestreturn", "elev_lowestmode", paste0("rh", seq(0, 100))
     )
-    close(pb)
-    return(rh.dt)
+    h5_open$close_all()
+    return(rh_dt)
 }
