@@ -127,7 +127,7 @@ chewie_convert_2A <- function(h5_src) {
     grps <- hdf5r::list.groups(h5_open, recursive = FALSE)
     beam_ids <- grps[startsWith(grps, "BEAM")]
 
-    purrr::map()
+    purrr::map(beam_ids, )
 
     colnames(rh.dt) <- c(
         "beam", "shot_number", "degrade_flag", "quality_flag", "delta_time",
