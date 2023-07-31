@@ -9,5 +9,6 @@ dev-cache/
 test-DB/
 download-cache*/
 chrome-download*
+parquet-test-cache/
 
 README.html
