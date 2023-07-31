@@ -18,6 +18,10 @@ chew_bold_cyan <- function(x) {
     cli::col_cyan(cli::style_bold(x))
 }
 
+chew_bold_yel <- function(x) {
+    cli::col_yellow(cli::style_bold(x))
+}
+
 # ---- abort ----
 
 abort_netrc_gen <- function(x) {
@@ -212,6 +216,12 @@ inform_time <- function(st, type) {
     time_units <- attr(tot_time, "units")
     num_time <- round(as.numeric(tot_time, units = time_units), 1)
     cli::cli_alert_info("{type} time: {num_time} {time_units}")
+}
+
+inform_download_completed <- function(ncomp, n) {
+    cli::cli_alert_success(
+        " {ncomp}/{n} {qty(ncomp)}file{?s} already downloaded."
+    )
 }
 
 #---- warn ----
