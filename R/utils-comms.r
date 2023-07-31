@@ -220,7 +220,7 @@ inform_time <- function(st, type) {
 
 inform_download_completed <- function(ncomp, n) {
     cli::cli_alert_success(
-        " {ncomp}/{n} {qty(ncomp)}file{?s} already downloaded."
+        " {ncomp}/{n} {cli::qty(ncomp)}file{?s} already downloaded."
     )
 }
 
