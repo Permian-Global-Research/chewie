@@ -7,6 +7,7 @@
 DEV/
 dev-cache/
 test-DB/
-download-cache/
+download-cache*/
+chrome-download*
 
 README.html
