@@ -17,7 +17,7 @@
     toset <- !(names(op_chewie) %in% names(op))
     if (any(toset)) options(op_chewie[toset])
 
-    chewie_health_check()
+    chewie_health_check(.test = FALSE)
 
     invisible()
 }

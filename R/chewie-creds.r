@@ -1,7 +1,58 @@
+#' @title Test NASA Earthdata Credentials
+#' @description Test NASA Earthdata credentials for use in `chewie` functions.
+#' @param .netrc character path to an existing `.netrc` file.
+#' @param .error logical whether to throw an error if the credentials are
+#' invalid.
+#' @noRd
+chewie_test_creds <- function(.netrc = chewie_get_env(), .error = TRUE) {
+    test_url <- paste0(
+        "https://e4ftl01.cr.usgs.gov//GEDI_L1_L2/GEDI/GEDI02_A.002/2022.12.03/",
+        "GEDI02_A_2022337234828_O22520_03_T07992_02_003_02_V002.h5"
+    )
+
+    gedi_handle <- curl::new_handle(
+        range = "0-1",
+        netrc = TRUE,
+        netrc_file = .netrc
+    )
+
+    sc <- curl::curl_fetch_memory(test_url, handle = gedi_handle)$status_code
+    cred_result <- dplyr::case_when(
+        sc == 206 ~ "success",
+        sc == 401 ~ "unauthorized",
+        TRUE ~ "ambiguous"
+    )
+
+    if (isTRUE(.error)) {
+        una <- function() {
+            cli::cli_abort(c("Invalid NASA Earthdata credentials!",
+                "i" = "Run `chewie::chewie_creds()` to update your credentials."
+            ))
+        }
+    } else {
+        una <- function() {
+            cli::cli_inform(c(
+                "x" = "Invalid NASA Earthdata credentials!",
+                "i" = "Run `chewie::chewie_creds()` to update your credentials."
+            ))
+        }
+    }
+
+    switch(cred_result,
+        "success" = cli::cli_alert_success("Credentials verified!"),
+        "unauthorized" = una(),
+        "ambiguous" = cli::cli_alert_warning(
+            "Ambiguous credentials test response: {sc}"
+        )
+    )
+}
+
+
+
 #' @title Validate `.netrc` file
 #' @param .netrc character path to an existing `.netrc` file.
 #' @noRd
-chewie_validate_netrc <- function(.netrc) {
+chewie_validate_netrc <- function(.netrc, .test = TRUE) {
     if (file.exists(.netrc)) {
         nrc_vals <- readLines(.netrc) |>
             strsplit(" ") |>
@@ -19,6 +70,10 @@ chewie_validate_netrc <- function(.netrc) {
             abort_netrc_val()
         }
         return(TRUE)
+
+        if (.test) {
+            chewie_test_creds(.netrc)
+        }
     } else {
         abort_netrc_no_exist()
     }
@@ -125,7 +180,8 @@ chewie_creds <- function(
     .force = FALSE,
     .usr = NULL,
     .pwd = NULL,
-    .quiet = FALSE) {
+    .quiet = FALSE,
+    .test = TRUE) {
     if (is.null(.netrc)) {
         if (isFALSE(.quiet) && interactive()) {
             is_reg <- chewie_register()
@@ -136,7 +192,7 @@ chewie_creds <- function(
     }
 
     if (!is.null(.netrc)) {
-        if (chewie_validate_netrc(.netrc)) {
+        if (chewie_validate_netrc(.netrc, .test)) {
             chewie_set_env(.netrc)
             inform_env_success(.netrc, .quiet)
             return(invisible())
@@ -168,7 +224,7 @@ chewie_creds <- function(
 
     chewie_write_netrc(.path, .usr, .pwd)
     chewie_set_env(.path)
-    chewie_validate_netrc(.path)
+    chewie_validate_netrc(.path, .test)
     inform_env_success(.path, .quiet)
 }
 
@@ -189,18 +245,40 @@ chewie_get_env <- function(.netrc) {
 #' @export
 #' @details `chewie_env_clean` can be used to manually remove the `CHEWIE_NETRC`
 #' environment and delete the associated `.netrc` file.
-chewie_env_clean <- function(renviron = "global") {
+chewie_env_clean <- function(renviron = "global", .check = interactive()) {
     check_n_del <- function(x) {
         if (file.exists(x)) {
             file.remove(x)
         }
     }
-    check_n_del(chewie_get_env())
-    check_n_del(file.path(chewie_default_dir(), ".netrc"))
-    if (!is.na(chewie_get_env())) {
-        remove_env_var("CHEWIE_NETRC", renviron)
+    clean_up <- function() {
+        check_n_del(chewie_get_env())
+        check_n_del(file.path(chewie_default_dir(), ".netrc"))
+        if (!is.na(chewie_get_env())) {
+            remove_env_var("CHEWIE_NETRC", renviron)
+        }
+        return(invisible())
     }
-    return(invisible())
+
+    cli::cli_inform(
+        paste0(
+            chew_bold_mag("?"),
+            paste0(
+                "   Do you really want to clear your saved NASA",
+                "Earthdata login account credentials?"
+            )
+        )
+    )
+
+    choice <- menu(c(
+        chew_bold_green("Yes"),
+        chew_bold_red("No!")
+    ))
+
+    switch(choice,
+        clean_up(),
+        return(invisible())
+    )
 }
 
 

@@ -1,8 +1,10 @@
 #' @title Check the status of the {chewie}
 #' @description checks the NASA Earthdata Credentials and GEDI Cache
 #' environment variables
+#' @param .test logical; whether to test the credentials (requires internet
+#' connection)
 #' @export
-chewie_health_check <- function() {
+chewie_health_check <- function(.test = TRUE) {
     if (is.na(chewie_get_env())) {
         inform_env_health("No NASA Earthdata Credentials set.")
     } else {
@@ -12,6 +14,9 @@ chewie_health_check <- function() {
             cli::cli_alert_success(c(
                 "NASA Earthdata Credentials already set."
             ))
+        }
+        if (isTRUE(.test)) {
+            chewie_test_creds(.error = FALSE)
         }
     }
 
