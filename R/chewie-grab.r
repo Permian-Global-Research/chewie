@@ -20,12 +20,6 @@ chewie_download <- function(
     nfiles <- length(x$url)
 
     dl_func <- function(.url, id) {
-        cli::cli_progress_message(paste0(
-            "   Downloading {cli::qty(id)}file{?s}:",
-            chew_bold_cyan("{id}"),
-            "/",
-            chew_bold_green("{nfiles}")
-        ))
         destination <- file.path(.dir, basename(.url))
 
         df <- curl::multi_download(
@@ -37,6 +31,14 @@ chewie_download <- function(
             netrc = TRUE,
             netrc_file = Sys.getenv("CHEWIE_NETRC")
         )
+
+        colfunc <- ifelse(id == nfiles, chew_bold_green, chew_bold_cyan)
+        cli::cli_progress_step(paste0(
+            "   Downloaded {cli::qty(id)}file{?s}:",
+            colfunc("{id}"),
+            "/",
+            chew_bold_green("{nfiles}")
+        ))
 
         return(df)
     }
