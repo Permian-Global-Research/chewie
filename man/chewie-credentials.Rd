@@ -13,12 +13,13 @@ chewie_creds(
   .force = FALSE,
   .usr = NULL,
   .pwd = NULL,
-  .quiet = FALSE
+  .quiet = FALSE,
+  .test = TRUE
 )
 
 chewie_get_env(.netrc)
 
-chewie_env_clean(renviron = "global")
+chewie_env_clean(renviron = "global", .check = interactive())
 
 chewie_set_env(.netrc, renviron = "global")
 }

@@ -4,7 +4,11 @@
 \alias{chewie_health_check}
 \title{Check the status of the {chewie}}
 \usage{
-chewie_health_check()
+chewie_health_check(.test = TRUE)
+}
+\arguments{
+\item{.test}{logical; whether to test the credentials (requires internet
+connection)}
 }
 \description{
 checks the NASA Earthdata Credentials and GEDI Cache
