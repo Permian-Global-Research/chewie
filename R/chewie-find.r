@@ -73,7 +73,7 @@ request_gedi <- function(.url, .page) {
     ))
 
     content <- rawToChar(response$content)
-    result <- jsonify::from_json(content, simplify = FALSE)
+    result <- RcppSimdJson::fparse(content, max_simplify_lvl = "list")
     if (response$status_code != 200) {
         abort_gedi_request(result$errors)
     }
