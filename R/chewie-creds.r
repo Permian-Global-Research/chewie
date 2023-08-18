@@ -10,41 +10,51 @@ chewie_test_creds <- function(.netrc = chewie_get_env(), .error = TRUE) {
         "GEDI02_A_2022337234828_O22520_03_T07992_02_003_02_V002.h5"
     )
 
-    gedi_handle <- curl::new_handle(
-        range = "0-1",
-        netrc = TRUE,
-        netrc_file = .netrc
-    )
-
-    sc <- curl::curl_fetch_memory(test_url, handle = gedi_handle)$status_code
-    cred_result <- dplyr::case_when(
-        sc == 206 ~ "success",
-        sc == 401 ~ "unauthorized",
-        TRUE ~ "ambiguous"
-    )
-
-    if (isTRUE(.error)) {
-        una <- function() {
-            cli::cli_abort(c("Invalid NASA Earthdata credentials!",
-                "i" = "Run `chewie::chewie_creds()` to update your credentials."
-            ))
-        }
-    } else {
-        una <- function() {
-            cli::cli_inform(c(
-                "x" = "Invalid NASA Earthdata credentials!",
-                "i" = "Run `chewie::chewie_creds()` to update your credentials."
-            ))
-        }
-    }
-
-    switch(cred_result,
-        "success" = cli::cli_alert_success("Credentials verified!"),
-        "unauthorized" = una(),
-        "ambiguous" = cli::cli_alert_warning(
-            "Ambiguous credentials test response: {sc}"
+    if (curl::has_internet()) {
+        gedi_handle <- curl::new_handle(
+            range = "0-1",
+            netrc = TRUE,
+            netrc_file = .netrc
         )
-    )
+
+        sc <- curl::curl_fetch_memory(test_url,
+            handle = gedi_handle
+        )$status_code
+
+        cred_result <- dplyr::case_when(
+            sc == 206 ~ "success",
+            sc == 401 ~ "unauthorized",
+            TRUE ~ "ambiguous"
+        )
+
+        if (isTRUE(.error)) {
+            una <- function() {
+                cli::cli_abort(c("Invalid NASA Earthdata credentials!",
+                    "i" = "Run `chewie::chewie_creds()` to update your credentials."
+                ))
+            }
+        } else {
+            una <- function() {
+                cli::cli_inform(c(
+                    "x" = "Invalid NASA Earthdata credentials!",
+                    "i" = "Run `chewie::chewie_creds()` to update your credentials."
+                ))
+            }
+        }
+
+        switch(cred_result,
+            "success" = cli::cli_alert_success("Credentials verified!"),
+            "unauthorized" = una(),
+            "ambiguous" = cli::cli_alert_warning(
+                "Ambiguous credentials test response: {sc}"
+            )
+        )
+    } else {
+        cli::cli_inform(c(
+            "!" = "No internet connection detected!",
+            "x" = "Unable to confirm credentials..."
+        ))
+    }
 }
 
 
@@ -77,22 +87,6 @@ chewie_validate_netrc <- function(.netrc, .test = TRUE) {
     } else {
         abort_netrc_no_exist()
     }
-}
-
-#' @title Create default `.netrc` file location
-#' @noRd
-chewie_default_dir <- function() {
-    usr <- c(
-        Sys.getenv("USERPROFILE", unset = NA),
-        Sys.getenv("HOME", unset = NA)
-    )
-    .dir <- file.path(usr[which(!is.na(usr))[1]], ".chewie")
-
-    if (!dir.exists(.dir)) {
-        dir.create(.dir)
-    }
-
-    return(.dir)
 }
 
 #' @title User interactive input for NASA Earthdata Login credentials
@@ -228,17 +222,6 @@ chewie_creds <- function(
     inform_env_success(.path, .quiet)
 }
 
-#' @title Get NASA Earthdata Credentials environment
-#' @rdname chewie-credentials
-#' @family manage credentials
-#' return character file path for `.netrc` file
-#' @export
-#' @details `chewie_get_env` can be used to manually get the `CHEWIE_NETRC`
-#' environment, providing the file path to the `.netrc` file.
-chewie_get_env <- function(.netrc) {
-    Sys.getenv("CHEWIE_NETRC", unset = NA)
-}
-
 #' @title Remove NASA Earthdata Credentials environment variable
 #' @rdname chewie-credentials
 #' @family manage credentials
@@ -295,8 +278,6 @@ chewie_env_clean <- function(renviron = "global", .check = interactive()) {
 chewie_set_env <- function(.netrc, renviron = "global") {
     add_env_var("CHEWIE_NETRC", .netrc, renviron)
 }
-
-
 
 
 read_renv <- function(renviron) {
