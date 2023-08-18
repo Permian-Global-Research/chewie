@@ -8,8 +8,8 @@ chewie_grab <- function() {
 #' @param x A chewie.find.x object.
 #'
 chewie_download <- function(
-    x, progress = TRUE, timeout = Inf,
-    .dir = getOption("chewie.session.cache")) {
+    x, progress = TRUE, timeout = 7200,
+    .dir = getOption("GEDI-h5-cache-temp")) {
     st_time <- Sys.time()
     if (!dir.exists(.dir)) {
         dir.create(.dir, recursive = TRUE)
