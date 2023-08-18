@@ -7,8 +7,8 @@
 chewie_download(
   x,
   progress = TRUE,
-  timeout = Inf,
-  .dir = getOption("chewie.session.cache")
+  timeout = 7200,
+  .dir = getOption("GEDI-h5-cache-temp")
 )
 }
 \arguments{
