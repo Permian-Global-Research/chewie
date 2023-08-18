@@ -1,5 +1,5 @@
 #' @title Set GEDI Parquet Cache
-#' @param .dir character path to the directory to set as the cache.
+#' @param .dir character path to the directory that should contain the cache.
 #' @param renviron character either 'global', 'local' or path to the directory
 #' containing the `.Renviron` file to set the `CHEWIE_PARQUET_CACHE`
 #' environment and create the directory. If missing, the default cache
@@ -7,22 +7,17 @@
 #' @rdname chewie-cache
 #' @family manage cache
 #' @export
-chewie_setup_cache <- function(.dir, renviron = "global") {
-    if (missing(.dir)) {
-        .dir <- file.path(chewie_default_dir(), "GEDI-parquet-cache")
-    }
+chewie_setup_cache <- function(
+    .dir = chewie_default_dir(),
+    renviron = "global",
+    quiet = FALSE) {
+    dir_parquet <- file.path(.dir, "GEDI-parquet-cache")
+    dir_h5 <- file.path(.dir, "GEDI-h5-cache-temp")
 
-    ovw <- add_env_var("CHEWIE_PARQUET_CACHE", .dir, renviron)
-
+    ovw <- add_env_var("CHEWIE_CACHE_HOME", .dir, renviron)
     if (!isTRUE(ovw)) {
         return(invisible())
     }
-
-    .subdir_list <- list(
-        "GEDI-1B" = file.path(.dir, "GEDI-1B"),
-        "GEDI-2A" = file.path(.dir, "GEDI-2A"),
-        "GEDI-2B" = file.path(.dir, "GEDI-2B")
-    )
 
     check_n_make_dir <- function(x) {
         if (!dir.exists(x)) {
@@ -30,26 +25,48 @@ chewie_setup_cache <- function(.dir, renviron = "global") {
         }
     }
 
-    lapply(.subdir_list, check_n_make_dir)
+    check_n_make_dir(dir_parquet)
+    check_n_make_dir(dir_h5)
+
+    chewie_set_cache_opts()
 
 
-    inform_cache_set_success(.dir)
+    if (!quiet) {
+        inform_cache_set_success(.dir)
+    }
+    return(invisible())
 }
 
-#' @title Unset GEDI Parquet Cache
+#' @title Unset GEDI Cache
 #' @rdname chewie-cache
 #' @family manage cache
 #' @export
 #' @details This `chewie_unset_cache` function will remove the
 #' `CHEWIE_PARQUET_CACHE` environment variable from the `.Renviron` file.
 chewie_unset_cache <- function(renviron = "global") {
-    remove_env_var("CHEWIE_PARQUET_CACHE", renviron)
+    remove_env_var("CHEWIE_CACHE_HOME", renviron)
 }
 
-#' @title Get GEDI Parquet Cache
+#' @title Get GEDI Cache
 #' @rdname chewie-cache
 #' @family manage cache
 #' @export
 chewie_get_cache <- function() {
-    Sys.getenv("CHEWIE_PARQUET_CACHE", unset = NA)
+    Sys.getenv("CHEWIE_CACHE_HOME", unset = NA)
+}
+
+#' @title Set GEDI Parquet Cache option params
+#' @family manage cache
+#' @noRd
+chewie_set_cache_opts <- function() {
+    options(
+        chewie.parquet.cache = file.path(
+            chewie_get_cache(),
+            "GEDI-parquet-cache"
+        ),
+        chewie.h5.cache = file.path(
+            chewie_get_cache(),
+            "GEDI-h5-cache-temp"
+        )
+    )
 }

@@ -60,3 +60,30 @@ check_env_var <- function(env_name, renviron = "global") {
     on.exit(close(rr$con), add = TRUE)
     any(grepl(env_name, rr$lines))
 }
+
+#' @title Create default `.netrc` file location
+#' @noRd
+chewie_default_dir <- function() {
+    usr <- c(
+        Sys.getenv("USERPROFILE", unset = NA),
+        Sys.getenv("HOME", unset = NA)
+    )
+    .dir <- file.path(usr[which(!is.na(usr))[1]], ".chewie")
+
+    if (!dir.exists(.dir)) {
+        dir.create(.dir)
+    }
+
+    return(.dir)
+}
+
+#' @title Get NASA Earthdata Credentials environment
+#' @rdname chewie-credentials
+#' @family manage credentials
+#' return character file path for `.netrc` file
+#' @export
+#' @details `chewie_get_env` can be used to manually get the `CHEWIE_NETRC`
+#' environment, providing the file path to the `.netrc` file.
+chewie_get_env <- function(.env = "CHEWIE_NETRC") {
+    Sys.getenv(.env, unset = NA)
+}
