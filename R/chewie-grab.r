@@ -33,7 +33,7 @@ chewie_download <- function(
         )
 
         colfunc <- ifelse(id == nfiles, chew_bold_green, chew_bold_cyan)
-        cli::cli_progress_step(paste0(
+        cli::cli_alert_success(paste0(
             "   Downloaded {cli::qty(id)}file{?s}:",
             colfunc("{id}"),
             "/",
