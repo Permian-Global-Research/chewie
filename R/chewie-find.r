@@ -177,3 +177,19 @@ build_date_range <- function(.sd, .ed) {
 print.chewie.find <- function(x, ...) {
     chewie_print(x, ...)
 }
+
+#' @title print a `chewie.find` object
+#' @description `print.chewie.find` is a method for printing `chewie.find`
+#' objects.
+#' @param x chewie.find object to print
+#' @param swath_col character; color of the swaths.
+#' @param land_col character; color of the land.
+#' @param ... arguments passed to `print.sf`
+#' @return a base R plot.
+#' @export
+# TODO: Do we want to keep this?
+plot.chewie.find <- function(x, swath_col, land_col = "#63a88840", ...) {
+    plot(x[0], axes = TRUE, border = "#903ca5", col = "#903ca5")
+    maps::map("world", add = TRUE, fill = TRUE, col = "#63a888")
+    plot(x[0], border = "#903ca5", col = "#903ca5", add = TRUE, ...)
+}
