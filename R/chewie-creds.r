@@ -1,3 +1,87 @@
+#' @title Set NASA Earthdata Credentials
+#' @description Set NASA Earthdata credentials for use in `chewie` functions.
+#' @param netrc character path to an existing `.netrc` file.
+#' @param path character path to set where to create the `.netrc` file
+#' @param force logical whether to overwrite an existing `.netrc` or
+#' `CHEWIE_NETRC` environment variable.
+#' @param usr character NASA Earthdata username.
+#' @param pwd character NASA Earthdata password.
+#' @param quiet logical whether to suppress the registration prompt and
+#' messaging.
+#' @rdname chewie-credentials
+#' @family manage credentials
+#' @export
+#'
+#' @details
+#' The NASA Earthdata API requires a username and password to access data. This
+#' is provided via the config settings in the form of a `.netrc` file. The
+#' `chewie_creds` function can help to generate this file and set its location
+#' as an environment variable for use in `chewie` functions. In theory this
+#' should only need to be done once, but if you need to change your credentials
+#' you can use the `force` argument to overwrite the existing `.netrc` file.
+#'
+chewie_creds <- function(
+    netrc = NULL,
+    path = NULL,
+    force = FALSE,
+    usr = NULL,
+    pwd = NULL,
+    quiet = FALSE,
+    test = TRUE,
+    renviron = "user") {
+    if (is.null(netrc)) {
+        if (isFALSE(quiet) && interactive()) {
+            if (!is.null(usr) || !is.null(pwd)) {
+                is_reg <- TRUE
+            } else {
+                is_reg <- chewie_register()
+            }
+
+            if (isFALSE(is_reg)) {
+                return(invisible())
+            }
+        }
+    }
+
+    if (!is.null(netrc)) {
+        if (chewie_validate_netrc(netrc, .test = test)) {
+            chewie_set_netrc_env(netrc)
+            inform_env_success(netrc, .quiet = quiet)
+            return(invisible())
+        }
+    }
+
+    if (is.null(path)) {
+        path <- file.path(chewie_default_dir(), ".netrc")
+    }
+
+    if (file.exists(path)) {
+        if (isFALSE(force)) {
+            abort_netrc_exists(path)
+        }
+    }
+
+    if (!is.na(chewie_get_env())) {
+        if (isFALSE(force)) {
+            abort_netrc_env_exists(chewie_get_env())
+        }
+    }
+
+    if (!interactive()) {
+        if (any(c(is.null(usr), is.null(pwd)))) {
+            abort_non_interactive_creds()
+        }
+    }
+
+
+    chewie_write_netrc(path, usr, pwd)
+    chewie_set_netrc_env(path, renviron)
+    chewie_validate_netrc(path, test)
+    inform_env_success(path, quiet)
+}
+
+
+
 #' @title Test NASA Earthdata Credentials
 #' @description Test NASA Earthdata credentials for use in `chewie` functions.
 #' @param .netrc character path to an existing `.netrc` file.
@@ -27,18 +111,16 @@ chewie_test_creds <- function(.netrc = chewie_get_env(), .error = TRUE) {
             TRUE ~ "ambiguous"
         )
 
+        .msg <- c("Invalid NASA Earthdata credentials!",
+            "i" = "Run `chewie::chewie_creds()` to update your credentials."
+        )
         if (isTRUE(.error)) {
             una <- function() {
-                cli::cli_abort(c("Invalid NASA Earthdata credentials!",
-                    "i" = "Run `chewie::chewie_creds()` to update your credentials."
-                ))
+                cli::cli_abort(.msg)
             }
         } else {
             una <- function() {
-                cli::cli_inform(c(
-                    "x" = "Invalid NASA Earthdata credentials!",
-                    "i" = "Run `chewie::chewie_creds()` to update your credentials."
-                ))
+                cli::cli_alert_danger(.msg)
             }
         }
 
@@ -79,11 +161,11 @@ chewie_validate_netrc <- function(.netrc, .test = TRUE) {
         if (!all(check_list)) {
             abort_netrc_val()
         }
-        return(TRUE)
 
         if (.test) {
             chewie_test_creds(.netrc)
         }
+        return(TRUE)
     } else {
         abort_netrc_no_exist()
     }
@@ -145,90 +227,15 @@ chewie_register <- function(.netrc) {
     )
 }
 
-
-#' @title Set NASA Earthdata Credentials
-#' @description Set NASA Earthdata credentials for use in `chewie` functions.
-#' @param .netrc character path to an existing `.netrc` file.
-#' @param .path character path to set where to create the `.netrc` file
-#' @param .force logical whether to overwrite an existing `.netrc` or
-#' `CHEWIE_NETRC` environment variable.
-#' @param .usr character NASA Earthdata username.
-#' @param .pwd character NASA Earthdata password.
-#' @param .quiet logical whether to suppress the registration prompt and
-#' messaging.
-#' @rdname chewie-credentials
-#' @family manage credentials
-#' @export
-#'
-#' @details
-#' The NASA Earthdata API requires a username and password to access data. This
-#' is provided via the config settings in the form of a `.netrc` file. The
-#' `chewie_creds` function can help to generate this file and set its location
-#' as an environment variable for use in `chewie` functions. In theory this
-#' should only need to be done once, but if you need to change your credentials
-#' you can use the `force` argument to overwrite the existing `.netrc` file.
-#'
-chewie_creds <- function(
-    .netrc = NULL,
-    .path = NULL,
-    .force = FALSE,
-    .usr = NULL,
-    .pwd = NULL,
-    .quiet = FALSE,
-    .test = TRUE) {
-    if (is.null(.netrc)) {
-        if (isFALSE(.quiet) && interactive()) {
-            is_reg <- chewie_register()
-            if (isFALSE(is_reg)) {
-                return(invisible())
-            }
-        }
-    }
-
-    if (!is.null(.netrc)) {
-        if (chewie_validate_netrc(.netrc, .test)) {
-            chewie_set_env(.netrc)
-            inform_env_success(.netrc, .quiet)
-            return(invisible())
-        }
-    }
-
-    if (is.null(.path)) {
-        .path <- file.path(chewie_default_dir(), ".netrc")
-    }
-
-    if (file.exists(.path)) {
-        if (isFALSE(.force)) {
-            abort_netrc_exists(.path)
-        }
-    }
-
-    if (!is.na(chewie_get_env())) {
-        if (isFALSE(.force)) {
-            abort_netrc_env_exists(chewie_get_env())
-        }
-    }
-
-    if (!interactive()) {
-        if (!any(c(is.null(.usr), is.null(.pwd)))) {
-            abort_non_interactive_creds()
-        }
-    }
-
-
-    chewie_write_netrc(.path, .usr, .pwd)
-    chewie_set_env(.path)
-    chewie_validate_netrc(.path, .test)
-    inform_env_success(.path, .quiet)
-}
-
 #' @title Remove NASA Earthdata Credentials environment variable
+#' @param renviron character either 'user', '"project"' or path to the directory
+#' containing the `.Renviron` file.
 #' @rdname chewie-credentials
 #' @family manage credentials
 #' @export
 #' @details `chewie_env_clean` can be used to manually remove the `CHEWIE_NETRC`
 #' environment and delete the associated `.netrc` file.
-chewie_env_clean <- function(renviron = "global", .check = interactive()) {
+chewie_clean_netrc <- function(renviron = "user") {
     check_n_del <- function(x) {
         if (file.exists(x)) {
             file.remove(x)
@@ -266,52 +273,28 @@ chewie_env_clean <- function(renviron = "global", .check = interactive()) {
 
 
 #' @title Set NASA Earthdata Credentials environment
-#' @param .netrc character path to an existing `.netrc` file.
-#' @param renviron character either 'global', 'local' or path to the directory
+#' @param netrc character path to an existing `.netrc` file.
+#' @param renviron character either 'user', '"project"' or path to the directory
 #' containing the `.Renviron` file to set the `CHEWIE_NETRC` environment.
 #' @rdname chewie-credentials
 #' @family manage credentials
 #' @export
-#' @details `chewie_set_env` is most likely not required but can be used to
+#' @details `chewie_set_netrc_env` is most likely not required but can be used to
 #' manually set the `CHEWIE_NETRC` environment variable which is used for
 #' authenticating downloads from the NASA Earthdata API.
-chewie_set_env <- function(.netrc, renviron = "global") {
-    add_env_var("CHEWIE_NETRC", .netrc, renviron)
+chewie_set_netrc_env <- function(netrc, renviron = "user") {
+    add_env_var("CHEWIE_NETRC", netrc, renviron)
 }
 
 
-read_renv <- function(renviron) {
-    # Get the .Renviron on their system
-    if (tolower(renviron) == "global") {
-        home <- Sys.getenv("HOME")
-    } else if (tolower(renviron) == "local") {
-        home <- getwd()
-    } else {
-        if (dir.exists(renviron)) {
-            home <- renviron
-        } else {
-            cli::cli_abort(".Renviron parent directory does not exist!")
-        }
-    }
-
-    renv_path <- file.path(home, ".Renviron")
-
-    con <- file(renv_path, open = "r+")
-    lines <- as.character()
-    ii <- 1
-
-    while (TRUE) {
-        line <- readLines(con, n = 1, warn = FALSE)
-        if (length(line) == 0) {
-            break()
-        }
-        lines[ii] <- line
-        ii <- ii + 1
-    }
-
-    return(list(
-        con = con,
-        lines = lines,
-        renv = renv_path
-    ))
+#' @title Get NASA Earthdata Credentials netrc file location
+#' @rdname chewie-credentials
+#' @family manage credentials
+#' return character file path for `.netrc` file
+#' @export
+#' @details `chewie_get_netrc` can be used to manually get the `CHEWIE_NETRC`
+#' environment, providing the file path to the `.netrc` file used to
+#' authenticate any requests to the NASA Earthdata API
+chewie_get_netrc <- function() {
+    chewie_get_env("CHEWIE_NETRC")
 }

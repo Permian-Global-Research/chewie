@@ -1,6 +1,6 @@
 #' @title Set GEDI Parquet Cache
 #' @param .dir character path to the directory that should contain the cache.
-#' @param renviron character either 'global', 'local' or path to the directory
+#' @param renviron character either 'user', '"project"' or path to the directory
 #' containing the `.Renviron` file to set the `CHEWIE_PARQUET_CACHE`
 #' environment and create the directory. If missing, the default cache
 #' directory is used.
@@ -9,7 +9,7 @@
 #' @export
 chewie_setup_cache <- function(
     .dir = chewie_default_dir(),
-    renviron = "global",
+    renviron = "user",
     quiet = FALSE) {
     dir_parquet <- file.path(.dir, "GEDI-parquet-cache")
     dir_h5 <- file.path(.dir, "GEDI-h5-cache-temp")
@@ -43,7 +43,7 @@ chewie_setup_cache <- function(
 #' @export
 #' @details This `chewie_unset_cache` function will remove the
 #' `CHEWIE_PARQUET_CACHE` environment variable from the `.Renviron` file.
-chewie_unset_cache <- function(renviron = "global") {
+chewie_unset_cache <- function(renviron = "user") {
     remove_env_var("CHEWIE_CACHE_HOME", renviron)
 }
 
@@ -52,7 +52,7 @@ chewie_unset_cache <- function(renviron = "global") {
 #' @family manage cache
 #' @export
 chewie_get_cache <- function() {
-    Sys.getenv("CHEWIE_CACHE_HOME", unset = NA)
+    chewie_get_env("CHEWIE_CACHE_HOME")
 }
 
 #' @title Set GEDI Parquet Cache option params

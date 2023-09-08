@@ -1,10 +1,59 @@
+#' @title Read the R environment file
+#' @param renviron character either 'user', '"project"' or path to the directory
+#' containing the `.Renviron` file.
+#' @noRd
+read_renv <- function(renviron) {
+    # Get the .Renviron on their system
+    if (tolower(renviron) == "user") {
+        home <- Sys.getenv("HOME")
+    } else if (tolower(renviron) == "project") {
+        home <- getwd()
+    } else {
+        if (dir.exists(renviron)) {
+            home <- renviron
+        } else {
+            cli::cli_abort(".Renviron parent directory does not exist!")
+        }
+    }
+
+    renv_path <- file.path(home, ".Renviron")
+
+    if (!file.exists(renv_path)) {
+        cli::cli_abort(c(".Renviron file does not exist in {home}",
+            "i" = "Please create it first using (for example):",
+            chew_bold_green("usethis::edit_r_environ(scope='project')")
+        ))
+    }
+
+    con <- file(renv_path, open = "r+")
+    lines <- as.character()
+    ii <- 1
+
+    while (TRUE) {
+        line <- readLines(con, n = 1, warn = FALSE)
+        if (length(line) == 0) {
+            break()
+        }
+        lines[ii] <- line
+        ii <- ii + 1
+    }
+
+    return(list(
+        con = con,
+        lines = lines,
+        renv = renv_path
+    ))
+}
+
+
+
 #' @title Add environment variable to `.Renviron`
 #' @param env_name character name of the environment variable to add.
 #' @param env_val character value of the environment variable to add.
-#' @param renviron character either 'global', 'local' or path to the directory
+#' @param renviron character either 'user', '"project"' or path to the directory
 #' containing the `.Renviron` file.
 #' @noRd
-add_env_var <- function(env_name, env_val, renviron = "global") {
+add_env_var <- function(env_name, env_val, renviron = "user") {
     if (isTRUE(check_env_var(env_name, renviron))) {
         if (!interactive()) {
             abort_env_set(env_name)
@@ -36,10 +85,10 @@ add_env_var <- function(env_name, env_val, renviron = "global") {
 
 #' @title Remove environment variable from `.Renviron`
 #' @param env_name character name of the environment variable to remove.
-#' @param renviron character either 'global', 'local' or path to the directory
+#' @param renviron character either 'user', '"project"' or path to the directory
 #' containing the `.Renviron` file.
 #' @noRd
-remove_env_var <- function(env_name, renviron = "global") {
+remove_env_var <- function(env_name, renviron = "user") {
     rr <- read_renv(renviron)
     on.exit(close(rr$con), add = TRUE)
     system_vars <- rr$lines[!grepl(env_name, rr$lines)]
@@ -52,10 +101,10 @@ remove_env_var <- function(env_name, renviron = "global") {
 
 #' @title Check if environment variable is set in `.Renviron`
 #' @param env_name character name of the environment variable to check.
-#' @param renviron character either 'global', 'local' or path to the directory
+#' @param renviron character either 'user', '"project"' or path to the directory
 #' containing the `.Renviron` file.
 #' @noRd
-check_env_var <- function(env_name, renviron = "global") {
+check_env_var <- function(env_name, renviron = "user") {
     rr <- read_renv(renviron)
     on.exit(close(rr$con), add = TRUE)
     any(grepl(env_name, rr$lines))
@@ -78,12 +127,10 @@ chewie_default_dir <- function() {
 }
 
 #' @title Get NASA Earthdata Credentials environment
-#' @rdname chewie-credentials
-#' @family manage credentials
 #' return character file path for `.netrc` file
-#' @export
 #' @details `chewie_get_env` can be used to manually get the `CHEWIE_NETRC`
 #' environment, providing the file path to the `.netrc` file.
-chewie_get_env <- function(.env = "CHEWIE_NETRC") {
-    Sys.getenv(.env, unset = NA)
+#' @noRd
+chewie_get_env <- function(.env = c("CHEWIE_NETRC", "CHEWIE_CACHE_HOME")) {
+    Sys.getenv(.env[1], unset = NA)
 }

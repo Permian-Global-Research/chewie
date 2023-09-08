@@ -28,7 +28,7 @@ abort_netrc_gen <- function(x) {
     cli::cli_abort(c(
         x,
         ">" = "Check the '.netrc' file(path) or rebuild it with:
-        `chewie::chewie_creds(.force=TRUE)`",
+        `chewie::chewie_creds(force=TRUE)`",
         "i" = "The .netrc should have the following format:",
         "machine urs.earthdata.nasa.gov",
         "login [USERNAME]",
@@ -54,7 +54,7 @@ abort_netrc_exists <- function(x) {
         ".netrc file already exists at:",
         chew_bold_red(x),
         "i" = paste0(
-            "Use ", chew_bold_cyan("`.force=TRUE`"),
+            "Use ", chew_bold_cyan("`force=TRUE`"),
             " to overwrite it."
         )
     ))
@@ -65,7 +65,7 @@ abort_netrc_env_exists <- function(x) {
         "`CHEWIE_NETRC` environment variable is already set to:",
         chew_bold_red(x),
         "i" = paste0(
-            "Use ", chew_bold_cyan("`.force=TRUE`"),
+            "Use ", chew_bold_cyan("`force=TRUE`"),
             " to overwrite it."
         )
     ))
