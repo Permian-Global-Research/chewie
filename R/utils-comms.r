@@ -147,6 +147,13 @@ abort_env_set <- function(env_name) {
     ))
 }
 
+abort_no_gedi_data <- function() {
+    cli::cli_abort(c(
+        "No GEDI data found for the provided region and/or datetime range.",
+        "i" = "Try expanding the search area or changing the datetime range."
+    ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {

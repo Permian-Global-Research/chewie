@@ -16,7 +16,7 @@
 #' bounding box coordinates in the order xmin, ymin, xmax, ymax.
 #'
 #' @export
-chewie_find <- function(
+find_gedi <- function(
     x,
     gedi_product = c("1B", "2A", "2B"),
     date_start = NULL,
@@ -42,6 +42,10 @@ chewie_find <- function(
         sf_polygon <- build_sf_set(gedi_response)
         sf_list[[page]] <- sf_polygon
         page <- page + 1
+    }
+
+    if (length(sf_list) == 0) {
+        abort_no_gedi_data()
     }
 
     sf_list <- sf_rbindlist(sf_list)
