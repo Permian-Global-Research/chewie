@@ -11,6 +11,12 @@
 #' @param intersects logical indicating whether to return only swaths that
 #' intersect with the given spatial object. If FALSE all swaths that are
 #' contained within the bounding box of the spatial object are returned.
+#' @param cache logical indicating whether to cache the results of the GEDI
+#' search. If TRUE the results of the search will be cached in the directory
+#' defined by: `getOption("chewie.find.gedi.cache")`. If FALSE the results will
+#' not be cached.
+#' @rdname chewie-find-gedi
+#' @family find GEDI
 #' @details
 #' Where x is a numeric it must be of length 4 with values corresponding to the
 #' bounding box coordinates in the order xmin, ymin, xmax, ymax.
@@ -21,12 +27,46 @@ find_gedi <- function(
     gedi_product = c("1B", "2A", "2B"),
     date_start = NULL,
     date_end = NULL,
-    intersects = TRUE) {
+    intersects = TRUE,
+    cache = TRUE) {
     assert_gedi_product(gedi_product)
 
     bbox <- paste(chewie_bbox(x), collapse = ",")
 
     date_range <- build_date_range(date_start, date_end)
+
+
+
+    if (isTRUE(cache)) {
+        if (is.null(date_end)) {
+            cache_end <- lubridate::now() |>
+                lubridate::add_with_rollback(months(1)) |>
+                lubridate::ceiling_date(unit = "month") |>
+                lubridate::format_ISO8601()
+            end_date_cache_warn(cache_end)
+        } else {
+            cache_end <- date_end
+        }
+        cache_string <- paste(
+            gedi_product[1],
+            bbox,
+            date_range[1],
+            cache_end,
+            intersects,
+            sep = "_"
+        ) |>
+            gsub("[:.,]", "_", x = _)
+
+        find_cache_dir <- getOption("chewie.find.gedi.cache")
+        cache_file <- file.path(
+            find_cache_dir,
+            paste0(cache_string, ".rds")
+        )
+        if (file.exists(cache_file)) {
+            cli::cli_alert_success("Using cached GEDI data")
+            return(readRDS(cache_file))
+        }
+    }
 
     request_url <- build_req_url(
         gedi_product[1],
@@ -66,6 +106,11 @@ find_gedi <- function(
         paste("chewie.find", "gedi", gedi_product[1], sep = "."),
         class(sf_list)
     )
+
+    if (isTRUE(cache)) {
+        saveRDS(sf_list, cache_file)
+    }
+
     return(sf_list)
 }
 
@@ -196,4 +241,39 @@ plot.chewie.find <- function(x, swath_col, land_col = "#63a88840", ...) {
     plot(x[0], axes = TRUE, border = "#903ca5", col = "#903ca5")
     maps::map("world", add = TRUE, fill = TRUE, col = "#63a888")
     plot(x[0], border = "#903ca5", col = "#903ca5", add = TRUE, ...)
+}
+
+#' @title Clear the GEDI find (search) cache
+#' @rdname chewie-find-gedi
+#' @family find GEDI.
+#' @details
+#' `chewie_clear_find_cache` deletes the cached .rds files in the GEDI find
+#' cache directory, located in `getOption("chewie.find.gedi.cache")`.
+#' @export
+chewie_clear_find_cache <- function() {
+    cache_dir <- getOption("chewie.find.gedi.cache")
+
+    clean_finds <- function() {
+        list.files(cache_dir, pattern = "\\.rds$", full.names = TRUE) |>
+            purrr::walk(file.remove)
+    }
+
+    cli::cli_inform(
+        paste0(
+            chew_bold_mag("?"),
+            paste0(
+                "   Do you really want to clear your GEDI search cache?"
+            )
+        )
+    )
+
+    choice <- menu(c(
+        chew_bold_green("Yes"),
+        chew_bold_red("No!")
+    ))
+
+    switch(choice,
+        clean_finds(),
+        return(invisible())
+    )
 }
