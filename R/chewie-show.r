@@ -32,7 +32,7 @@ chewie_show.chewie.find <- function(
     x,
     time_group = c("year", "month"),
     alpha = 0.5,
-    swath_pal = "SunsetDark",
+    swath_pal = "Zissou 1",
     aoi_color = "black",
     interactive = TRUE,
     file = tempfile(fileext = ".png")) {
