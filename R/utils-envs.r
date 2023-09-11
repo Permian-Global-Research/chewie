@@ -110,7 +110,7 @@ check_env_var <- function(env_name, renviron = "user") {
     any(grepl(env_name, rr$lines))
 }
 
-#' @title Create default `.netrc` file location
+#' @title Create default chewie cache file location
 #' @noRd
 chewie_default_dir <- function() {
     usr <- c(
