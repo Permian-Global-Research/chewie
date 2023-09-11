@@ -233,13 +233,24 @@ inform_download_completed <- function(ncomp, n) {
 
 #---- warn ----
 chewie_show_warn <- function(x) {
-    cli::cli_alert_warning(
+    cli::cli_inform(
         c(
-            paste0(
-                "No `chewie_show()` method for class ",
-                chew_bold_red(class(x))
-            ),
+            "!" =
+                paste0(
+                    "No `chewie_show()` method for class ",
+                    chew_bold_red(class(x)[1])
+                ),
             "i" = "Only objects of class `chewie.*` are supported."
         )
     )
+}
+
+end_date_cache_warn <- function(x) {
+    cli::cli_inform(c(
+        "!" = "No end date was provided - A Non-permenant
+            cache is in effect. \n",
+        "i" = "The cache will be invalidated on {x}. \n",
+        " " = "To establish a permanent cache set the end date using the
+                `date_end` argument."
+    ))
 }
