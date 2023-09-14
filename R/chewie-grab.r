@@ -1,84 +1,163 @@
-chewie_grab <- function() {
-    #---- grab ----
-}
-
-
 #' @title Download GEDI data
-#' @description Download GEDI data from the NASA Earthdata in hdf5 format.
-#' @param x A chewie.find.x object.
-#'
+#' @description internal function to download GEDI data from the NASA Earthdata
+#' in hdf5 format, write as parquet, and return a dataframe of the download summary.
+#' @param .url A character vector of url to download.
+#' @param s_id A character vector of swath id.
+#' @param id A numeric indicating the iterator number
+#' @param .dir A character vector of the directory to save the hdf5 file.
+#' @param timeout A numeric indicating the timeout in seconds.
+#' @param progress A logical indicating whether to show a progress bar.
+#' @param gedi_prod A character vector indicating the GEDI product.
+#' @noRd
 chewie_download <- function(
-    x, progress = TRUE, timeout = 7200,
-    .dir = getOption("GEDI-h5-cache-temp")) {
-    st_time <- Sys.time()
-    if (!dir.exists(.dir)) {
-        dir.create(.dir, recursive = TRUE)
-    }
+    .url, s_id, id,
+    .dir, timeout, progress, gedi_prod, nfiles) {
+    destination <- file.path(.dir, basename(.url))
 
-    #---- download ----
+    # here we're using multi_download but only downloading one file at a
+    # time. We could do this with other curl functions but this api is nice
+    # however the progress bar is not not perfect...
+    df <- curl::multi_download(
+        .url,
+        destfiles = destination,
+        resume = TRUE,
+        timeout = timeout,
+        progress = progress,
+        netrc = TRUE,
+        netrc_file = Sys.getenv("CHEWIE_NETRC")
+    )
 
-    nfiles <- length(x$url)
+    attr(df, "class") <- c(
+        paste0("chewie.download.", gedi_prod),
+        class(df)
+    )
 
-    dl_func <- function(.url, id) {
-        destination <- file.path(.dir, basename(.url))
 
-        df <- curl::multi_download(
-            .url,
-            destfiles = destination,
-            resume = TRUE,
-            timeout = timeout,
-            progress = progress,
-            netrc = TRUE,
-            netrc_file = Sys.getenv("CHEWIE_NETRC")
+    if (isTRUE(check_status_codes(df))) {
+        cli::cli_inform(c("*" = "Converting to data.table"))
+        gedi_dt <- chewie_convert(df)
+        cli::cli_inform(c("*" = "Writing as parquet file"))
+        save_dir <- file.path(
+            getOption(
+                "chewie.parquet.cache"
+            ),
+            gedi_prod,
+            paste0("swath_id=", s_id)
         )
+        if (!dir.exists(save_dir)) {
+            dir.create(save_dir, recursive = TRUE)
+        }
 
+        arrow::write_parquet(
+            dplyr::as_tibble(gedi_dt),
+            file.path(
+                save_dir,
+                paste0(
+                    tools::file_path_sans_ext(basename(df$destfile)),
+                    ".parquet"
+                )
+            )
+        )
+        cli::cli_inform(c("*" = "Removing hdf5 file"))
+        unlink(df$destfile)
+
+        # report success
         colfunc <- ifelse(id == nfiles, chew_bold_green, chew_bold_cyan)
+
         cli::cli_alert_success(paste0(
             "   Downloaded {cli::qty(id)}file{?s}:",
             colfunc("{id}"),
             "/",
             chew_bold_green("{nfiles}")
         ))
-
-        return(df)
+    } else {
+        cli::cli_alert_danger(paste0(
+            "   Error Downloading {cli::qty(id)}file{?s}:",
+            colfunc("{id}"),
+            "/",
+            chew_bold_red("{nfiles}")
+        ))
     }
 
-    # on.exit(cli::cli_progress_done())
-
-    cli::cli_alert_info(paste0(
-        "Downloading GEDI ",
-        attributes(x)$gedi_product
-    ))
-
-
-    dl_df <-
-        purrr::imap(
-            .x = x$url,
-            ~ dl_func(.x, .y),
-            .progress = FALSE
-        ) |>
-        purrr::list_rbind()
-
-    check_staus_codes(dl_df, nfiles)
-
-    inform_time(st_time, "Download")
-
-    return(dl_df)
+    return(df)
 }
 
 
-check_staus_codes <- function(x, n) {
-    if (any(!x$status_code %in% c(200, 206, 416)) || any(isFALSE(x$success))) {
+#' @title Download GEDI data
+#' @description Download GEDI data from the NASA Earthdata in hdf5 format.
+#' @param x A chewie.find.x object.
+#' @param progress A logical indicating whether to show a progress bar.
+#' @param timeout A numeric indicating the timeout in seconds.
+#' @export
+#' @details
+#' This function is the main handler for gedi data - it checks the cache to see
+#' if the required GEDI data are already downloaded, and if not, downloads them
+#' from the NASA Earthdata. Once downloaded each file is converted to the
+#' parquet format and saved in the cache directory. This saves a huge amount of
+#' disk space and enables dynamic reading and filtering of the returned "open"
+#' arrow dataset.
+chewie_grab <- function(
+    x, progress = TRUE, timeout = 7200) {
+    .dir <- getOption("chewie.h5.cache")
+    st_time <- Sys.time()
+
+    if (!dir.exists(.dir)) {
+        dir.create(.dir, recursive = TRUE)
+    }
+
+    gedi_product <- find_gedi_product(x)
+
+    # function to control file download and conversion.
+    x_to_down <- chewie_scan(x)
+
+    # get the number of files to download for informative messaging later.
+    nfiles <- nrow(x_to_down)
+
+    if (nfiles > 0) {
+        cli::cli_inform(c(">" = paste0(
+            "Downloading {nfiles} ",
+            chew_bold_yel(attributes(x)$gedi_product),
+            " Data files."
+        )))
+
+        dl_df <-
+            purrr::pmap(
+                .l = list(x_to_down$url, x_to_down$id, 1:nfiles),
+                ~ chewie_download(
+                    ..1, ..2, ..3,
+                    .dir, timeout, progress, gedi_product, nfiles
+                )
+            ) |>
+            purrr::list_rbind()
+
+        log_staus_codes(dl_df, nfiles)
+        inform_time(st_time, "Download")
+        return(dl_df)
+    }
+
+    return(invisible())
+}
+
+check_status_codes <- function(x) {
+    if (any(x$status_code %in% c(200, 206, 416)) || any(isFALSE(x$success))) {
+        return(TRUE)
+    } else {
+        return(FALSE)
+    }
+}
+
+log_staus_codes <- function(x, n) {
+    if (isFALSE(check_status_codes(x))) {
         log_path <- file.path(
-            getOption("chewie.session.cache"),
+            tempdir(),
             paste0("GEDI-dl-log-", dt_snake_case(), ".rds")
         )
 
         saveRDS(x, log_path)
 
-        cli::cli_inform(c(
+        cli::cli_abort(c(
             "x" = "Some Downloads have not completed successfully.",
-            "i" = "Saving log to cache. To read the log, use:",
+            "i" = "Saving log file. To read the log, use:",
             ">" = paste0(
                 chew_bold_cyan("readRDS("),
                 chew_bold_yel(paste0('"', log_path, '"')),
@@ -92,54 +171,4 @@ check_staus_codes <- function(x, n) {
         inform_download_completed(length(completed), n)
     }
     return(invisible())
-}
-
-
-l2a_h5_to_dt <- function(beam_id, h5_con) {
-    # browser()
-    l2a_beam <- h5_con[[beam_id]]
-
-    if ("shot_number" %in% hdf5r::list.datasets(l2a_beam)) {
-        if (length(l2a_beam[["rh"]]$dims) == 2) {
-            rh <- t(l2a_beam[["rh"]][, ])
-        } else {
-            rh <- t(l2a_beam[["rh"]][])
-        }
-
-        data.table::data.table(
-            beam = rep(beam_id, length(l2a_beam[["shot_number"]][])),
-            shot_number = l2a_beam[["shot_number"]][],
-            degrade_flag = l2a_beam[["degrade_flag"]][],
-            quality_flag = l2a_beam[["quality_flag"]][],
-            quality_flag = l2a_beam[["delta_time"]][],
-            sensitivity = l2a_beam[["sensitivity"]][],
-            solar_elevation = l2a_beam[["solar_elevation"]][],
-            lat_lowestmode = l2a_beam[["lat_lowestmode"]][],
-            lon_lowestmode = l2a_beam[["lon_lowestmode"]][],
-            elev_highestreturn = l2a_beam[["elev_highestreturn"]][],
-            elev_lowestmode = l2a_beam[["elev_lowestmode"]][],
-            rh
-        )
-    }
-}
-
-chewie_convert_2A <- function(h5_src) {
-    h5_open <- hdf5r::H5File$new(h5_src, mode = "r")
-    grps <- hdf5r::list.groups(h5_open, recursive = FALSE)
-    beam_ids <- grps[startsWith(grps, "BEAM")]
-
-
-    rh_dt <- purrr::map(beam_ids,
-        ~ l2a_h5_to_dt(.x, h5_open),
-        .progress = TRUE
-    ) |>
-        data.table::rbindlist()
-
-    colnames(rh_dt) <- c(
-        "beam", "shot_number", "degrade_flag", "quality_flag", "delta_time",
-        "sensitivity", "solar_elevation", "lat_lowestmode", "lon_lowestmode",
-        "elev_highestreturn", "elev_lowestmode", paste0("rh", seq(0, 100))
-    )
-    h5_open$close_all()
-    return(rh_dt)
 }
