@@ -27,3 +27,5 @@ Suggests:
     mapview,
     stars,
     terra
+Depends: 
+    R (>= 4.1.0)
