@@ -101,6 +101,7 @@ find_gedi <- function(
 
     attr(sf_list, "aoi") <- get_spat_outline(x)
     attr(sf_list, "gedi_product") <- paste0("GEDI-", gedi_product[1])
+    attr(sf_list, "intersects") <- intersects
     attr(sf_list, "class") <- c(
         "chewie.find",
         paste("chewie.find", "gedi", gedi_product[1], sep = "."),
