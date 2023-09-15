@@ -83,12 +83,13 @@ chewie_download <- function(
 }
 
 
-#' @title Download GEDI data
+#' @title Download GEDI data or access from cahce
 #' @description Download GEDI data from the NASA Earthdata in hdf5 format.
 #' @param x A chewie.find.x object.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param timeout A numeric indicating the timeout in seconds.
 #' @export
+#' @returns An arrow_dplyr_query object.
 #' @details
 #' This function is the main handler for gedi data - it checks the cache to see
 #' if the required GEDI data are already downloaded, and if not, downloads them
@@ -96,7 +97,7 @@ chewie_download <- function(
 #' parquet format and saved in the cache directory. This saves a huge amount of
 #' disk space and enables dynamic reading and filtering of the returned "open"
 #' arrow dataset.
-chewie_grab <- function(
+grab_gedi <- function(
     x, progress = TRUE, timeout = 7200) {
     .dir <- getOption("chewie.h5.cache")
     st_time <- Sys.time()
@@ -132,10 +133,9 @@ chewie_grab <- function(
 
         log_staus_codes(dl_df, nfiles)
         inform_time(st_time, "Download")
-        return(dl_df)
     }
 
-    return(invisible())
+    return(open_gedi(x))
 }
 
 check_status_codes <- function(x) {
