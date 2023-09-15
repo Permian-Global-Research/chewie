@@ -23,7 +23,7 @@ chewie_scan <- function(x) {
     swath_ids <- sub(".*\\=", "", x = basename(swath_dirs))
     req_swaths <- swath_ids[swath_ids %in% x$id]
     swath_dirs <- swath_dirs[swath_ids %in% x$id]
-
+    # TODO: THIS IS BORKED.
     cached <- purrr::map_vec(
         swath_dirs,
         ~ length(list.files(.x, pattern = ".*\\.parquet$")) > 0
@@ -37,6 +37,7 @@ chewie_scan <- function(x) {
     # left join cache tab with x
     cache_tab <- merge(x, cache_tab, by = "id", all.x = TRUE) |>
         sf::st_drop_geometry()
+    browser()
     cache_tab$cached[is.na(cache_tab$cached)] <- FALSE
 
     to_download <- cache_tab[!cache_tab$cached, ]
