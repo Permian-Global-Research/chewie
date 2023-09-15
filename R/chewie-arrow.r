@@ -1,38 +1,54 @@
-read_bbox_area <- function(x, intersect = TRUE) {
+open_gedi <- function(x) {
     bounds <- chewie_bbox(attributes(x)$aoi)
     gedi_prod <- find_gedi_product(x)
+
 
     gp <- file.path(
         getOption("chewie.parquet.cache"),
         gedi_prod
     )
 
-    pnts_dt <- arrow::open_dataset(gp) |>
+    og <- arrow::open_dataset(gp) |>
         dplyr::filter(
             lat_lowestmode >= bounds$ymin,
             lat_lowestmode <= bounds$ymax,
             lon_lowestmode >= bounds$xmin,
-            lon_lowestmode <= bounds$xmax
+            lon_lowestmode <= bounds$xmax,
+            swath_id %in% x$id
         ) |>
         dplyr::mutate(date_time = lubridate::as_datetime(delta_time,
             origin = lubridate::ymd_hms("2018-01-01 00:00:00", tz = "UTC")
         )) |>
-        dplyr::collect()
+        dplyr::relocate(date_time, .after = delta_time)
 
-    pnts_dt_sf <- dplyr::mutate(pnts_dt,
-        geometry =
-            wk::wk_handle(
-                wk::xy(
-                    x = pnts_dt$lon_lowestmode,
-                    y = pnts_dt$lat_lowestmode
-                ),
-                wk::sfc_writer()
+    return(og)
+}
+
+handle_points <- function(context, lat, lon) {
+    wk::wk_handle(
+        wk::xy(
+            x = lon,
+            y = lat
+        ),
+        wk::sfc_writer()
+    )
+}
+
+
+collect_gedi <- function(x, find) {
+    intersect <- attributes(find)$intersects
+    gedi_pnts <- dplyr::collect(x)
+    gedi_pnts <- gedi_pnts |>
+        dplyr::mutate(
+            geometry = handle_points(
+                lat = lat_lowestmode,
+                lon = lon_lowestmode
             )
-    ) |>
+        ) |>
         sf::st_as_sf(crs = "EPSG:4326")
 
     if (isTRUE(intersect)) {
-        pnts_dt_sf <- sf::st_filter(pnts_dt_sf, attributes(x)$aoi)
+        gedi_pnts <- sf::st_filter(gedi_pnts, attributes(find)$aoi)
     }
-    return(pnts_dt_sf)
+    return(gedi_pnts)
 }
