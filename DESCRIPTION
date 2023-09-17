@@ -16,8 +16,10 @@ Imports:
     data.table,
     dplyr,
     getPass,
-    jsonify,
     lubridate,
+    maps,
+    purrr,
+    RcppSimdJson,
     sf
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
@@ -25,3 +27,5 @@ Suggests:
     mapview,
     stars,
     terra
+Depends: 
+    R (>= 4.1.0)

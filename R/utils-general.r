@@ -7,3 +7,11 @@ dt_snake_case <- function() {
         )
     )
 }
+
+#' @title get the GEDI product from a `chewie.find` object
+#'
+find_gedi_product <- function(x) {
+    g_prod <- sub(".*\\-", "", attributes(x)$gedi_product)
+    assert_gedi_product(g_prod)
+    return(g_prod)
+}

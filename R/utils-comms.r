@@ -18,13 +18,17 @@ chew_bold_cyan <- function(x) {
     cli::col_cyan(cli::style_bold(x))
 }
 
+chew_bold_yel <- function(x) {
+    cli::col_yellow(cli::style_bold(x))
+}
+
 # ---- abort ----
 
 abort_netrc_gen <- function(x) {
     cli::cli_abort(c(
         x,
         ">" = "Check the '.netrc' file(path) or rebuild it with:
-        `chewie::chewie_creds(.force=TRUE)`",
+        `chewie::chewie_creds(force=TRUE)`",
         "i" = "The .netrc should have the following format:",
         "machine urs.earthdata.nasa.gov",
         "login [USERNAME]",
@@ -50,7 +54,7 @@ abort_netrc_exists <- function(x) {
         ".netrc file already exists at:",
         chew_bold_red(x),
         "i" = paste0(
-            "Use ", chew_bold_cyan("`.force=TRUE`"),
+            "Use ", chew_bold_cyan("`force=TRUE`"),
             " to overwrite it."
         )
     ))
@@ -61,7 +65,7 @@ abort_netrc_env_exists <- function(x) {
         "`CHEWIE_NETRC` environment variable is already set to:",
         chew_bold_red(x),
         "i" = paste0(
-            "Use ", chew_bold_cyan("`.force=TRUE`"),
+            "Use ", chew_bold_cyan("`force=TRUE`"),
             " to overwrite it."
         )
     ))
@@ -127,17 +131,12 @@ abort_no_mapview <- function() {
 }
 
 abort_gedi_opts <- function() {
-    cli::cli_abort(c("Invalid GEDI product and/or version!",
+    cli::cli_abort(c("Invalid GEDI product",
         "i" = paste0(
             "Valid GEDI products are: ",
             chew_bold_cyan("1B"), ", ",
             chew_bold_cyan("2A"), ", and ",
             chew_bold_cyan("2B"), "."
-        ),
-        " " = paste0(
-            "Valid GEDI versions are: ",
-            chew_bold_cyan("v1"), " and ",
-            chew_bold_cyan("v2"), "."
         )
     ))
 }
@@ -145,6 +144,13 @@ abort_gedi_opts <- function() {
 abort_env_set <- function(env_name) {
     cli::cli_abort(c(
         "Environment variable `{env_name}` is already set."
+    ))
+}
+
+abort_no_gedi_data <- function() {
+    cli::cli_abort(c(
+        "No GEDI data found for the provided region and/or datetime range.",
+        "i" = "Try expanding the search area or changing the datetime range."
     ))
 }
 
@@ -185,10 +191,8 @@ inform_ask_env_overwrite <- function(x) {
 
 inform_cache_set_success <- function(x) {
     cli::cli_inform(c(
-        "v" = "GEDI cache location set!",
-        "i" = paste0(
-            "The cache is located here: {x} "
-        )
+        "v" = "GEDI cache set in the following directory:",
+        ">" = cli::style_italic(paste0('"', x, '"'))
     ))
 }
 
@@ -208,7 +212,7 @@ inform_cache_health <- function(x) {
         "x" = x,
         "i" = paste0(
             "Please run `",
-            chew_bold_mag("chewie::chewie_setup_parquet_cache()"),
+            chew_bold_mag("chewie::chewie_setup_cache()"),
             "` to set up your cache."
         )
     ))
@@ -220,15 +224,33 @@ inform_time <- function(st, type) {
     num_time <- round(as.numeric(tot_time, units = time_units), 1)
     cli::cli_alert_info("{type} time: {num_time} {time_units}")
 }
+
+inform_download_completed <- function(ncomp, n) {
+    cli::cli_alert_success(
+        " {ncomp}/{n} {cli::qty(ncomp)}file{?s} already downloaded."
+    )
+}
+
 #---- warn ----
 chewie_show_warn <- function(x) {
-    cli::cli_alert_warning(
+    cli::cli_inform(
         c(
-            paste0(
-                "No `chewie_show()` method for class ",
-                chew_bold_red(class(x))
-            ),
+            "!" =
+                paste0(
+                    "No `chewie_show()` method for class ",
+                    chew_bold_red(class(x)[1])
+                ),
             "i" = "Only objects of class `chewie.*` are supported."
         )
     )
+}
+
+end_date_cache_warn <- function(x) {
+    cli::cli_inform(c(
+        "!" = "No end date was provided - A Non-permenant
+            cache is in effect. \n",
+        "i" = "The cache will be invalidated on {x}. \n",
+        " " = "To establish a permanent cache set the end date using the
+                `date_end` argument."
+    ))
 }

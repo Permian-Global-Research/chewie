@@ -7,3 +7,12 @@ chk_pkg <- function(pkg, abort_fun) {
         abort_fun()
     }
 }
+
+
+assert_gedi_product <- function(x) {
+    if (length(x) > 0 && x %in% c("1B", "2A", "2B")) {
+        return(invisible())
+    } else {
+        abort_gedi_opts()
+    }
+}

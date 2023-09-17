@@ -9,7 +9,8 @@
 \arguments{
 \item{x}{chewie.find object to print}
 
-\item{...}{additional arguments passed to \code{print.data.table}}
+\item{...}{arguments passed to
+\code{\link[data.table:print.data.table]{data.table::print.data.table}}}
 }
 \description{
 \code{print.chewie.find} is a method for printing \code{chewie.find}
@@ -23,3 +24,4 @@ of \code{chewie.find} objects: \code{chewie.print.class}, \code{chewie.print.key
 \code{chewie.prettyprint.char}, \code{chewie.print.width}. Additonal options for
 \code{print.data.table} can also be set to alter the print layout.
 }
+\concept{print}

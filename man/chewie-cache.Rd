@@ -6,16 +6,20 @@
 \alias{chewie_get_cache}
 \title{Set GEDI Parquet Cache}
 \usage{
-chewie_setup_cache(.dir, renviron = "global")
+chewie_setup_cache(
+  .dir = chewie_default_dir(),
+  renviron = "user",
+  quiet = FALSE
+)
 
-chewie_unset_cache(renviron = "global")
+chewie_unset_cache(renviron = "user")
 
 chewie_get_cache()
 }
 \arguments{
-\item{.dir}{character path to the directory to set as the cache.}
+\item{.dir}{character path to the directory that should contain the cache.}
 
-\item{renviron}{character either 'global', 'local' or path to the directory
+\item{renviron}{character either 'user', '"project"' or path to the directory
 containing the \code{.Renviron} file to set the \code{CHEWIE_PARQUET_CACHE}
 environment and create the directory. If missing, the default cache
 directory is used.}
@@ -23,9 +27,9 @@ directory is used.}
 \description{
 Set GEDI Parquet Cache
 
-Unset GEDI Parquet Cache
+Unset GEDI Cache
 
-Get GEDI Parquet Cache
+Get GEDI Cache
 }
 \details{
 This \code{chewie_unset_cache} function will remove the
