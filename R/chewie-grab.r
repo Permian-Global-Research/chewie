@@ -82,6 +82,32 @@ chewie_download <- function(
     return(df)
 }
 
+#' @title filter find for uncached data
+#' @description internal function to filter a chewie.find object for data that
+#' is not already cached.
+#' @param x A chewie.find object.
+#' @details mainly for more informative messaging.
+#' @noRd
+chewie_missing_gedi <- function(x) {
+    x <- chewie_scan(x)
+    n_swaths <- nrow(x)
+    to_download <- x[!x$cached, ]
+
+    if (nrow(to_download) == 0) {
+        cli::cli_alert_success("All data found in cache")
+    } else {
+        if (nrow(to_download) != n_swaths) {
+            cli::cli_inform(
+                c(
+                    "i" = "{n_swaths - nrow(to_download)} of {n_swaths}
+                    file{?s}  found in cache"
+                )
+            )
+        }
+    }
+    return(to_download)
+}
+
 
 #' @title Download GEDI data or access from cahce
 #' @description Download GEDI data from the NASA Earthdata in hdf5 format.
@@ -109,7 +135,7 @@ grab_gedi <- function(
     gedi_product <- find_gedi_product(x)
 
     # function to control file download and conversion.
-    x_to_down <- chewie_scan(x)
+    x_to_down <- chewie_missing_gedi(x)
 
     # get the number of files to download for informative messaging later.
     nfiles <- nrow(x_to_down)
@@ -117,7 +143,7 @@ grab_gedi <- function(
     if (nfiles > 0) {
         cli::cli_inform(c(">" = paste0(
             "Downloading {nfiles} ",
-            chew_bold_yel(attributes(x)$gedi_product),
+            chew_bold_yel(gedi_product),
             " Data files."
         )))
 

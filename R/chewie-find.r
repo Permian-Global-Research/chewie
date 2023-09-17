@@ -64,7 +64,8 @@ find_gedi <- function(
         )
         if (file.exists(cache_file)) {
             cli::cli_alert_success("Using cached GEDI data")
-            return(readRDS(cache_file))
+            cached_find <- readRDS(cache_file)
+            return(chewie_scan(cached_find))
         }
     }
 
@@ -112,7 +113,7 @@ find_gedi <- function(
         saveRDS(sf_list, cache_file)
     }
 
-    return(sf_list)
+    return(chewie_scan(sf_list))
 }
 
 request_gedi <- function(.url, .page) {

@@ -11,48 +11,55 @@ chewie_scan <- function(x) {
         gedi_product
     )
 
-    n_swaths <- nrow(x)
-
-    swath_dirs <- list.dirs(parquet_dir, recursive = FALSE)
-    if (length(swath_dirs) == 0) {
+    nothing_here <- function(x) {
         reclass <- class(x)
         x$cached <- FALSE
         class(x) <- reclass
         return(x)
     }
-    swath_ids <- sub(".*\\=", "", x = basename(swath_dirs))
-    req_swaths <- swath_ids[swath_ids %in% x$id]
-    swath_dirs <- swath_dirs[swath_ids %in% x$id]
-    # TODO: THIS IS BORKED.
+
+    # get paths for existing folders
+    swath_dirs <- list.dirs(parquet_dir, recursive = FALSE)
+    if (length(swath_dirs) == 0) {
+        return(nothing_here(x))
+    }
+    # extract ids from existing folders
+    all_swaths <- sub(".*\\=", "", x = basename(swath_dirs))
+    # get ids for swaths that are not in the cache
+    req_swaths <- x$id[!x$id %in% all_swaths]
+    if (length(req_swaths) == nrow(x)) {
+        return(nothing_here(x))
+    }
+
+    # get paths for swaths that are in the cache
+    cached_swaths <- x$id[x$id %in% all_swaths]
+    # check if there are parquet files in the folders
     cached <- purrr::map_vec(
         swath_dirs,
         ~ length(list.files(.x, pattern = ".*\\.parquet$")) > 0
     )
 
     cache_tab <- data.frame(
-        id = req_swaths,
+        id = cached_swaths,
         cached = cached
     )
 
     # left join cache tab with x
-    cache_tab <- merge(x, cache_tab, by = "id", all.x = TRUE) |>
-        sf::st_drop_geometry()
-    browser()
-    cache_tab$cached[is.na(cache_tab$cached)] <- FALSE
+    cache_tab <- dplyr::left_join(
+        x,
+        cache_tab,
+        by = "id"
+    ) |> dplyr::mutate(
+        cached = dplyr::case_when(
+            is.na(cached) ~ FALSE,
+            TRUE ~ cached
+        )
+    )
 
-    to_download <- cache_tab[!cache_tab$cached, ]
+    class(cache_tab) <- class(x)
+    attr(cache_tab, "aoi") <- attr(x, "aoi")
+    attr(cache_tab, "gedi_product") <- attr(x, "gedi_product")
+    attr(cache_tab, "intersects") <- attr(x, "intersects")
 
-    if (nrow(to_download) == 0) {
-        cli::cli_alert_success("All data found in cache")
-    } else {
-        if (nrow(to_download) != n_swaths) {
-            cli::cli_inform(
-                c(
-                    "i" = "{n_swaths - nrow(to_download)} of {n_swaths}
-                    file{?s}  found in cache"
-                )
-            )
-        }
-    }
-    return(to_download)
+    return(cache_tab)
 }
