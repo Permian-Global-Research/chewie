@@ -12,7 +12,21 @@ sf_rbindlist <- function(x) {
     return(x)
 }
 
-
+#' @title convert long/lat to sfc points geometry
+#' @description wrapper for wk::wk_handle to convert long/lat to sfc points
+#' @param lat A numeric vector of latitudes
+#' @param lon A numeric vector of longitudes
+#' @noRd
+#' @returns an sfc POINT geometry vector.
+handle_points <- function(lat, lon) {
+    wk::wk_handle(
+        wk::xy(
+            x = lon,
+            y = lat
+        ),
+        wk::sfc_writer()
+    )
+}
 
 
 #' @title Get spatial outline of object
