@@ -14,7 +14,7 @@ grab_gedi(x, progress = TRUE, timeout = 7200)
 \item{timeout}{A numeric indicating the timeout in seconds.}
 }
 \value{
-A
+An arrow_dplyr_query object.
 }
 \description{
 Download GEDI data from the NASA Earthdata in hdf5 format.
