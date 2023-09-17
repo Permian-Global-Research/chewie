@@ -1,3 +1,14 @@
+#' @title open gedi data
+#' @description open gedi data as an arrow dataset
+#' @param x A chewie.find.x object.
+#' @noRd
+#' @details
+#' This is internal for now - the idea being that when you "grab" GEDI data with
+#' `grab_gedi` it is converted to parquet format and saved in the cache. This
+#' function is used to open the parquet data at the end of the `grab_gedi`
+#' function, reading only the data that is required based on the bounding box
+#' and swath IDs of the `chewie.find` object.
+#' @return an arrow dataset
 open_gedi <- function(x) {
     bounds <- chewie_bbox(attributes(x)$aoi)
     gedi_prod <- find_gedi_product(x)
@@ -24,17 +35,21 @@ open_gedi <- function(x) {
     return(og)
 }
 
-handle_points <- function(context, lat, lon) {
-    wk::wk_handle(
-        wk::xy(
-            x = lon,
-            y = lat
-        ),
-        wk::sfc_writer()
-    )
-}
 
 
+#' @title Collect GEDI data
+#' @description Collect GEDI data, returned from `grab_gedi`, as an sf object.
+#' @param x An arrow dataset object.
+#' @param find The chewie.find object used to obtain `x`.
+#' @export
+#' @details
+#' This function is used to collect the GEDI data returned from `grab_gedi` as
+#' an sf object. It is largely a wrapper for dplyr::collect but converts to sf
+#' and filters the gedi footprints based on the search extent attributed to the
+#' `chewie.find` object.
+#' It is strongly recomended that you make the most of the ability to to edit
+#' the gedi data on read by using the `dplyr` verbs before collecting the data.
+#' This will save a lot of time and memory.
 collect_gedi <- function(x, find) {
     intersect <- attributes(find)$intersects
     gedi_pnts <- dplyr::collect(x)
