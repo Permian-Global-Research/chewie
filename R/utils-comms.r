@@ -154,6 +154,16 @@ abort_no_gedi_data <- function() {
     ))
 }
 
+abort_missing_lon_lat <- function() {
+    cli::cli_abort(c(
+        "No 'lat_lowestmode' or 'lon_lowestmode' columns found in gedi data.",
+        "i" = "make sure you haven't removed these unintentionally using
+            `dplyr::select` or similar.",
+        "i" = "If you don't want a geometry column then you can just use
+            `dplyr::collect` instead of `collect_gedi`."
+    ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {
