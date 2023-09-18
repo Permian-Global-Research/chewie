@@ -59,11 +59,16 @@ TO DO:
 - [ ] Add cache reporting to `chewie_health_check` - i.e. n files in cache, 
 size of cache, etc.
 
-- [ ] refactor to use {collapse} instead of {data.table}
+- [ ] refactor to use {collapse} instead of {data.table} or maybe just use dplyr
+as this really has to be a "depends" anyway and we're not really making the most
+of the data.table functionality as it stands because we are using arrow for the
+data qurying etc. 
 
 - [ ] Currently a sort of bug exists whereby if you drop the lat long columns
 after running  `geb_gedi`, then the `collect_gedi` function will fail. Needs a
 little thought or maybe just a better error message...
+
+-[ ] write tests...
 
 
 ## Installation
@@ -91,7 +96,10 @@ gedi_2a_search <- find_gedi(hw,
 
 print(gedi_2a_search)
 
-swaths_img <- chewie_show(gedi_2a_search, interactive = FALSE)
+swaths_img <- chewie_show(gedi_2a_search,
+  time_group = "month",
+  interactive = FALSE
+)
 ```
 ![map](inst/imgs/map.png)
 

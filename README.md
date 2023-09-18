@@ -52,12 +52,17 @@ TO DO:
   - [ ] Add cache reporting to `chewie_health_check` - i.e. n files in
     cache, size of cache, etc.
 
-  - [ ] refactor to use {collapse} instead of {data.table}
+  - [ ] refactor to use {collapse} instead of {data.table} or maybe just
+    use dplyr as this really has to be a “depends” anyway and we’re not
+    really making the most of the data.table functionality as it stands
+    because we are using arrow for the data qurying etc.
 
   - [ ] Currently a sort of bug exists whereby if you drop the lat long
     columns after running `geb_gedi`, then the `collect_gedi` function
     will fail. Needs a little thought or maybe just a better error
     message…
+
+\-\[ \] write tests…
 
 ## Installation
 
@@ -106,7 +111,10 @@ print(gedi_2a_search)
 #> 
 #> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-swaths_img <- chewie_show(gedi_2a_search, interactive = FALSE)
+swaths_img <- chewie_show(gedi_2a_search,
+  time_group = "month",
+  interactive = FALSE
+)
 #> The legacy packages maptools, rgdal, and rgeos, underpinning this package
 #> will retire shortly. Please refer to R-spatial evolution reports on
 #> https://r-spatial.org/r/2023/05/15/evolution4.html for details.
@@ -133,16 +141,16 @@ print(gedi_2a_sf)
 #> # A tibble: 11,032 × 115
 #>    beam     shot_number degrade_flag quality_flag delta_time date_time          
 #>  * <chr>        <int64>        <int>        <int>      <dbl> <dttm>             
-#>  1 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  2 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  3 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  4 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  5 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  6 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  7 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  8 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  9 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#> 10 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
+#>  1 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  2 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  3 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  4 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  5 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  6 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  7 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  8 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#>  9 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
+#> 10 BEAM0010       2.e17            0            0 160619754. 2023-02-03 00:35:54
 #> # ℹ 11,022 more rows
 #> # ℹ 109 more variables: sensitivity <dbl>, solar_elevation <dbl>,
 #> #   lat_lowestmode <dbl>, lon_lowestmode <dbl>, elev_highestreturn <dbl>,
