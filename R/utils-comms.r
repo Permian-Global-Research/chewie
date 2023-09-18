@@ -164,6 +164,13 @@ abort_missing_lon_lat <- function() {
     ))
 }
 
+abort_missing_project_renv <- function(x) {
+    cli::cli_abort(c(".Renviron file does not exist in {x}",
+        "i" = "Please create it first using (for example):",
+        chew_bold_green("usethis::edit_r_environ(scope='project')")
+    ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {
@@ -241,6 +248,12 @@ inform_download_completed <- function(ncomp, n) {
     )
 }
 
+inform_missing_user_renv <- function() {
+    cli::cli_inform(c(
+        "!" = "No '.Renviron' file found in your home directory.",
+        ">" = "chewie is creating one for you now..."
+    ))
+}
 #---- warn ----
 chewie_show_warn <- function(x) {
     cli::cli_inform(
