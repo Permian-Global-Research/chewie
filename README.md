@@ -77,6 +77,15 @@ pak::pkg_install("Permian-Global-Research/chewie")
 
 ``` r
 library(chewie)
+#> Loading required package: dplyr
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
 #> ✔ NASA Earthdata Credentials already set.
 #> ✔ GEDI cache set in the following directory:
 #> → "/home/hugh/.chewie"
@@ -125,39 +134,39 @@ swaths_img <- chewie_show(gedi_2a_search,
 
 ``` r
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
-  dplyr::filter(
+  filter(
     quality_flag == 0,
     degrade_flag == 0
   ) |>
-  collect_gedi(find = gedi_2a_search)
+  select(
+    beam, solar_elevation, lat_lowestmode, lon_lowestmode,
+    elev_highestreturn, elev_lowestmode, rh0, rh25, rh50, rh75, rh100
+  ) |>
+  collect_gedi(gedi_find = gedi_2a_search)
 #> ✔ All data found in cache
 
 print(gedi_2a_sf)
-#> Simple feature collection with 11032 features and 114 fields
+#> Simple feature collection with 11032 features and 11 fields
 #> Geometry type: POINT
 #> Dimension:     XY
 #> Bounding box:  xmin: -83.25809 ymin: 35.30825 xmax: -82.77747 ymax: 35.72121
 #> Geodetic CRS:  WGS 84
-#> # A tibble: 11,032 × 115
-#>    beam     shot_number degrade_flag quality_flag delta_time date_time          
-#>  * <chr>        <int64>        <int>        <int>      <dbl> <dttm>             
-#>  1 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  2 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  3 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  4 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  5 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  6 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  7 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  8 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#>  9 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
-#> 10 BEAM0010       2.e17            0            0 158468440. 2023-01-09 03:00:39
+#> # A tibble: 11,032 × 12
+#>    beam     solar_elevation lat_lowestmode lon_lowestmode elev_highestreturn
+#>  * <chr>              <dbl>          <dbl>          <dbl>              <dbl>
+#>  1 BEAM0000           -52.8           35.4          -83.1              2768.
+#>  2 BEAM0000           -52.8           35.4          -83.1              2767.
+#>  3 BEAM0000           -52.8           35.4          -83.1              2768.
+#>  4 BEAM0000           -52.8           35.4          -83.1              2768.
+#>  5 BEAM0000           -52.8           35.5          -83.1              2767.
+#>  6 BEAM0000           -52.8           35.5          -83.1              2767.
+#>  7 BEAM0000           -52.8           35.5          -83.1              2768.
+#>  8 BEAM0000           -52.8           35.5          -83.1              2768.
+#>  9 BEAM0000           -52.8           35.5          -83.1              2768.
+#> 10 BEAM0000           -52.8           35.5          -83.1              2768.
 #> # ℹ 11,022 more rows
-#> # ℹ 109 more variables: sensitivity <dbl>, solar_elevation <dbl>,
-#> #   lat_lowestmode <dbl>, lon_lowestmode <dbl>, elev_highestreturn <dbl>,
-#> #   elev_lowestmode <dbl>, rh0 <dbl>, rh1 <dbl>, rh2 <dbl>, rh3 <dbl>,
-#> #   rh4 <dbl>, rh5 <dbl>, rh6 <dbl>, rh7 <dbl>, rh8 <dbl>, rh9 <dbl>,
-#> #   rh10 <dbl>, rh11 <dbl>, rh12 <dbl>, rh13 <dbl>, rh14 <dbl>, rh15 <dbl>,
-#> #   rh16 <dbl>, rh17 <dbl>, rh18 <dbl>, rh19 <dbl>, rh20 <dbl>, rh21 <dbl>, …
+#> # ℹ 7 more variables: elev_lowestmode <dbl>, rh0 <dbl>, rh25 <dbl>, rh50 <dbl>,
+#> #   rh75 <dbl>, rh100 <dbl>, geometry <POINT [°]>
 
 plot(gedi_2a_sf[0], axes = TRUE, col = "#43b37f")
 plot(sf::st_transform(hw[0], sf::st_crs(gedi_2a_sf)), add = TRUE)

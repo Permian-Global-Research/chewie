@@ -14,7 +14,6 @@ Imports:
     cli,
     curl,
     data.table,
-    dplyr,
     getPass,
     lubridate,
     maps,
@@ -28,4 +27,5 @@ Suggests:
     stars,
     terra
 Depends: 
+    dplyr,
     R (>= 4.1.0)

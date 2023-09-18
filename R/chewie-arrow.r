@@ -40,7 +40,7 @@ open_gedi <- function(x) {
 #' @title Collect GEDI data
 #' @description Collect GEDI data, returned from `grab_gedi`, as an sf object.
 #' @param x An arrow dataset object.
-#' @param find The chewie.find object used to obtain `x`.
+#' @param gedi_find The chewie.find object used to obtain `x`.
 #' @export
 #' @details
 #' This function is used to collect the GEDI data returned from `grab_gedi` as
@@ -49,10 +49,18 @@ open_gedi <- function(x) {
 #' `chewie.find` object.
 #' It is strongly recomended that you make the most of the ability to to edit
 #' the gedi data on read by using the `dplyr` verbs before collecting the data.
-#' This will save a lot of time and memory.
-collect_gedi <- function(x, find) {
-    intersect <- attributes(find)$intersects
+#' This will save a lot of time and memory. However, make sure that, when
+#' selecting columns, you do not remove the `lat_lowestmode` and
+#' `lon_lowestmode` columns as these are required to create the geometry column.
+#' @return an sf object
+collect_gedi <- function(x, gedi_find) {
+    if (!"lat_lowestmode" %in% names(x) ||
+        !"lon_lowestmode" %in% names(x)) {
+        abort_missing_lon_lat()
+    }
+
     gedi_pnts <- dplyr::collect(x)
+
     gedi_pnts <- gedi_pnts |>
         dplyr::mutate(
             geometry = handle_points(
@@ -62,8 +70,8 @@ collect_gedi <- function(x, find) {
         ) |>
         sf::st_as_sf(crs = "EPSG:4326")
 
-    if (isTRUE(intersect)) {
-        gedi_pnts <- sf::st_filter(gedi_pnts, attributes(find)$aoi)
+    if (isTRUE(attributes(gedi_find)$intersects)) {
+        gedi_pnts <- sf::st_filter(gedi_pnts, attributes(gedi_find)$aoi)
     }
     return(gedi_pnts)
 }
