@@ -19,10 +19,12 @@ read_renv <- function(renviron) {
     renv_path <- file.path(home, ".Renviron")
 
     if (!file.exists(renv_path)) {
-        cli::cli_abort(c(".Renviron file does not exist in {home}",
-            "i" = "Please create it first using (for example):",
-            chew_bold_green("usethis::edit_r_environ(scope='project')")
-        ))
+        if (tolower(renviron) == "user") {
+            inform_missing_user_renv()
+            file.create(renv_path)
+        } else {
+            abort_missing_project_renv(home)
+        }
     }
 
     con <- file(renv_path, open = "r+")

@@ -75,25 +75,41 @@ pak::pkg_install("Permian-Global-Research/chewie")
 
 ## Example
 
+First, let’s load in some libraries. {dplyr} isn’t essential but it is
+recommended as it’s an excellent and highly performative option for
+working with arrow datasets.
+
 ``` r
 library(chewie)
-#> Loading required package: dplyr
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
 #> ✔ NASA Earthdata Credentials already set.
 #> ✔ GEDI cache set in the following directory:
 #> → "/home/hugh/.chewie"
+library(dplyr, warn.conflicts = FALSE)
+library(sf)
+#> Linking to GEOS 3.11.1, GDAL 3.6.2, PROJ 9.1.1; sf_use_s2() is TRUE
+```
 
-# chewie_creds() # to set up your credentials
-# chewie_health_check() # to check your credentials and cache setup.
+Here are some useful helper functions to set up your credentials (using
+`chewie_creds()`) and check that those credentials and the cache are set
+up correctly (using `chewie_health_check()`). By default the cache is
+set up in the `.chewie` folder in your home directory. You can change
+this by running `chewie_cache_set()`.
+
+``` r
+chewie_creds() # to set up your credentials
+chewie_health_check() # to check your credentials and cache setup.
+```
+
+In this chunk we search for some GEDI 2A data that intersects with the
+Haywood county in North Carolina. We then plot the footprints of the
+swaths that intersect with this area to check out what we’ve got. Note
+that by default, both `find_gedi` and `grab_gedi` cache their outputs so
+when these functions are re-run, the data will be loaded from the cache
+rather than downloaded again, even in a different R session.
+
+``` r
 nc <- system.file("gpkg", "nc.gpkg", package = "sf")
-hw <- subset(sf::read_sf(nc), NAME == "Haywood")
+hw <- subset(read_sf(nc), NAME == "Haywood")
 
 gedi_2a_search <- find_gedi(hw,
   gedi_product = "2A",
@@ -132,6 +148,12 @@ swaths_img <- chewie_show(gedi_2a_search,
 
 ![map](inst/imgs/map.png)
 
+Now we use `grab_gedi` to download the data - this function internally,
+converts the data to parquet format and stores it in the cache. The data
+is as an arrow dataset. We can then use any dplyr verbs to filter/select
+the data as we wish before finally using `collect_gedi` to convert the
+data to a sf object.
+
 ``` r
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
   filter(
@@ -154,16 +176,16 @@ print(gedi_2a_sf)
 #> # A tibble: 11,032 × 12
 #>    beam     solar_elevation lat_lowestmode lon_lowestmode elev_highestreturn
 #>  * <chr>              <dbl>          <dbl>          <dbl>              <dbl>
-#>  1 BEAM0000           -52.8           35.4          -83.1              2768.
-#>  2 BEAM0000           -52.8           35.4          -83.1              2767.
-#>  3 BEAM0000           -52.8           35.4          -83.1              2768.
-#>  4 BEAM0000           -52.8           35.4          -83.1              2768.
-#>  5 BEAM0000           -52.8           35.5          -83.1              2767.
-#>  6 BEAM0000           -52.8           35.5          -83.1              2767.
-#>  7 BEAM0000           -52.8           35.5          -83.1              2768.
-#>  8 BEAM0000           -52.8           35.5          -83.1              2768.
-#>  9 BEAM0000           -52.8           35.5          -83.1              2768.
-#> 10 BEAM0000           -52.8           35.5          -83.1              2768.
+#>  1 BEAM0010           -52.8           35.4          -83.1              2790.
+#>  2 BEAM0010           -52.8           35.4          -83.1              2791.
+#>  3 BEAM0010           -52.8           35.4          -83.1              2791.
+#>  4 BEAM0010           -52.8           35.4          -83.1              2791.
+#>  5 BEAM0010           -52.8           35.4          -83.1              2790.
+#>  6 BEAM0010           -52.8           35.4          -83.1              2791.
+#>  7 BEAM0010           -52.8           35.4          -83.1              2791.
+#>  8 BEAM0010           -52.8           35.4          -83.1              2791.
+#>  9 BEAM0010           -52.8           35.4          -83.1              2791.
+#> 10 BEAM0010           -52.8           35.4          -83.1              2791.
 #> # ℹ 11,022 more rows
 #> # ℹ 7 more variables: elev_lowestmode <dbl>, rh0 <dbl>, rh25 <dbl>, rh50 <dbl>,
 #> #   rh75 <dbl>, rh100 <dbl>, geometry <POINT [°]>

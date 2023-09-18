@@ -75,19 +75,44 @@ little thought or maybe just a better error message...
 
 You can install the development version of chewie like so:
 
-``` r
+```{r, eval = FALSE}
 # install.packages("pak")
 pak::pkg_install("Permian-Global-Research/chewie")
 ```
 
 ## Example
-```{r find-data}
-library(chewie)
 
-# chewie_creds() # to set up your credentials
-# chewie_health_check() # to check your credentials and cache setup.
+First, let's load in some libraries. {dplyr} isn't essential but it is 
+recommended as it's an excellent and highly performative option for working with 
+arrow datasets.
+
+```{r load-libs}
+library(chewie)
+library(dplyr, warn.conflicts = FALSE)
+library(sf)
+```
+
+Here are some useful helper functions to set up your credentials (using 
+`chewie_creds()`) and check that those credentials and the cache are set up 
+correctly (using `chewie_health_check()`). By default the cache is set up in the 
+`.chewie` folder in your home directory. You can change this by running 
+`chewie_cache_set()`.
+
+```{r, eval = FALSE}
+chewie_creds() # to set up your credentials
+chewie_health_check() # to check your credentials and cache setup.
+```
+
+In this chunk we search for some GEDI 2A data that intersects with the Haywood
+county in North Carolina. We then plot the footprints of the swaths that
+intersect with this area to check out what we've got. Note that by default,
+both `find_gedi` and `grab_gedi` cache their outputs so when these functions are
+re-run, the data will be loaded from the cache rather than downloaded again, 
+even in a different R session.
+
+```{r find-data}
 nc <- system.file("gpkg", "nc.gpkg", package = "sf")
-hw <- subset(sf::read_sf(nc), NAME == "Haywood")
+hw <- subset(read_sf(nc), NAME == "Haywood")
 
 gedi_2a_search <- find_gedi(hw,
   gedi_product = "2A",
@@ -103,6 +128,10 @@ swaths_img <- chewie_show(gedi_2a_search,
 ```
 ![map](inst/imgs/map.png)
 
+Now we use `grab_gedi` to download the data - this function internally, converts
+the data to parquet format and stores it in the cache. The data is as an arrow
+dataset. We can then use any dplyr verbs to filter/select the data as we wish 
+before finally using `collect_gedi` to convert the data to a sf object. 
 ```{r collect-data}
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
   filter(
