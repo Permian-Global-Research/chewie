@@ -4,12 +4,15 @@
 \alias{collect_gedi}
 \title{Collect GEDI data}
 \usage{
-collect_gedi(x, find)
+collect_gedi(x, gedi_find)
 }
 \arguments{
 \item{x}{An arrow dataset object.}
 
-\item{find}{The chewie.find object used to obtain \code{x}.}
+\item{gedi_find}{The chewie.find object used to obtain \code{x}.}
+}
+\value{
+an sf object
 }
 \description{
 Collect GEDI data, returned from \code{grab_gedi}, as an sf object.
@@ -21,5 +24,7 @@ and filters the gedi footprints based on the search extent attributed to the
 \code{chewie.find} object.
 It is strongly recomended that you make the most of the ability to to edit
 the gedi data on read by using the \code{dplyr} verbs before collecting the data.
-This will save a lot of time and memory.
+This will save a lot of time and memory. However, make sure that, when
+selecting columns, you do not remove the \code{lat_lowestmode} and
+\code{lon_lowestmode} columns as these are required to create the geometry column.
 }
