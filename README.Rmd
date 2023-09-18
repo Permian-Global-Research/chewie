@@ -105,11 +105,15 @@ swaths_img <- chewie_show(gedi_2a_search,
 
 ```{r collect-data}
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
-  dplyr::filter(
+  filter(
     quality_flag == 0,
     degrade_flag == 0
   ) |>
-  collect_gedi(find = gedi_2a_search)
+  select(
+    beam, solar_elevation, lat_lowestmode, lon_lowestmode,
+    elev_highestreturn, elev_lowestmode, rh0, rh25, rh50, rh75, rh100
+  ) |>
+  collect_gedi(gedi_find = gedi_2a_search)
 
 print(gedi_2a_sf)
 
