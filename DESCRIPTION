@@ -1,6 +1,6 @@
 Package: chewie
 Title: A package to efficiently download GEDI data
-Version: 0.0.0.9000
+Version: 0.0.0.91
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
