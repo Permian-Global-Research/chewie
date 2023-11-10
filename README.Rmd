@@ -110,6 +110,9 @@ both `find_gedi` and `grab_gedi` cache their outputs so when these functions are
 re-run, the data will be loaded from the cache rather than downloaded again, 
 even in a different R session.
 
+we can print and plot the results of `find_gedi` to check that we have the data
+we want.
+
 ```{r find-data}
 nc <- system.file("gpkg", "nc.gpkg", package = "sf")
 hw <- subset(read_sf(nc), NAME == "Haywood")
@@ -121,12 +124,22 @@ gedi_2a_search <- find_gedi(hw,
 
 print(gedi_2a_search)
 
-swaths_img <- chewie_show(gedi_2a_search,
+plot(gedi_2a_search)
+```
+
+Or alternatively plot a leaflet map with `chewie_show`, which can be static or 
+interactive.
+
+```{r, show-find-data, message=FALSE, warning=FALSE}
+swath_map <- chewie_show(
+  gedi_2a_search,
   time_group = "month",
-  interactive = FALSE
+  zoom = 8,
+  interactive = FALSE,
+  file = "swath_map.png"
 )
 ```
-![map](inst/imgs/map.png)
+![](`r swath_map`)
 
 Now we use `grab_gedi` to download the data - this function internally, converts
 the data to parquet format and stores it in the cache. The data is as an arrow
@@ -135,11 +148,11 @@ before finally using `collect_gedi` to convert the data to a sf object.
 ```{r collect-data}
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
   filter(
-    quality_flag == 0,
+    quality_flag == 1,
     degrade_flag == 0
   ) |>
   select(
-    beam, solar_elevation, lat_lowestmode, lon_lowestmode,
+    beam, date_time, solar_elevation, lat_lowestmode, lon_lowestmode,
     elev_highestreturn, elev_lowestmode, rh0, rh25, rh50, rh75, rh100
   ) |>
   collect_gedi(gedi_find = gedi_2a_search)
