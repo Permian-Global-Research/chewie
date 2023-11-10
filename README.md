@@ -148,16 +148,14 @@ Or alternatively plot a leaflet map with `chewie_show`, which can be
 static or interactive.
 
 ``` r
-swath_map <- chewie_show(
+chewie_show(
   gedi_2a_search,
   time_group = "month",
-  zoom = 8,
-  interactive = FALSE,
-  file = "swath_map.png"
+  zoom = 8
 )
 ```
 
-![](swath_map.png)
+<img src="man/figures/README-show-find-data-1.png" width="100%" />
 
 Now we use `grab_gedi` to download the data - this function internally,
 converts the data to parquet format and stores it in the cache. The data
@@ -202,8 +200,8 @@ print(gedi_2a_sf)
 #> #   rh0 <dbl>, rh25 <dbl>, rh50 <dbl>, rh75 <dbl>, rh100 <dbl>,
 #> #   geometry <POINT [°]>
 
-plot(gedi_2a_sf[0], axes = TRUE, col = "#43b37f")
-plot(sf::st_transform(hw[0], sf::st_crs(gedi_2a_sf)), add = TRUE)
+plot(gedi_2a_sf["rh75"], axes = TRUE, reset = FALSE)
+plot(sf::st_transform(hw[0], sf::st_crs(gedi_2a_sf)), add = TRUE, reset = FALSE)
 ```
 
 <img src="man/figures/README-collect-data-1.png" width="100%" />

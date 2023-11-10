@@ -129,17 +129,25 @@ plot(gedi_2a_search)
 
 Or alternatively plot a leaflet map with `chewie_show`, which can be static or 
 interactive.
-
-```{r, show-find-data, message=FALSE, warning=FALSE}
+```{r, show-find-data, include=FALSE}
 swath_map <- chewie_show(
   gedi_2a_search,
   time_group = "month",
-  zoom = 8,
+  zoom = 10,
   interactive = FALSE,
-  file = "swath_map.png"
+  file = "man/figures/README-show-find-data-1.png"
 )
 ```
-![](`r swath_map`)
+```{r, show-find-data-example, eval=FALSE}
+chewie_show(
+  gedi_2a_search,
+  time_group = "month",
+  zoom = 8
+)
+```
+```{r, show-fig, echo=FALSE}
+knitr::include_graphics("man/figures/README-show-find-data-1.png")
+```
 
 Now we use `grab_gedi` to download the data - this function internally, converts
 the data to parquet format and stores it in the cache. The data is as an arrow
@@ -159,8 +167,8 @@ gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
 
 print(gedi_2a_sf)
 
-plot(gedi_2a_sf[0], axes = TRUE, col = "#43b37f")
-plot(sf::st_transform(hw[0], sf::st_crs(gedi_2a_sf)), add = TRUE)
+plot(gedi_2a_sf["rh75"], axes = TRUE, reset = FALSE)
+plot(sf::st_transform(hw[0], sf::st_crs(gedi_2a_sf)), add = TRUE, reset = FALSE)
 ```
 
 
