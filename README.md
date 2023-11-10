@@ -86,7 +86,7 @@ library(chewie)
 #> → "/home/hugh/.chewie"
 library(dplyr, warn.conflicts = FALSE)
 library(sf)
-#> Linking to GEOS 3.11.1, GDAL 3.6.2, PROJ 9.1.1; sf_use_s2() is TRUE
+#> Linking to GEOS 3.11.1, GDAL 3.6.4, PROJ 9.1.1; sf_use_s2() is TRUE
 ```
 
 Here are some useful helper functions to set up your credentials (using
@@ -107,6 +107,9 @@ that by default, both `find_gedi` and `grab_gedi` cache their outputs so
 when these functions are re-run, the data will be loaded from the cache
 rather than downloaded again, even in a different R session.
 
+we can print and plot the results of `find_gedi` to check that we have
+the data we want.
+
 ``` r
 nc <- system.file("gpkg", "nc.gpkg", package = "sf")
 hw <- subset(read_sf(nc), NAME == "Haywood")
@@ -116,7 +119,7 @@ gedi_2a_search <- find_gedi(hw,
   date_start = "2022-12-31"
 )
 #> ! No end date was provided - A Non-permenant cache is in effect.
-#> ℹ The cache will be invalidated on 2023-11-01T00:00:00.
+#> ℹ The cache will be invalidated on 2024-01-01T00:00:00.
 #>   To establish a permanent cache set the end date using the `date_end`
 #>   argument.
 #> ✔ Using cached GEDI data
@@ -136,17 +139,25 @@ print(gedi_2a_search)
 #> 
 #> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-swaths_img <- chewie_show(gedi_2a_search,
-  time_group = "month",
-  interactive = FALSE
-)
-#> The legacy packages maptools, rgdal, and rgeos, underpinning this package
-#> will retire shortly. Please refer to R-spatial evolution reports on
-#> https://r-spatial.org/r/2023/05/15/evolution4.html for details.
-#> This package is now running under evolution status 0
+plot(gedi_2a_search)
 ```
 
-![map](inst/imgs/map.png)
+<img src="man/figures/README-find-data-1.png" width="100%" />
+
+Or alternatively plot a leaflet map with `chewie_show`, which can be
+static or interactive.
+
+``` r
+swath_map <- chewie_show(
+  gedi_2a_search,
+  time_group = "month",
+  zoom = 8,
+  interactive = FALSE,
+  file = "swath_map.png"
+)
+```
+
+![](swath_map.png)
 
 Now we use `grab_gedi` to download the data - this function internally,
 converts the data to parquet format and stores it in the cache. The data
@@ -157,38 +168,39 @@ data to a sf object.
 ``` r
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
   filter(
-    quality_flag == 0,
+    quality_flag == 1,
     degrade_flag == 0
   ) |>
   select(
-    beam, solar_elevation, lat_lowestmode, lon_lowestmode,
+    beam, date_time, solar_elevation, lat_lowestmode, lon_lowestmode,
     elev_highestreturn, elev_lowestmode, rh0, rh25, rh50, rh75, rh100
   ) |>
   collect_gedi(gedi_find = gedi_2a_search)
 #> ✔ All data found in cache
 
 print(gedi_2a_sf)
-#> Simple feature collection with 11032 features and 11 fields
+#> Simple feature collection with 2798 features and 12 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -83.25809 ymin: 35.30825 xmax: -82.77747 ymax: 35.72121
+#> Bounding box:  xmin: -82.95697 ymin: 35.29232 xmax: -82.74454 ymax: 35.44537
 #> Geodetic CRS:  WGS 84
-#> # A tibble: 11,032 × 12
-#>    beam     solar_elevation lat_lowestmode lon_lowestmode elev_highestreturn
-#>  * <chr>              <dbl>          <dbl>          <dbl>              <dbl>
-#>  1 BEAM0010           -52.8           35.4          -83.1              2790.
-#>  2 BEAM0010           -52.8           35.4          -83.1              2791.
-#>  3 BEAM0010           -52.8           35.4          -83.1              2791.
-#>  4 BEAM0010           -52.8           35.4          -83.1              2791.
-#>  5 BEAM0010           -52.8           35.4          -83.1              2790.
-#>  6 BEAM0010           -52.8           35.4          -83.1              2791.
-#>  7 BEAM0010           -52.8           35.4          -83.1              2791.
-#>  8 BEAM0010           -52.8           35.4          -83.1              2791.
-#>  9 BEAM0010           -52.8           35.4          -83.1              2791.
-#> 10 BEAM0010           -52.8           35.4          -83.1              2791.
-#> # ℹ 11,022 more rows
-#> # ℹ 7 more variables: elev_lowestmode <dbl>, rh0 <dbl>, rh25 <dbl>, rh50 <dbl>,
-#> #   rh75 <dbl>, rh100 <dbl>, geometry <POINT [°]>
+#> # A tibble: 2,798 × 13
+#>    beam     date_time           solar_elevation lat_lowestmode lon_lowestmode
+#>  * <chr>    <dttm>                        <dbl>          <dbl>          <dbl>
+#>  1 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  2 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  3 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  4 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  5 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  6 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  7 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  8 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>  9 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#> 10 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#> # ℹ 2,788 more rows
+#> # ℹ 8 more variables: elev_highestreturn <dbl>, elev_lowestmode <dbl>,
+#> #   rh0 <dbl>, rh25 <dbl>, rh50 <dbl>, rh75 <dbl>, rh100 <dbl>,
+#> #   geometry <POINT [°]>
 
 plot(gedi_2a_sf[0], axes = TRUE, col = "#43b37f")
 plot(sf::st_transform(hw[0], sf::st_crs(gedi_2a_sf)), add = TRUE)

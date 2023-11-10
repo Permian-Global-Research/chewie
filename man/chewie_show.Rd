@@ -11,12 +11,6 @@ chewie_show(x, ...)
 
 \item{...}{additional arguments passed to \code{mapview::mapview}.}
 
-\item{interactive}{logical; if \code{TRUE} (default), return an interactive map.
-If \code{FALSE}, return a static map.}
-
-\item{file}{character; if \code{interactive = FALSE}, save the static map to this
-file.}
-
 \item{time_group}{character; if \code{interactive = TRUE}, group the swaths by
 this time unit. Must be one of \code{"year"} or \code{"month"}.}
 
@@ -26,6 +20,15 @@ this time unit. Must be one of \code{"year"} or \code{"month"}.}
 see \code{hcl.pals()} for a list of available palettes.}
 
 \item{aoi_color}{character; color of the AOI polygon.}
+
+\item{zoom}{numeric; zoom level of the map. If \code{NULL} (default), the zoom
+level is determined automatically by the extent of the GEDI swaths.}
+
+\item{interactive}{logical; if \code{TRUE} (default), return an interactive map.
+If \code{FALSE}, return a static map.}
+
+\item{file}{character; if \code{interactive = FALSE}, save the static map to this
+file.}
 }
 \value{
 interactive leaflet map

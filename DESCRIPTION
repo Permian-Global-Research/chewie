@@ -17,7 +17,6 @@ Imports:
     dplyr,
     getPass,
     lubridate,
-    maps,
     purrr,
     RcppSimdJson,
     sf

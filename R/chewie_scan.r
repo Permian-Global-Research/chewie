@@ -35,7 +35,7 @@ chewie_scan <- function(x) {
   cached_swaths <- x$id[x$id %in% all_swaths]
   # check if there are parquet files in the folders
   cached_bool <- purrr::map_vec(
-    swath_dirs,
+    file.path(parquet_dir, paste0("swath_id=", cached_swaths)),
     ~ length(list.files(.x, pattern = ".*\\.parquet$")) > 0
   )
 

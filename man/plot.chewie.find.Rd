@@ -2,16 +2,16 @@
 % Please edit documentation in R/chewie-find.r
 \name{plot.chewie.find}
 \alias{plot.chewie.find}
-\title{print a \code{chewie.find} object}
+\title{plot a \code{chewie.find} object}
 \usage{
-\method{plot}{chewie.find}(x, swath_col, land_col = "#63a88840", ...)
+\method{plot}{chewie.find}(x, swath_col = "#903ca586", aoi_col = "#cecece", ...)
 }
 \arguments{
 \item{x}{chewie.find object to print}
 
 \item{swath_col}{character; color of the swaths.}
 
-\item{land_col}{character; color of the land.}
+\item{aoi_col}{character; color of the aoi.}
 
 \item{...}{arguments passed to \code{print.sf}}
 }
@@ -19,6 +19,6 @@
 a base R plot.
 }
 \description{
-\code{print.chewie.find} is a method for printing \code{chewie.find}
+\code{plot.chewie.find} is a method for plotting \code{chewie.find}
 objects.
 }
