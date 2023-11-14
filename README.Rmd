@@ -19,6 +19,10 @@ knitr::opts_chunk$set(
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
+<p align="center">
+<img src="man/figures/chewie-hex.png" width="40%" />
+</p>
+
   *Still in a developmental phase - only level-2A data available at present.*
 
 The goal of chewie is to make downloading GEDI data as fast and as simple as 
