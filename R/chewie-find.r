@@ -58,9 +58,8 @@ find_gedi <- function(
       gsub("[:.,]", "_", x = _)
 
     find_cache_dir <- getOption("chewie.find.gedi.cache")
-    if (!dir.exists(find_cache_dir)) {
-      dir.create(find_cache_dir, recursive = TRUE)
-    }
+    check_n_make_dir(find_cache_dir)
+
     cache_file <- file.path(
       find_cache_dir,
       paste0(cache_string, ".rds")
