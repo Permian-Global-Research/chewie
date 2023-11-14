@@ -44,9 +44,7 @@ chewie_download <- function(
       gedi_prod,
       paste0("swath_id=", s_id)
     )
-    if (!dir.exists(save_dir)) {
-      dir.create(save_dir, recursive = TRUE)
-    }
+    check_n_make_dir(save_dir)
 
     arrow::write_parquet(
       dplyr::as_tibble(gedi_dt),
