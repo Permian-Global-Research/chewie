@@ -14,25 +14,55 @@ knitr::opts_chunk$set(
 )
 ```
 
+This vignette demonstrates how to use the `chewie` package to download and
+extract GEDI Level 1B waveforms. 
+
+First let's load the `chewie` package and the `ggplot2` package for plotting.
+
 ```{r setup}
 library(chewie)
 library(ggplot2)
+library(sf)
+library(dplyr)
 ```
 
+First, we define an area of interest. In this case, we will use the Haywood County
+area of North Carolina which is included in the `nc.gpkg` dataset that comes
+with the `sf` package. You can alternatively use the `st_read()` function to
+read in your own spatial vector data.
 
-```{r find-gedi}
+```{r define-aoi}
 nc <- system.file("gpkg", "nc.gpkg", package = "sf") |>
   sf::read_sf()
 hw <- subset(nc, NAME %in% c("Haywood"))
+```
 
+Now we can search for GEDI Level 1B products that intersect with our area of
+interest. We will search for products that were collected on or after February
+3, 2023. Note that no end date is provided, so the search will return all
+products collected after the start date.
+
+```{r find-gedi}
 g1b_search <- find_gedi(hw,
   gedi_product = "1B",
   date_start = "2023-02-03"
 )
+print(g1b_search)
 ```
+You'll see that two swaths were found. The returned gedi.find object contains 
+information about the search, including whether or not the files are cached 
+locally.
+
+Now we can download the GEDI Level 1B products. However, note that the `grab_gedi()`
+function will not download the products if they are already cached locally. It 
+first checks the cache and grabs the relevant files if they exist. If they do
+not exist, they'll be downloaded from the LPDAAC server. {chewie} will, by 
+default only download specific data columns. There are many variables contained
+in the raw hdf5 files; if you want to download additional variables, you can
+specify them using the `add_vars` argument.
 
 ```{r grab-gedi}
-gedi_1b_sf <- grab_gedi(g1b_search,
+gedi_1b_arr <- grab_gedi(g1b_search,
   add_vars = list(
     rx_energy = "rx_energy",
     solar_elevation = "geolocation/solar_elevation"
@@ -40,8 +70,16 @@ gedi_1b_sf <- grab_gedi(g1b_search,
 )
 ```
 
+The  `grab_gedi()` function returns a *arrow_dplyr_query* object. If the user 
+wishes to carry out further filtering (for example using quality flags), this 
+should be done at this stage to avoid loading unnecessary data into memory.
+
+In order to access the data we must first collect the data into a data frame.
+This could be done using `dplyr::collect`. However, the `collect_gedi()` function
+is a wrapper around `dplyr::collect` that also converts the data to an `sf`
+object, immediately providing a spatial context for the data. 
 ```{r plot-gedi}
-g1b_sf <- collect_gedi(gedi_1b_sf, g1b_search)
+g1b_sf <- collect_gedi(gedi_1b_arr, g1b_search)
 
 print(g1b_sf)
 
@@ -49,16 +87,25 @@ plot(g1b_sf[0], axes = TRUE)
 plot(attributes(g1b_search)$aoi, add = TRUE, border = "#7700ff")
 ```
 
+So, here's the cool bit about the way the Level-1B data are extracted. We can
+access the full waveform for every shot in the data set by using the 
+`extract_waveforms()` function. This generates a longform data frame with 
+waveform amplitude, relative elevation, and shot number for each shot. This enables
+the combined analysis and comparison of many waveforms across space and time. 
+
+For example, here we take 50 of the waveforms...
 ```{r extract-waveforms}
 g1b_wvf <- extract_waveforms(g1b_sf[50:60, ])
 
 print(g1b_wvf)
 ```
 
+And plot them using `ggplot2`...
+
 ```{r plot-waveforms}
 wvf_ggplot <- function(x, wf, z, .ylab = "Elevation (m)") {
-  wf <- dplyr::sym(wf)
-  z <- dplyr::sym(z)
+  wf <- sym(wf)
+  z <- sym(z)
   ggplot(x, aes(x = !!z, y = !!wf)) +
     geom_ribbon(aes(ymin = min(!!wf), ymax = !!wf),
       alpha = 0.6, fill = "#69d66975", colour = "grey30", lwd = 0.2
@@ -72,18 +119,21 @@ wvf_ggplot(g1b_wvf, "rxwaveform", "rxelevation") +
   facet_wrap(~shot_number, ncol = 5, scales = "free")
 ```
 
+We can also calculate the mean waveform for these shots and plot it. *Note that
+this may not be particualtly helpful for all contexts, but it provides an indication
+of the power of having access to all waveforms in a single dataset.*
 
 ```{r plot-mean-waveforms}
 g1b_wvf |>
-  dplyr::group_by(shot_number) |>
-  dplyr::arrange(rxelevation) |>
-  dplyr::mutate(id = dplyr::n():1) |>
-  dplyr::ungroup() |>
-  dplyr::group_by(id) |>
-  dplyr::summarise(
+  group_by(shot_number) |>
+  arrange(rxelevation) |>
+  mutate(id = dplyr::n():1) |>
+  ungroup() |>
+  group_by(id) |>
+  summarise(
     mean_wvf = mean(rxwaveform),
     mean_elev = mean(rxelevation)
   ) |>
   wvf_ggplot("mean_wvf", "id", .ylab = "Sequence Order") +
-  ggplot2::scale_x_reverse()
+  scale_x_reverse()
 ```
