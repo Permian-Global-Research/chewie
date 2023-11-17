@@ -1,0 +1,89 @@
+---
+title: "GEDI Level 1B Waveforms"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{GEDI Level 1B Waveforms}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(chewie)
+library(ggplot2)
+```
+
+
+```{r find-gedi}
+nc <- system.file("gpkg", "nc.gpkg", package = "sf") |>
+  sf::read_sf()
+hw <- subset(nc, NAME %in% c("Haywood"))
+
+g1b_search <- find_gedi(hw,
+  gedi_product = "1B",
+  date_start = "2023-02-03"
+)
+```
+
+```{r grab-gedi}
+gedi_1b_sf <- grab_gedi(g1b_search,
+  add_vars = list(
+    rx_energy = "rx_energy",
+    solar_elevation = "geolocation/solar_elevation"
+  )
+)
+```
+
+```{r plot-gedi}
+g1b_sf <- collect_gedi(gedi_1b_sf, g1b_search)
+
+print(g1b_sf)
+
+plot(g1b_sf[0], axes = TRUE)
+plot(attributes(g1b_search)$aoi, add = TRUE, border = "#7700ff")
+```
+
+```{r extract-waveforms}
+g1b_wvf <- extract_waveforms(g1b_sf[50:60, ])
+
+print(g1b_wvf)
+```
+
+```{r plot-waveforms}
+wvf_ggplot <- function(x, wf, z, .ylab = "Elevation (m)") {
+  wf <- dplyr::sym(wf)
+  z <- dplyr::sym(z)
+  ggplot(x, aes(x = !!z, y = !!wf)) +
+    geom_ribbon(aes(ymin = min(!!wf), ymax = !!wf),
+      alpha = 0.6, fill = "#69d66975", colour = "grey30", lwd = 0.2
+    ) +
+    theme_light() +
+    coord_flip() +
+    labs(x = .ylab, y = "Waveform Amplitude")
+}
+
+wvf_ggplot(g1b_wvf, "rxwaveform", "rxelevation") +
+  facet_wrap(~shot_number, ncol = 5, scales = "free")
+```
+
+
+```{r plot-mean-waveforms}
+g1b_wvf |>
+  dplyr::group_by(shot_number) |>
+  dplyr::arrange(rxelevation) |>
+  dplyr::mutate(id = dplyr::n():1) |>
+  dplyr::ungroup() |>
+  dplyr::group_by(id) |>
+  dplyr::summarise(
+    mean_wvf = mean(rxwaveform),
+    mean_elev = mean(rxelevation)
+  ) |>
+  wvf_ggplot("mean_wvf", "id", .ylab = "Sequence Order") +
+  ggplot2::scale_x_reverse()
+```
