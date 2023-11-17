@@ -48,4 +48,5 @@ returned dataset.
 https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
 https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
 https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
+https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
 }

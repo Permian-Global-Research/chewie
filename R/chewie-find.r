@@ -24,12 +24,12 @@
 #' @export
 find_gedi <- function(
     x,
-    gedi_product = c("1B", "2A", "2B"),
+    gedi_product = c("1B", "2A", "2B", "4A"),
     date_start = NULL,
     date_end = NULL,
     intersects = TRUE,
     cache = TRUE) {
-  assert_gedi_product(gedi_product)
+  rlang::arg_match(gedi_product)
 
   bbox <- paste(chewie_bbox(x), collapse = ",")
 
@@ -167,15 +167,19 @@ gedi_code_lookup <- function(.gprod) {
     G1B = "C1908344278-LPDAAC_ECS",
     G2A = "C1908348134-LPDAAC_ECS",
     G2B = "C1908350066-LPDAAC_ECS",
+    G4A = "C2237824918-ORNL_CLOUD",
     abort_gedi_opts()
   )
 }
 
 
 build_req_url <- function(.gprod, .bbox, .dr) {
+  .provider <- ifelse(.gprod == "4A", "ORNL_CLOUD", "LPDAAC_ECS")
   req_url <- paste0(
     "https://cmr.earthdata.nasa.gov/search/granules.json?",
-    "pretty=true&provider=LPDAAC_ECS&page_size=2000&concept_id=",
+    "pretty=true&provider=",
+    .provider,
+    "&page_size=2000&concept_id=",
     gedi_code_lookup(.gprod),
     "&bounding_box=",
     .bbox

@@ -10,8 +10,9 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 <!-- badges: end -->
 
 The goal of chewie is to make downloading GEDI data as fast and as
-simple as possible. Here is a quick summary of design choices that
-enables {chewie} to achieve this:
+simple as possible. This includes point-level products: 1B, 2A, 2B and
+4A. Here is a quick summary of design choices that enables {chewie} to
+achieve this:
 
   - chewie adopts an R-centric approach to downloading GEDI data. Data
     are downloaded and converted to parquet files which can then read
@@ -37,8 +38,6 @@ enables {chewie} to achieve this:
 TO DO:
 
   - [ ] Add a `chewie_show` method to plot footprints
-
-  - [ ] Add a functionality to get level 4a data
 
   - [ ] Add cache reporting to `chewie_health_check` - i.e. n files in
     cache, size of cache, etc.

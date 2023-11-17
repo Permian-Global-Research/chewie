@@ -135,8 +135,9 @@ abort_gedi_opts <- function() {
     "i" = paste0(
       "Valid GEDI products are: ",
       chew_bold_cyan("1B"), ", ",
-      chew_bold_cyan("2A"), ", and ",
-      chew_bold_cyan("2B"), "."
+      chew_bold_cyan("2A"), ", ",
+      chew_bold_cyan("2B"), ", and ",
+      chew_bold_cyan("4A"), "."
     )
   ))
 }

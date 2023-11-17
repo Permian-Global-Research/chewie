@@ -102,6 +102,26 @@ l2b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
   return(dt_cbindlist(c(vals, pavd_z, pai_z)))
 }
 
+#' @title Convert GEDI 4A hdf data to a data.table
+#' @description Internal function for reading GEDI 4A hdf data as a data.table
+#' object.
+#' @param beam_id A character string of the beam id to read.
+#' @param h5_con A `H5File` object.
+#' @param extra_vals A named list of extra variables to add to the returned data.table.
+#' @noRd
+#' @details
+#' This function is a little different to the others - by default it retrieves
+#' all of the possible columns. may change or other datasets might change...
+l4a_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
+  l4a_beam <- h5_con[[beam_id]]
+  dt_builder(l4a_beam, colnames_4a, l4a_beam) |>
+    dt_cbindlist()
+}
+
+
+#' @ title convert waveform to integer
+#' @param x numeric vector of waveform values
+#' @noRd
 compress_waveform <- function(x) {
   I(as.integer(x * 1e4))
 }
@@ -124,6 +144,21 @@ dt_builder <- function(.beam, .f, .ev) {
   names(dt_list) <- NULL
   return(dt_list)
 }
+
+#' @title column names and hdf locations for gedi 4A variables
+#' @noRd
+#' @details here the .ev argument is the hdf5 file itself. and any
+#' extra variables are ignored. This is because this will return all available
+#' variables in the hdf5 file.
+colnames_4a <- function(.ev) {
+  l <- hdf5r::list.datasets(.ev) |>
+    sub("^[^/]*/", "", x = _) |>
+    unique()
+  l <- setNames(l, basename(l))
+  as.list(l)
+}
+
+
 
 #' @title column names and hdf locations for gedi 1B variables
 #' @noRd
