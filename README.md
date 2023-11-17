@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# chewie
+# chewie<img src="man/figures/chewie-hex.png" align="right" height="200" alt=""/>
 
 <!-- badges: start -->
 
@@ -9,43 +9,30 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-<p align="center">
-
-<img src="man/figures/chewie-hex.png" width="40%" />
-
-</p>
-
-*Still in a developmental phase - only level-2A data available at
-present.*
-
 The goal of chewie is to make downloading GEDI data as fast and as
-simple as possible. Here is a quick summary of features that enables
-{chewie} to achieve this:
+simple as possible. Here is a quick summary of design choices that
+enables {chewie} to achieve this:
 
-  - Support for spatial filtering of swaths that intersect an area of
-    interest and not only by bounding box; this can frequently reduce
-    the amount of irrelevant data that is downloaded.
+  - chewie adopts an R-centric approach to downloading GEDI data. Data
+    are downloaded and converted to parquet files which can then read
+    using the [{arrow}](https://arrow.apache.org/docs/r/index.html) and
+    converted to [sf](https://r-spatial.github.io/sf/) objects. This
+    approach is performative and enables the use of
+    [dplyr](https://dplyr.tidyverse.org/) verbs to `filter`, `mutate`
+    and `select` data as required without needing to load all shots,
+    from a given swath, into memory.
 
-  - GEDI is provided in large files in the h5 format. Whilst
-    performative, the disk space required to store these files is large
-    \~ 2-3GB per GEDI 2A file. This package downloads the data (as we
-    know of no way to stream these files) and then converts them to
-    parquet format which have a file size of 100-200MB per file.
-    Further, the parquet format enables dynamic filtering of the data
-    without having to load the entire file into memory - this includes
-    spatial filtering (at least crudely for now based on bounding box
-    until geoparquet is more widely supported).
+  - There is support for spatial filtering of swaths that intersect an
+    area of interest and not only by bounding box; this frequently
+    reduces the amount of irrelevant data that is downloaded.
 
-  - In terms of “ease of use” the package is designed to be as simple as
-    possible. with the main feature here being the automated caching of
-    files in a central location. This means that once a file has been
-    downloaded it will not be downloaded again even if working in a
-    different project (it is also possible to specify a different cache
-    location for each project).
+  - A system-level cache is used to store the data. This means that once
+    a file has been downloaded it will not be downloaded again even if
+    working in a different project (it is also possible to specify a
+    different cache location for each project).
 
-  - The scope of this package is intended to be deilibertly narrow. It
-    is not intended to include functionality for post processing or
-    modelling.
+  - The scope of this package is deilibertly narrow. It is not intended
+    to include functionality for post processing or modelling.
 
 TO DO:
 

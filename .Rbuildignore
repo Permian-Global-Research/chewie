@@ -3,3 +3,5 @@
 ^DEV$
 ^notes\.md$
 ^README_files$
+^doc$
+^Meta$
