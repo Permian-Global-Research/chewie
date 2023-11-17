@@ -47,6 +47,15 @@ chewie_convert.chewie.download.2B <- function(x, extra_vars = NULL, ...) {
   )
 }
 
+#' @export
+chewie_convert.chewie.download.4A <- function(x, extra_vars = NULL, ...) {
+  h5_to_gedi_dt(
+    x,
+    .f = l4a_h5_to_dt,
+    extra_vars,
+    .progress = TRUE
+  )
+}
 
 
 h5_to_gedi_dt <- function(x, .f, extra_vars, .progress = TRUE) {

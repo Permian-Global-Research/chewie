@@ -7,7 +7,7 @@
 \usage{
 find_gedi(
   x,
-  gedi_product = c("1B", "2A", "2B"),
+  gedi_product = c("1B", "2A", "2B", "4A"),
   date_start = NULL,
   date_end = NULL,
   intersects = TRUE,
