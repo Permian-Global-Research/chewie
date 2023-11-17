@@ -19,12 +19,17 @@ Imports:
     lubridate,
     purrr,
     RcppSimdJson,
+    rlang,
     sf
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
 Suggests: 
+    ggplot2,
+    knitr,
     mapview,
+    rmarkdown,
     stars,
     terra
 Depends: 
     R (>= 4.1.0)
+VignetteBuilder: knitr
