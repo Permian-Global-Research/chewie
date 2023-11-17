@@ -10,7 +10,9 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 <!-- badges: end -->
 
 <p align="center">
+
 <img src="man/figures/chewie-hex.png" width="40%" />
+
 </p>
 
 *Still in a developmental phase - only level-2A data available at
@@ -47,24 +49,12 @@ simple as possible. Here is a quick summary of features that enables
 
 TO DO:
 
-  - [ ] Add conversion methods for 1B, 2B and 4A data
-
   - [ ] Add a `chewie_show` method to plot footprints
 
   - [ ] Add a functionality to get level 4a data
 
   - [ ] Add cache reporting to `chewie_health_check` - i.e. n files in
     cache, size of cache, etc.
-
-  - [ ] refactor to use {collapse} instead of {data.table} or maybe just
-    use dplyr as this really has to be a “depends” anyway and we’re not
-    really making the most of the data.table functionality as it stands
-    because we are using arrow for the data qurying etc.
-
-  - [ ] Currently a sort of bug exists whereby if you drop the lat long
-    columns after running `geb_gedi`, then the `collect_gedi` function
-    will fail. Needs a little thought or maybe just a better error
-    message…
 
   - [ ] write tests…
 
