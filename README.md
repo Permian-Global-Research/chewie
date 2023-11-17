@@ -39,8 +39,6 @@ TO DO:
 
   - [ ] Add a `chewie_show` method to plot footprints
 
-  - [ ] Add a functionality to get level 4a data
-
   - [ ] Add cache reporting to `chewie_health_check` - i.e. n files in
     cache, size of cache, etc.
 
