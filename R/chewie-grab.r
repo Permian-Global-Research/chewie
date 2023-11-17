@@ -11,7 +11,7 @@
 #' @noRd
 chewie_download <- function(
     .url, s_id, id,
-    .dir, timeout, progress, gedi_prod, nfiles) {
+    .dir, timeout, progress, gedi_prod, nfiles, add_vars) {
   destination <- file.path(.dir, basename(.url))
 
   # here we're using multi_download but only downloading one file at a
@@ -32,10 +32,9 @@ chewie_download <- function(
     class(df)
   )
 
-
   if (isTRUE(check_status_codes(df))) {
     cli::cli_inform(c("*" = "Converting to data.table"))
-    gedi_dt <- chewie_convert(df)
+    gedi_dt <- chewie_convert(df, extra_vars = add_vars)
     cli::cli_inform(c("*" = "Writing as parquet file"))
     save_dir <- file.path(
       getOption(
@@ -110,6 +109,8 @@ chewie_missing_gedi <- function(x) {
 #' @title Download GEDI data or access from cahce
 #' @description Download GEDI data from the NASA Earthdata in hdf5 format.
 #' @param x A chewie.find.x object.
+#' @param add_vars A named list of GEDI variables to add to the returned dataset.
+#' See details.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param timeout A numeric indicating the timeout in seconds.
 #' @export
@@ -121,8 +122,28 @@ chewie_missing_gedi <- function(x) {
 #' parquet format and saved in the cache directory. This saves a huge amount of
 #' disk space and enables dynamic reading and filtering of the returned "open"
 #' arrow dataset.
+#'
+#' Info about `add_vars`:
+#' {chewie} will only cache specific variables made available in the GEDI hdf5
+#' files. This is in part to reduce disk space but also to improve performance
+#' and make working with these data simpler. However, some users may wish to
+#' access other variables not cached by default. In this case the `add_vars`
+#' argument can be used to add these variables to the returned dataset.
+#' These must be provided as a named list in the format:
+#' `list(new_var_name = "path/to/variable")`. The path to the variable is
+#' relative to the root of the hdf5 file. For example, to add the
+#' `solar_elevation` variable to the returned dataset, the `add_vars` argument
+#' would be: `add_vars = list(solar_elevation = "geolocation/solar_elevation")`.
+#' Note that, this feature is somewhat experimental - non existent variables or
+#' incorrectly spelled variables will fail silently and not be added to the
+#' returned dataset.
+#'
+#' https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
+#' https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
+#' https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
+#'
 grab_gedi <- function(
-    x, progress = TRUE, timeout = 7200) {
+    x, add_vars = NULL, progress = TRUE, timeout = 7200) {
   .dir <- getOption("chewie.h5.cache")
   st_time <- Sys.time()
 
@@ -150,7 +171,7 @@ grab_gedi <- function(
         .l = list(x_to_down$url, x_to_down$id, 1:nfiles),
         ~ chewie_download(
           ..1, ..2, ..3,
-          .dir, timeout, progress, gedi_product, nfiles
+          .dir, timeout, progress, gedi_product, nfiles, add_vars
         )
       ) |>
       purrr::list_rbind()
