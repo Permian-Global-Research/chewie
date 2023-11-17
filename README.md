@@ -9,6 +9,12 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
+<p align="center">
+
+<img src="man/figures/chewie-hex.png" width="40%" />
+
+</p>
+
 *Still in a developmental phase - only level-2A data available at
 present.*
 
@@ -43,24 +49,12 @@ simple as possible. Here is a quick summary of features that enables
 
 TO DO:
 
-  - [ ] Add conversion methods for 1B, 2B and 4A data
-
   - [ ] Add a `chewie_show` method to plot footprints
 
   - [ ] Add a functionality to get level 4a data
 
   - [ ] Add cache reporting to `chewie_health_check` - i.e. n files in
     cache, size of cache, etc.
-
-  - [ ] refactor to use {collapse} instead of {data.table} or maybe just
-    use dplyr as this really has to be a “depends” anyway and we’re not
-    really making the most of the data.table functionality as it stands
-    because we are using arrow for the data qurying etc.
-
-  - [ ] Currently a sort of bug exists whereby if you drop the lat long
-    columns after running `geb_gedi`, then the `collect_gedi` function
-    will fail. Needs a little thought or maybe just a better error
-    message…
 
   - [ ] write tests…
 
@@ -183,18 +177,18 @@ print(gedi_2a_sf)
 #> Bounding box:  xmin: -82.95697 ymin: 35.29232 xmax: -82.74454 ymax: 35.44537
 #> Geodetic CRS:  WGS 84
 #> # A tibble: 2,798 × 13
-#>    beam     date_time           solar_elevation lat_lowestmode lon_lowestmode
-#>  * <chr>    <dttm>                        <dbl>          <dbl>          <dbl>
-#>  1 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  2 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  3 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  4 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  5 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  6 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  7 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  8 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  9 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
-#> 10 BEAM0010 2023-02-04 16:28:13            35.3           35.3          -82.9
+#>    beam  date_time           solar_elevation lat_lowestmode lon_lowestmode
+#>  * <chr> <dttm>                        <dbl>          <dbl>          <dbl>
+#>  1 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  2 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  3 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  4 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  5 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  6 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  7 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  8 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#>  9 0     2023-02-04 16:28:13            35.3           35.3          -83.0
+#> 10 0     2023-02-04 16:28:13            35.3           35.3          -83.0
 #> # ℹ 2,788 more rows
 #> # ℹ 8 more variables: elev_highestreturn <dbl>, elev_lowestmode <dbl>,
 #> #   rh0 <dbl>, rh25 <dbl>, rh50 <dbl>, rh75 <dbl>, rh100 <dbl>,

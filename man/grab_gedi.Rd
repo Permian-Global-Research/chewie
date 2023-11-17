@@ -4,10 +4,13 @@
 \alias{grab_gedi}
 \title{Download GEDI data or access from cahce}
 \usage{
-grab_gedi(x, progress = TRUE, timeout = 7200)
+grab_gedi(x, add_vars = NULL, progress = TRUE, timeout = 7200)
 }
 \arguments{
 \item{x}{A chewie.find.x object.}
+
+\item{add_vars}{A named list of GEDI variables to add to the returned dataset.
+See details.}
 
 \item{progress}{A logical indicating whether to show a progress bar.}
 
@@ -26,4 +29,23 @@ from the NASA Earthdata. Once downloaded each file is converted to the
 parquet format and saved in the cache directory. This saves a huge amount of
 disk space and enables dynamic reading and filtering of the returned "open"
 arrow dataset.
+
+Info about \code{add_vars}:
+{chewie} will only cache specific variables made available in the GEDI hdf5
+files. This is in part to reduce disk space but also to improve performance
+and make working with these data simpler. However, some users may wish to
+access other variables not cached by default. In this case the \code{add_vars}
+argument can be used to add these variables to the returned dataset.
+These must be provided as a named list in the format:
+\code{list(new_var_name = "path/to/variable")}. The path to the variable is
+relative to the root of the hdf5 file. For example, to add the
+\code{solar_elevation} variable to the returned dataset, the \code{add_vars} argument
+would be: \code{add_vars = list(solar_elevation = "geolocation/solar_elevation")}.
+Note that, this feature is somewhat experimental - non existent variables or
+incorrectly spelled variables will fail silently and not be added to the
+returned dataset.
+
+https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
+https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
+https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
 }
