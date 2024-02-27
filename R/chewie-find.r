@@ -71,6 +71,8 @@ find_gedi <- function(
     }
   }
 
+
+
   request_url <- build_req_url(
     gedi_product[1],
     bbox,
@@ -90,6 +92,7 @@ find_gedi <- function(
   if (length(sf_list) == 0) {
     abort_no_gedi_data()
   }
+
 
   sf_list <- sf_rbindlist(sf_list)
   data.table::setcolorder(
