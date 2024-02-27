@@ -58,6 +58,9 @@ open_gedi <- function(x) {
 #' @description Collect GEDI data, returned from `grab_gedi`, as an sf object.
 #' @param x An arrow dataset object.
 #' @param gedi_find The chewie.find object used to obtain `x`.
+#' @param intersects logical; whether to filter the GEDI data based on the
+#' search extent attributed to the `chewie.find` object. Default is to use
+#' whatever was specified in chewie.find.
 #' @export
 #' @details
 #' This function is used to collect the GEDI data returned from `grab_gedi` as
@@ -70,13 +73,20 @@ open_gedi <- function(x) {
 #' selecting columns, you do not remove the `lat_lowestmode` and
 #' `lon_lowestmode` columns as these are required to create the geometry column.
 #' @return an sf object
-collect_gedi <- function(x, gedi_find) {
+collect_gedi <- function(
+    x, gedi_find,
+    intersects = attributes(gedi_find)$intersects) {
+  if ("shot_number" %in% names(x)) {
+    # convert shot_number to from Int64 to character; required if saving with sf
+    x <- x |>
+      dplyr::mutate(shot_number = as.character(shot_number))
+  }
+
   if (find_gedi_product(gedi_find) == "1B") {
     if (!"latitude_bin0" %in% names(x) ||
       !"longitude_bin0" %in% names(x)) {
       abort_missing_lon_lat(gedi_find)
     }
-
     # get the midpoint between the start  and end lat/long of the waveform
     x <- x |>
       dplyr::mutate(
@@ -107,8 +117,9 @@ collect_gedi <- function(x, gedi_find) {
     sf::st_as_sf(crs = "EPSG:4326") |>
     dplyr::select(!dplyr::any_of(c("latitude_avg", "longitude_avg")))
 
-  if (isTRUE(attributes(gedi_find)$intersects)) {
+  if (isTRUE(intersects)) {
     gedi_pnts <- sf::st_filter(gedi_pnts, attributes(gedi_find)$aoi)
   }
+
   return(gedi_pnts)
 }
