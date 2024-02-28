@@ -262,6 +262,20 @@ inform_missing_user_renv <- function() {
     ">" = "chewie is creating one for you now..."
   ))
 }
+
+inform_find_gedi_cache <- function(fn, fs) {
+  cli::cli_alert_info(
+    c(
+      "The ",
+      chew_bold_yel("`find_gedi`"),
+      " cache contains ",
+      chew_bold_green("{fn} file{?s}"),
+      " with a total size of ",
+      chew_bold_mag("{fs} MB.")
+    )
+  )
+}
+
 #---- warn ----
 chewie_show_warn <- function(x) {
   cli::cli_inform(

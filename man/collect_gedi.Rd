@@ -4,12 +4,16 @@
 \alias{collect_gedi}
 \title{Collect GEDI data}
 \usage{
-collect_gedi(x, gedi_find)
+collect_gedi(x, gedi_find, intersects = attributes(gedi_find)$intersects)
 }
 \arguments{
 \item{x}{An arrow dataset object.}
 
 \item{gedi_find}{The chewie.find object used to obtain \code{x}.}
+
+\item{intersects}{logical; whether to filter the GEDI data based on the
+search extent attributed to the \code{chewie.find} object. Default is to use
+whatever was specified in chewie.find.}
 }
 \value{
 an sf object
