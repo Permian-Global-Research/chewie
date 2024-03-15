@@ -3,7 +3,6 @@
 #' @param x object of class `sf`, `spatVector`, `spatRaster`, `sfc`, `stars`,
 #' `stars_proxy`, or `numeric` see details.
 #' @param gedi_product character of GEDI product to search for.
-#' @param gedi_version character of GEDI version to search for.
 #' @param date_start character or `POSIXct` of the start date to search for GEDI
 #' data. If `NULL` defaults to the start of GEDI operations (2019-03-25).
 #' @param date_end character or `POSIXct` of the end date to search for GEDI

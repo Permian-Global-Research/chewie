@@ -36,8 +36,6 @@ contained within the bounding box of the spatial object are returned.}
 search. If TRUE the results of the search will be cached in the directory
 defined by: \code{getOption("chewie.find.gedi.cache")}. If FALSE the results will
 not be cached.}
-
-\item{gedi_version}{character of GEDI version to search for.}
 }
 \description{
 Find GEDI swaths that intersect with a given spatial object.

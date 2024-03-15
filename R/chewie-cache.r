@@ -4,6 +4,7 @@
 #' containing the `.Renviron` file to set the `CHEWIE_PARQUET_CACHE`
 #' environment and create the directory. If missing, the default cache
 #' directory is used.
+#' @param quiet logical if `TRUE` then no messages are printed.
 #' @rdname chewie-cache
 #' @family manage cache
 #' @export

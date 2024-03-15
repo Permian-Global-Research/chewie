@@ -46,9 +46,8 @@ cordinates orderd as xmin, ymin, xmax, ymax.
 }
 \examples{
 f <- system.file("ex/elev.tif", package = "terra")
-chewie_bbox(f)
 chewie_bbox(terra::rast(f))
 f2 <- system.file("ex/lux.shp", package = "terra")
-chewie_bbox(f2)
+chewie_bbox(sf::read_sf(f2))
 }
 \concept{spatial helpers (class agnostic)}

@@ -3,13 +3,13 @@
 #' @return sf object
 #' @noRd
 sf_rbindlist <- function(x) {
-    if (length(x) == 0) cli::cli_abort("list is empty!")
-    geom_name <- attr(x[[1]], "sf_column")
-    x <- data.table::rbindlist(x, use.names = FALSE)
-    x[[geom_name]] <- sf::st_sfc(x[[geom_name]], recompute_bbox = TRUE)
-    x <- sf::st_as_sf(x)
-    sf::st_geometry(x) <- "geometry"
-    return(x)
+  if (length(x) == 0) cli::cli_abort("list is empty!")
+  geom_name <- attr(x[[1]], "sf_column")
+  x <- data.table::rbindlist(x, use.names = FALSE)
+  x[[geom_name]] <- sf::st_sfc(x[[geom_name]], recompute_bbox = TRUE)
+  x <- sf::st_as_sf(x)
+  sf::st_geometry(x) <- "geometry"
+  return(x)
 }
 
 #' @title convert long/lat to sfc points geometry
@@ -19,13 +19,13 @@ sf_rbindlist <- function(x) {
 #' @noRd
 #' @returns an sfc POINT geometry vector.
 handle_points <- function(lat, lon) {
-    wk::wk_handle(
-        wk::xy(
-            x = lon,
-            y = lat
-        ),
-        wk::sfc_writer()
-    )
+  wk::wk_handle(
+    wk::xy(
+      x = lon,
+      y = lat
+    ),
+    wk::sfc_writer()
+  )
 }
 
 
@@ -35,51 +35,50 @@ handle_points <- function(lat, lon) {
 #' `stars_proxy`, or `numeric`.
 #' @return sfc object
 #' @noRd
-#' @export
 get_spat_outline <- function(x) {
-    UseMethod("get_spat_outline")
+  UseMethod("get_spat_outline")
 }
 #' @noRd
 #' @export
 get_spat_outline.sfc <- function(x) {
-    sf::st_transform(sf::st_union(x), "EPSG:4326")
+  sf::st_transform(sf::st_union(x), "EPSG:4326")
 }
 #' @noRd
 #' @export
 get_spat_outline.sf <- function(x) {
-    sf::st_transform(sf::st_union(x), "EPSG:4326")
+  sf::st_transform(sf::st_union(x), "EPSG:4326")
 }
 #' @noRd
 #' @export
 get_spat_outline.SpatVector <- function(x) {
-    sf::st_as_sf(x) |>
-        sf::st_union() |>
-        sf::st_transform("EPSG:4326")
+  sf::st_as_sf(x) |>
+    sf::st_union() |>
+    sf::st_transform("EPSG:4326")
 }
 #' @noRd
 #' @export
 get_spat_outline.SpatRaster <- function(x) {
-    box_outline(x)
+  box_outline(x)
 }
 #' @noRd
 #' @export
 get_spat_outline.stars <- function(x) {
-    box_outline(x)
+  box_outline(x)
 }
 #' @noRd
 #' @export
 get_spat_outline.stars_proxy <- function(x) {
-    box_outline(x)
+  box_outline(x)
 }
 #' @noRd
 #' @export
 get_spat_outline.numeric <- function(x) {
-    box_outline(x)
+  box_outline(x)
 }
 
 box_outline <- function(x) {
-    chewie_bbox(x) |>
-        sf::st_as_sfc()
+  chewie_bbox(x) |>
+    sf::st_as_sfc()
 }
 
 
@@ -92,52 +91,51 @@ box_outline <- function(x) {
 #' @param swaths object of class `sf` or `sfc` representing the swaths.
 #' @return sf object
 #' @noRd
-#' @export
 get_swath_intersect <- function(aoi, swaths) {
-    UseMethod("get_swath_intersect")
+  UseMethod("get_swath_intersect")
 }
 
 #' @noRd
 #' @export
 get_swath_intersect.sfc <- function(aoi, swaths) {
-    sf::st_filter(swaths, sf::st_transform(aoi, sf::st_crs(swaths)))
+  sf::st_filter(swaths, sf::st_transform(aoi, sf::st_crs(swaths)))
 }
 
 #' @noRd
 #' @export
 get_swath_intersect.sf <- function(aoi, swaths) {
-    sf::st_filter(swaths, sf::st_transform(aoi, sf::st_crs(swaths)))
+  sf::st_filter(swaths, sf::st_transform(aoi, sf::st_crs(swaths)))
 }
 
 #' @noRd
 #' @export
-get_swath_intersect.SpatVector <- function(swaths, aoi) {
-    sf::st_filter(
-        swaths,
-        sf::st_transform(sf::st_as_sf(aoi), sf::st_crs(swaths))
-    )
+get_swath_intersect.SpatVector <- function(aoi, swaths) {
+  sf::st_filter(
+    swaths,
+    sf::st_transform(sf::st_as_sf(aoi), sf::st_crs(swaths))
+  )
 }
 
 #' @noRd
 #' @export
-get_swath_intersect.SpatRaster <- function(swaths, aoi) {
-    swaths
+get_swath_intersect.SpatRaster <- function(aoi, swaths) {
+  swaths
 }
 
 #' @noRd
 #' @export
-get_swath_intersect.stars <- function(swaths, aoi) {
-    swaths
+get_swath_intersect.stars <- function(aoi, swaths) {
+  swaths
 }
 
 #' @noRd
 #' @export
-get_swath_intersect.stars_proxy <- function(swaths, aoi) {
-    swaths
+get_swath_intersect.stars_proxy <- function(aoi, swaths) {
+  swaths
 }
 
 #' @noRd
 #' @export
-get_swath_intersect.numeric <- function(swaths, aoi) {
-    swaths
+get_swath_intersect.numeric <- function(aoi, swaths) {
+  swaths
 }

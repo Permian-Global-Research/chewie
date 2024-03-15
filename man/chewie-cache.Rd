@@ -23,6 +23,8 @@ chewie_get_cache()
 containing the \code{.Renviron} file to set the \code{CHEWIE_PARQUET_CACHE}
 environment and create the directory. If missing, the default cache
 directory is used.}
+
+\item{quiet}{logical if \code{TRUE} then no messages are printed.}
 }
 \description{
 Set GEDI Parquet Cache
