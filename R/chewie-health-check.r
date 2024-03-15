@@ -11,9 +11,10 @@ chewie_health_check <- function(.test = TRUE) {
     if (!file.exists(chewie_get_env())) {
       inform_env_health("NASA Earthdata Credentials file does not exist.")
     } else {
-      cli::cli_alert_success(c(
-        "NASA Earthdata Credentials already set."
-      ))
+      cli::cli_inform(c(
+        "v" =
+          "NASA Earthdata Credentials already set."
+      ), class = "packageStartupMessage")
     }
     if (isTRUE(.test)) {
       chewie_test_creds(.error = FALSE)

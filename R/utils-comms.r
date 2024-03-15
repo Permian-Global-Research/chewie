@@ -218,7 +218,7 @@ inform_cache_set_success <- function(x) {
   cli::cli_inform(c(
     "v" = "GEDI cache set in the following directory:",
     ">" = cli::style_italic(paste0('"', x, '"'))
-  ))
+  ), class = "packageStartupMessage")
 }
 
 inform_env_health <- function(x) {
@@ -240,7 +240,7 @@ inform_cache_health <- function(x) {
       chew_bold_mag("chewie::chewie_setup_cache()"),
       "` to set up your cache."
     )
-  ))
+  ), class = "packageStartupMessage")
 }
 
 inform_time <- function(st, type) {
@@ -264,15 +264,19 @@ inform_missing_user_renv <- function() {
 }
 
 inform_find_gedi_cache <- function(fn, fs) {
-  cli::cli_alert_info(
+  cli::cli_inform(
     c(
-      "The ",
-      chew_bold_yel("`find_gedi`"),
-      " cache contains ",
-      chew_bold_green("{fn} file{?s}"),
-      " with a total size of ",
-      chew_bold_mag("{fs} MB.")
-    )
+      "i" =
+        paste0(
+          "The ",
+          chew_bold_yel("`find_gedi`"),
+          " cache contains ",
+          chew_bold_green("{fn} file{?s}"),
+          " with a total size of ",
+          chew_bold_mag("{fs} MB.")
+        )
+    ),
+    class = "packageStartupMessage"
   )
 }
 
