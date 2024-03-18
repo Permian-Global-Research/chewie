@@ -4,6 +4,8 @@
 \alias{chewie_setup_cache}
 \alias{chewie_unset_cache}
 \alias{chewie_get_cache}
+\alias{chewie_clear_find_cache}
+\alias{chewie_clear_h5_temp_cache}
 \title{Set GEDI Parquet Cache}
 \usage{
 chewie_setup_cache(
@@ -15,6 +17,10 @@ chewie_setup_cache(
 chewie_unset_cache(renviron = "user")
 
 chewie_get_cache()
+
+chewie_clear_find_cache()
+
+chewie_clear_h5_temp_cache()
 }
 \arguments{
 \item{.dir}{character path to the directory that should contain the cache.}
@@ -27,14 +33,23 @@ directory is used.}
 \item{quiet}{logical if \code{TRUE} then no messages are printed.}
 }
 \description{
-Set GEDI Parquet Cache
-
-Unset GEDI Cache
-
-Get GEDI Cache
+Get the path to the GEDI cache directory.
 }
 \details{
 This \code{chewie_unset_cache} function will remove the
 \code{CHEWIE_PARQUET_CACHE} environment variable from the \code{.Renviron} file.
+
+\code{chewie_clear_find_cache} deletes the cached .rds files in the GEDI find
+cache directory, located in \code{getOption("chewie.find.gedi.cache")}.
+
+\code{chewie_clear_h5_temp_cache} deletes the cached .h5 files in the GEDI h5 -
+these files sometimes persist when a download in incomplete or there has
+been an error with the download. If you are having trouble downloading data,
+running this command could well help.
+
+chewie does not provide a helper function to clear the main parquet cache
+for safety reasons. In theory this cache should also be stable. To manually
+clear it - navigate to the location of \code{getOption("chewie.parquet.cache")}
+and delete the necessary files.
 }
 \concept{manage cache}
