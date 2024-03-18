@@ -250,38 +250,3 @@ plot.chewie.find <- function(x, swath_col = "#903ca586", aoi_col = "#cecece", ..
   plot(attributes(x)$aoi, col = aoi_col, axes = TRUE)
   plot(x[0], col = swath_col, add = TRUE)
 }
-
-#' @title Clear the GEDI find (search) cache
-#' @rdname chewie-find-gedi
-#' @family find GEDI.
-#' @details
-#' `chewie_clear_find_cache` deletes the cached .rds files in the GEDI find
-#' cache directory, located in `getOption("chewie.find.gedi.cache")`.
-#' @export
-chewie_clear_find_cache <- function() {
-  cache_dir <- getOption("chewie.find.gedi.cache")
-
-  clean_finds <- function() {
-    list.files(cache_dir, pattern = "\\.rds$", full.names = TRUE) |>
-      purrr::walk(file.remove)
-  }
-
-  cli::cli_inform(
-    paste0(
-      chew_bold_mag("?"),
-      paste0(
-        "   Do you really want to clear your GEDI search cache?"
-      )
-    )
-  )
-
-  choice <- menu(c(
-    chew_bold_green("Yes"),
-    chew_bold_red("No!")
-  ))
-
-  switch(choice,
-    clean_finds(),
-    return(invisible())
-  )
-}
