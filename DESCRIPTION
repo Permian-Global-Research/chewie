@@ -8,7 +8,7 @@ Description: What the package does (one paragraph).
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Imports: 
     arrow,
     cli,
@@ -16,17 +16,21 @@ Imports:
     data.table,
     dplyr,
     getPass,
+    hdf5r,
     lubridate,
     purrr,
     RcppSimdJson,
     rlang,
-    sf
+    sf,
+    wk,
+    tibble
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
 Suggests: 
     ggplot2,
     knitr,
     mapview,
+    leaflet,
     rmarkdown,
     stars,
     terra

@@ -39,6 +39,8 @@ chewie_get_netrc()
 \item{quiet}{logical whether to suppress the registration prompt and
 messaging.}
 
+\item{test}{logical whether to test the credentials after setting them.}
+
 \item{renviron}{character either 'user', '"project"' or path to the directory
 containing the \code{.Renviron} file to set the \code{CHEWIE_NETRC} environment.}
 }

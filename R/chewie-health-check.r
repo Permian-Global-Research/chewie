@@ -3,17 +3,24 @@
 #' environment variables
 #' @param .test logical; whether to test the credentials (requires internet
 #' connection)
+#' @param .report_cache logical; whether to report the cache status (default:
+#' TRUE)
+#'
 #' @export
-chewie_health_check <- function(.test = TRUE) {
+chewie_health_check <- function(.test = TRUE, .report_cache = TRUE) {
+  assert_bool(c(".test" = .test))
+  assert_bool(c(".report_cache" = .report_cache))
+
   if (is.na(chewie_get_env())) {
     inform_env_health("No NASA Earthdata Credentials set.")
   } else {
     if (!file.exists(chewie_get_env())) {
       inform_env_health("NASA Earthdata Credentials file does not exist.")
     } else {
-      cli::cli_alert_success(c(
-        "NASA Earthdata Credentials already set."
-      ))
+      cli::cli_inform(c(
+        "v" =
+          "NASA Earthdata Credentials already set."
+      ), class = "packageStartupMessage")
     }
     if (isTRUE(.test)) {
       chewie_test_creds(.error = FALSE)
@@ -28,9 +35,9 @@ chewie_health_check <- function(.test = TRUE) {
     } else {
       inform_cache_set_success(chewie_get_cache())
 
-      gedi_find_cache_checker()
+      gedi_find_cache_checker(.report_cache)
 
-      gedi_grab_cache_checker()
+      gedi_grab_cache_checker(.report_cache)
     }
   }
 }
@@ -60,7 +67,11 @@ dir_info <- function(dir) {
 #' @title Check the GEDI find cache
 #' @description Check the size of the GEDI find cache
 #' @noRd
-gedi_find_cache_checker <- function() {
+gedi_find_cache_checker <- function(.report) {
+  if (!.report) {
+    return(invisible())
+  }
+
   if (dir.exists(getOption("chewie.find.gedi.cache"))) {
     gf_info <- dir_info(getOption("chewie.find.gedi.cache"))
     gf_fs <- gf_info$size
@@ -72,7 +83,11 @@ gedi_find_cache_checker <- function() {
 #' @title Check the GEDI grab cache
 #' @description Check the size of the GEDI grab cache
 #' @noRd
-gedi_grab_cache_checker <- function() {
+gedi_grab_cache_checker <- function(.report) {
+  if (!.report) {
+    return(invisible())
+  }
+
   if (dir.exists(getOption("chewie.parquet.cache"))) {
     parq_dirs <- list.files(
       getOption("chewie.parquet.cache"),

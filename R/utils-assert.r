@@ -16,3 +16,11 @@ assert_gedi_product <- function(x) {
     abort_gedi_opts()
   }
 }
+
+assert_bool <- function(x) {
+  if (isTRUE(x) || isFALSE(x)) {
+    return(invisible())
+  } else {
+    abort_bool(x)
+  }
+}

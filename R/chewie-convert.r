@@ -4,7 +4,6 @@
 #' @param x A `chewie.download` object.
 #' @param ... arguments passed to `chewie_convert`
 #' @noRd
-#' @export
 #'
 chewie_convert <- function(x, ...) {
   UseMethod("chewie_convert")

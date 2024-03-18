@@ -179,14 +179,27 @@ abort_missing_project_renv <- function(x) {
   ))
 }
 
+
+abort_bool <- function(x) {
+  arg <- names(x)
+  cli::cli_abort(c(
+    paste0(
+      "The provided value for ",
+      chew_bold_mag("`{arg}`"),
+      " is not a boolean."
+    ),
+    "i" = "Please provide either TRUE or FALSE."
+  ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {
   cli::cli_inform(
     c(
       paste0(
-        chew_bold_green("→ "),
-        "Opening https://urs.earthdata.nasa.gov/users/new"
+        chew_bold_green(cli::symbol$arrow_right),
+        " Opening ", cli::style_bold("https://urs.earthdata.nasa.gov/users/new")
       ),
       "i" = "Please create an account and rerun `chewie::chewie_creds()`."
     )
@@ -218,7 +231,7 @@ inform_cache_set_success <- function(x) {
   cli::cli_inform(c(
     "v" = "GEDI cache set in the following directory:",
     ">" = cli::style_italic(paste0('"', x, '"'))
-  ))
+  ), class = "packageStartupMessage")
 }
 
 inform_env_health <- function(x) {
@@ -240,7 +253,7 @@ inform_cache_health <- function(x) {
       chew_bold_mag("chewie::chewie_setup_cache()"),
       "` to set up your cache."
     )
-  ))
+  ), class = "packageStartupMessage")
 }
 
 inform_time <- function(st, type) {
@@ -264,15 +277,19 @@ inform_missing_user_renv <- function() {
 }
 
 inform_find_gedi_cache <- function(fn, fs) {
-  cli::cli_alert_info(
+  cli::cli_inform(
     c(
-      "The ",
-      chew_bold_yel("`find_gedi`"),
-      " cache contains ",
-      chew_bold_green("{fn} file{?s}"),
-      " with a total size of ",
-      chew_bold_mag("{fs} MB.")
-    )
+      "i" =
+        paste0(
+          "The ",
+          chew_bold_yel("`find_gedi`"),
+          " cache contains ",
+          chew_bold_green("{fn} file{?s}"),
+          " with a total size of ",
+          chew_bold_mag("{fs} MB.")
+        )
+    ),
+    class = "packageStartupMessage"
   )
 }
 

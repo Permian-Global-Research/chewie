@@ -2,14 +2,35 @@
 % Please edit documentation in R/chewie-show.r
 \name{chewie_show}
 \alias{chewie_show}
+\alias{chewie_show.chewie.find}
 \title{Show an interactive map of a chewie_* object.}
 \usage{
-chewie_show(x, ...)
+chewie_show(
+  x,
+  time_group = c("year", "month"),
+  alpha = 0.5,
+  swath_pal = "Zissou 1",
+  aoi_color = "black",
+  zoom = NULL,
+  interactive = TRUE,
+  file = tempfile(fileext = ".png"),
+  ...
+)
+
+\method{chewie_show}{chewie.find}(
+  x,
+  time_group = c("year", "month"),
+  alpha = 0.5,
+  swath_pal = "Zissou 1",
+  aoi_color = "black",
+  zoom = NULL,
+  interactive = TRUE,
+  file = tempfile(fileext = ".png"),
+  ...
+)
 }
 \arguments{
 \item{x}{object of class \code{chewie_find} or \code{chewie_grab}.}
-
-\item{...}{additional arguments passed to \code{mapview::mapview}.}
 
 \item{time_group}{character; if \code{interactive = TRUE}, group the swaths by
 this time unit. Must be one of \code{"year"} or \code{"month"}.}
@@ -29,6 +50,8 @@ If \code{FALSE}, return a static map.}
 
 \item{file}{character; if \code{interactive = FALSE}, save the static map to this
 file.}
+
+\item{...}{additional arguments passed to \code{mapview::mapview}.}
 }
 \value{
 interactive leaflet map

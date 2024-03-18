@@ -19,7 +19,16 @@
 #'
 #' @return interactive leaflet map
 #' @export
-chewie_show <- function(x, ...) {
+chewie_show <- function(
+    x,
+    time_group = c("year", "month"),
+    alpha = 0.5,
+    swath_pal = "Zissou 1",
+    aoi_color = "black",
+    zoom = NULL,
+    interactive = TRUE,
+    file = tempfile(fileext = ".png"),
+    ...) {
   chk_pkg("mapview", abort_no_mapview)
   UseMethod("chewie_show")
 }
@@ -29,6 +38,7 @@ chewie_show.default <- function(x, ...) {
   chewie_show_warn(x)
 }
 
+#' @rdname chewie_show
 #' @export
 chewie_show.chewie.find <- function(
     x,
@@ -38,7 +48,8 @@ chewie_show.chewie.find <- function(
     aoi_color = "black",
     zoom = NULL,
     interactive = TRUE,
-    file = tempfile(fileext = ".png")) {
+    file = tempfile(fileext = ".png"),
+    ...) {
   if (isFALSE(interactive)) {
     mapview::mapviewOptions(fgb = FALSE)
     on.exit(mapview::mapviewOptions(fgb = TRUE))

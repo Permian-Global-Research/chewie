@@ -2,7 +2,6 @@
 % Please edit documentation in R/chewie-find.r
 \name{find_gedi}
 \alias{find_gedi}
-\alias{chewie_clear_find_cache}
 \title{Find GEDI swaths}
 \usage{
 find_gedi(
@@ -13,8 +12,6 @@ find_gedi(
   intersects = TRUE,
   cache = TRUE
 )
-
-chewie_clear_find_cache()
 }
 \arguments{
 \item{x}{object of class \code{sf}, \code{spatVector}, \code{spatRaster}, \code{sfc}, \code{stars},
@@ -36,8 +33,6 @@ contained within the bounding box of the spatial object are returned.}
 search. If TRUE the results of the search will be cached in the directory
 defined by: \code{getOption("chewie.find.gedi.cache")}. If FALSE the results will
 not be cached.}
-
-\item{gedi_version}{character of GEDI version to search for.}
 }
 \description{
 Find GEDI swaths that intersect with a given spatial object.
@@ -45,9 +40,5 @@ Find GEDI swaths that intersect with a given spatial object.
 \details{
 Where x is a numeric it must be of length 4 with values corresponding to the
 bounding box coordinates in the order xmin, ymin, xmax, ymax.
-
-\code{chewie_clear_find_cache} deletes the cached .rds files in the GEDI find
-cache directory, located in \code{getOption("chewie.find.gedi.cache")}.
 }
 \concept{find GEDI}
-\concept{find GEDI.}
