@@ -179,14 +179,27 @@ abort_missing_project_renv <- function(x) {
   ))
 }
 
+
+abort_bool <- function(x) {
+  arg <- names(x)
+  cli::cli_abort(c(
+    paste0(
+      "The provided value for ",
+      chew_bold_mag("`{arg}`"),
+      " is not a boolean."
+    ),
+    "i" = "Please provide either TRUE or FALSE."
+  ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {
   cli::cli_inform(
     c(
       paste0(
-        chew_bold_green("→ "),
-        "Opening https://urs.earthdata.nasa.gov/users/new"
+        chew_bold_green(cli::symbol$arrow_right),
+        " Opening ", cli::style_bold("https://urs.earthdata.nasa.gov/users/new")
       ),
       "i" = "Please create an account and rerun `chewie::chewie_creds()`."
     )

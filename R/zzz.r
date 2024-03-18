@@ -26,6 +26,6 @@
 }
 
 .onAttach <- function(lib, pkg) {
-  chewie_health_check(.test = FALSE)
+  chewie_health_check(.test = FALSE, .report_cache = FALSE)
   invisible()
 }
