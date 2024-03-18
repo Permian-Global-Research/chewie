@@ -68,6 +68,7 @@ chewie_unset_cache <- function(renviron = "user") {
 }
 
 #' @title Get GEDI Cache
+#' @description Get the path to the GEDI cache directory.
 #' @rdname chewie-cache
 #' @family manage cache
 #' @export
@@ -92,5 +93,83 @@ chewie_set_cache_opts <- function() {
       chewie_get_cache(),
       "find-gedi-cache"
     )
+  )
+}
+
+#' @title Clear the GEDI find (search) cache
+#' @rdname chewie-cache
+#' @family manage cache
+#' @details
+#' `chewie_clear_find_cache` deletes the cached .rds files in the GEDI find
+#' cache directory, located in `getOption("chewie.find.gedi.cache")`.
+#' @export
+chewie_clear_find_cache <- function() {
+  cache_dir <- getOption("chewie.find.gedi.cache")
+
+  clean_finds <- function() {
+    list.files(cache_dir, pattern = "\\.rds$", full.names = TRUE) |>
+      purrr::walk(file.remove)
+  }
+
+  cli::cli_inform(
+    paste0(
+      chew_bold_mag("?"),
+      paste0(
+        "   Do you really want to clear your GEDI search cache?"
+      )
+    )
+  )
+
+  choice <- menu(c(
+    chew_bold_green("Yes"),
+    chew_bold_red("No!")
+  ))
+
+  switch(choice,
+    clean_finds(),
+    return(invisible())
+  )
+}
+
+#' @title Clear the GEDI h5 temp cache
+#' @rdname chewie-cache
+#' @family manage cache
+#' @details
+#' `chewie_clear_h5_temp_cache` deletes the cached .h5 files in the GEDI h5 -
+#' these files sometimes persist when a download in incomplete or there has
+#' been an error with the download. If you are having trouble downloading data,
+#' running this command could well help.
+#'
+#' chewie does not provide a helper function to clear the main parquet cache
+#' for safety reasons. In theory this cache should also be stable. To manually
+#' clear it - navigate to the location of `getOption("chewie.parquet.cache")`
+#' and delete the necessary files.
+#'
+#' @export
+chewie_clear_h5_temp_cache <- function() {
+  cache_dir <- getOption("chewie.h5.cache")
+
+  clean_finds <- function() {
+    list.files(cache_dir, pattern = "\\.h5$", full.names = TRUE) |>
+      purrr::walk(file.remove)
+  }
+
+  cli::cli_inform(
+    paste0(
+      chew_bold_mag("?"),
+      paste0(
+        "   Do you really want to clear your GEDI h5 temp cache?"
+      )
+    )
+  )
+
+  choice <- menu(c(
+    chew_bold_green("Yes"),
+    chew_bold_red("No!")
+  ))
+
+  switch(choice,
+    clean_finds(),
+    return(invisible())
   )
 }
