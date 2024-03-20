@@ -192,6 +192,18 @@ abort_bool <- function(x) {
   ))
 }
 
+abort_download_with_log <- function(log_path) {
+  cli::cli_abort(c(
+    "x" = "Some Downloads have not completed successfully.",
+    "i" = "Saving log file. To read the log, use:",
+    ">" = paste0(
+      chew_bold_cyan("readRDS("),
+      chew_bold_yel(paste0('"', log_path, '"')),
+      chew_bold_cyan(")")
+    )
+  ))
+}
+
 # ---- inform ----
 #' @noRd
 inform_reg_account <- function() {
@@ -264,8 +276,8 @@ inform_time <- function(st, type) {
 }
 
 inform_download_completed <- function(ncomp, n) {
-  cli::cli_alert_success(
-    " {ncomp}/{n} {cli::qty(ncomp)}file{?s} already downloaded."
+  cli::cli_alert_info(
+    " {ncomp}/{n} {cli::qty(ncomp)}file{?s} were already downloaded."
   )
 }
 
@@ -293,6 +305,37 @@ inform_find_gedi_cache <- function(fn, fs) {
   )
 }
 
+inform_n_to_convert <- function(gedi_product, nfiles) {
+  cli::cli_inform(c(">" = paste0(
+    "Converting {nfiles} ",
+    chew_bold_yel(gedi_product),
+    " hdf files to parquet."
+  )))
+}
+
+inform_n_to_download <- function(gedi_product, nfiles) {
+  cli::cli_inform(c(">" = paste0(
+    "Downloading {nfiles} ",
+    chew_bold_yel(gedi_product),
+    " Data files."
+  )))
+}
+
+inform_no_select_cache <- function() {
+  cli::cli_inform(
+    c(
+      "!" = "No parquet cache directories were selected.",
+      "i" = "Please give one or more of the following as the `directories` argument:",
+      paste0(
+        cli::col_br_yellow("1B, 2A, 2B "),
+        "and/or ",
+        cli::col_br_yellow("4A")
+      )
+    )
+  )
+}
+
+
 #---- warn ----
 chewie_show_warn <- function(x) {
   cli::cli_inform(
@@ -302,7 +345,8 @@ chewie_show_warn <- function(x) {
           "No `chewie_show()` method for class ",
           chew_bold_red(class(x)[1])
         ),
-      "i" = "Only objects of class `chewie.*` are supported."
+      "i" = "Only objects of class `chewie.*` or created with `collect_gedi`
+      are supported."
     )
   )
 }
@@ -325,4 +369,35 @@ no_tx_waveform_warn <- function() {
       " is not currently supported"
     )
   )
+}
+
+
+# ---- menus ----
+
+cache_clear_check <- function(prod_name = c("1B", "2A", "2B", "4A", "H5")) {
+  prod_name <- rlang::arg_match(prod_name, multiple = TRUE)
+  get_cache_type <- function(cd) {
+    unique(dplyr::case_match(
+      cd,
+      c("1B", "2A", "2B", "4A") ~ "parquet cache director",
+      "H5" ~ "temp cache director"
+    ))
+  }
+
+  cache_type <- get_cache_type(prod_name)
+
+  cli::cli_inform(
+    paste0(
+      chew_bold_mag("?"),
+      paste0(
+        "   Do you really want to clear the GEDI {.pkg {prod_name}} ",
+        cache_type, "{?y/ies}."
+      )
+    )
+  )
+
+  menu(c(
+    chew_bold_green("Yes"),
+    chew_bold_red("No!")
+  ))
 }
