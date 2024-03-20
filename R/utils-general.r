@@ -10,10 +10,17 @@ dt_snake_case <- function() {
 
 #' @title get the GEDI product from a `chewie.find` object
 #' @noRd
-find_gedi_product <- function(x) {
-  g_prod <- sub(".*\\-", "", attributes(x)$gedi_product)
-  assert_gedi_product(g_prod)
-  return(g_prod)
+find_gedi_product <- function(x, simple = TRUE, err = TRUE) {
+  prod_long <- attributes(x)$gedi_product
+  if (is.null(prod_long)) {
+    ifelse(err,
+      cli::cli_abort("No GEDI product associated with object `x`."),
+      return(NULL)
+    )
+  }
+  g_prod <- sub(".*\\-", "", prod_long)
+  assert_gedi_product(g_prod, err = err)
+  return(ifelse(simple, g_prod, prod_long))
 }
 
 #' @title create a directory if it doesn't exist
