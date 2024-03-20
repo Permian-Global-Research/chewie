@@ -9,23 +9,11 @@
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param gedi_prod A character vector indicating the GEDI product.
 #' @noRd
-chewie_download <- function(
-    .url, s_id, id,
+chewie_mk_parquet <- function(
+    df,
     .dir, timeout, progress, gedi_prod, nfiles, add_vars) {
-  destination <- file.path(.dir, basename(.url))
-
-  # here we're using multi_download but only downloading one file at a
-  # time. We could do this with other curl functions but this api is nice
-  # however the progress bar is not perfect...
-  df <- curl::multi_download(
-    .url,
-    destfiles = destination,
-    resume = TRUE,
-    timeout = timeout,
-    progress = progress,
-    netrc = TRUE,
-    netrc_file = Sys.getenv("CHEWIE_NETRC")
-  )
+  s_id <- df$id
+  id <- df$row_num
 
   attr(df, "class") <- c(
     paste0("chewie.download.", gedi_prod),
@@ -33,9 +21,7 @@ chewie_download <- function(
   )
 
   if (isTRUE(check_status_codes(df))) {
-    cli::cli_inform(c("*" = "Converting to data.table"))
     gedi_dt <- chewie_convert(df, extra_vars = add_vars)
-    cli::cli_inform(c("*" = "Writing as parquet file"))
     save_dir <- file.path(
       getOption(
         "chewie.parquet.cache"
@@ -55,24 +41,27 @@ chewie_download <- function(
         )
       )
     )
-    cli::cli_inform(c("*" = "Removing hdf5 file"))
     unlink(df$destfile)
 
     # report success
     colfunc <- ifelse(id == nfiles, chew_bold_green, chew_bold_cyan)
 
-    cli::cli_alert_success(paste0(
-      "   Downloaded {cli::qty(id)}file{?s}:",
-      colfunc("{id}"),
-      "/",
-      chew_bold_green("{nfiles}")
-    ))
+    if (id == nfiles) {
+      cli::cli_alert_success(paste0(
+        "   Converted {cli::qty(id)}",
+        colfunc("{id}"),
+        "/",
+        chew_bold_green("{nfiles}"),
+        " file{?s} to parquet format"
+      ))
+    }
   } else {
     cli::cli_alert_danger(paste0(
-      "   Error Downloading {cli::qty(id)}file{?s}:",
+      "   Error converting {cli::qty(id)}file ",
       colfunc("{id}"),
       "/",
-      chew_bold_red("{nfiles}")
+      chew_bold_red("{nfiles}"),
+      " to parquet format"
     ))
   }
 
@@ -154,25 +143,43 @@ grab_gedi <- function(
   gedi_product <- find_gedi_product(x)
 
   # function to control file download and conversion.
-  x_to_down <- chewie_missing_gedi(x)
+  x_to_down <- chewie_missing_gedi(x) |>
+    dplyr::mutate(destfile = file.path(.dir, basename(url)))
 
   # get the number of files to download for informative messaging later.
   nfiles <- nrow(x_to_down)
 
   if (nfiles > 0) {
-    cli::cli_inform(c(">" = paste0(
-      "Downloading {nfiles} ",
-      chew_bold_yel(gedi_product),
-      " Data files."
-    )))
+    inform_n_to_download(gedi_product, nfiles)
+
+    # here we run the download in parallel
+    down_df <- curl::multi_download(
+      x_to_down$url,
+      destfiles = file.path(.dir, basename(x_to_down$url)),
+      resume = TRUE,
+      timeout = timeout,
+      progress = progress,
+      multiplex = TRUE,
+      netrc = TRUE,
+      netrc_file = Sys.getenv("CHEWIE_NETRC")
+    )
+
+    dd_full_split <- sf::st_drop_geometry(x_to_down) |>
+      dplyr::select(destfile, id) |>
+      dplyr::mutate(row_num = dplyr::row_number()) |>
+      dplyr::right_join(down_df, by = "destfile") |>
+      dplyr::group_split(row_num)
+
+    inform_n_to_convert(gedi_product, nfiles)
 
     dl_df <-
-      purrr::pmap(
-        .l = list(x_to_down$url, x_to_down$id, 1:nfiles),
-        ~ chewie_download(
-          ..1, ..2, ..3,
+      purrr::map(
+        dd_full_split,
+        ~ chewie_mk_parquet(
+          .x,
           .dir, timeout, progress, gedi_product, nfiles, add_vars
-        )
+        ),
+        .progress = progress
       ) |>
       purrr::list_rbind()
 
@@ -200,15 +207,7 @@ log_staus_codes <- function(x, n) {
 
     saveRDS(x, log_path)
 
-    cli::cli_abort(c(
-      "x" = "Some Downloads have not completed successfully.",
-      "i" = "Saving log file. To read the log, use:",
-      ">" = paste0(
-        chew_bold_cyan("readRDS("),
-        chew_bold_yel(paste0('"', log_path, '"')),
-        chew_bold_cyan(")")
-      )
-    ))
+    abort_download_with_log(log_path)
   }
 
   completed <- which(x$status_code == 416)

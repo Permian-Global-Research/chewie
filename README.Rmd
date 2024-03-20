@@ -25,12 +25,12 @@ Here is a quick summary of design choices that enables {chewie} to
 achieve this:
 
 - chewie adopts an R-centric approach to downloading GEDI data. Data are 
-  downloaded and converted to parquet files which can then read using the 
+  downloaded and converted to parquet files which can then be read using 
   [{arrow}](https://arrow.apache.org/docs/r/index.html) and converted to 
   [sf](https://r-spatial.github.io/sf/) objects. This approach is performative 
   and enables the use of [dplyr](https://dplyr.tidyverse.org/) verbs to `filter`, 
   `mutate` and `select` data as required without needing to load all shots, from
-  a given swath, into memory.
+  a given swath/granule, into memory.
 
 -  There is support for spatial filtering of swaths that intersect an area of 
   interest and not only by bounding box; this frequently reduces the amount 
@@ -41,18 +41,8 @@ achieve this:
   different project (it is also possible to specify a different cache location 
   for each project).
 
-- The scope of this package is deilibertly narrow. It is not intended to include 
-  functionality for post processing or modelling.
-
-
-TO DO:
-
-- [ ] Add a `chewie_show` method to plot footprints
-  
-- [ ] Add cache reporting to `chewie_health_check` - i.e. n files in cache, 
-size of cache, etc.
-
-- [ ] write tests...
+- The scope of this package is deliberately narrow. It is not intended to include 
+  functionality for complex post processing or modelling.
 
 
 ## Installation
@@ -107,12 +97,11 @@ gedi_2a_search <- find_gedi(hw,
 )
 
 print(gedi_2a_search)
-
-plot(gedi_2a_search)
 ```
 
-Or alternatively plot a leaflet map with `chewie_show`, which can be static or 
-interactive.
+Whilst there is a `plot` method for *chewie.find* objects, a great alternative 
+is to plot a leaflet map with `chewie_show`, which can be static or 
+interactive (this uses the fantastic {mapview} under the hood).
 ```{r, show-find-data, include=FALSE}
 swath_map <- chewie_show(
   gedi_2a_search,
@@ -135,8 +124,11 @@ knitr::include_graphics("man/figures/README-show-find-data-1.png")
 
 Now we use `grab_gedi` to download the data - this function internally, converts
 the data to parquet format and stores it in the cache. The data is as an arrow
-dataset. We can then use any dplyr verbs to filter/select the data as we wish 
-before finally using `collect_gedi` to convert the data to a sf object. 
+dataset. We can then use any {dplyr} verbs to filter/select the data as we wish 
+before finally using `collect_gedi` to convert the data to a sf object. If no
+filtering/selection is carried out then `collect_gedi` will return all the 
+available columns.
+
 ```{r collect-data}
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
   filter(
@@ -150,20 +142,40 @@ gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
   collect_gedi(gedi_find = gedi_2a_search)
 
 print(gedi_2a_sf)
+```
 
-plot(gedi_2a_sf["rh75"], axes = TRUE, reset = FALSE)
-plot(sf::st_transform(hw[0], sf::st_crs(gedi_2a_sf)), add = TRUE, reset = FALSE)
+Finally, we can plot the data. Again we can use the generic `chewie_show` 
+function.
+
+```{r, show-2a-data, include=FALSE}
+swath_map <- chewie_show(
+  gedi_2a_sf,
+  zcol = "rh100",
+  zoom = 12,
+  interactive = FALSE,
+  file = "man/figures/README-show-2a-data-1.png"
+)
+```
+```{r, show-2a-data-example, eval=FALSE}
+chewie_show(
+  gedi_2a_sf,
+  zcol = "rh90",
+  zoom = 12
+)
+```
+```{r, show-fig-2a, echo=FALSE}
+knitr::include_graphics("man/figures/README-show-2a-data-1.png")
 ```
 
 
 ## Other relevant packages
 - [{rGEDI}](https://github.com/carlos-alberto-silva/rGEDI) provides the ability
 download GEDI data but also a great deal of additional functionality for 
-visualisation, post processing and modelling.
+visualisation, post-processing and modelling.
 
-- [{GEDI4R}](https://github.com/VangiElia/GEDI4R) which similiarly provides a 
+- [{GEDI4R}](https://github.com/VangiElia/GEDI4R) which similarly provides a 
 suit of tools for downloading, visualising and modelling GEDI data, but with a
 focus on the 4A product.
 
-Both of these packages have been a great source of inspiration for this package
+Both of these packages have been a great source of inspiration;
 we would like to thank the authors for their great work! 

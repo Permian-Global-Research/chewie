@@ -9,11 +9,11 @@ chk_pkg <- function(pkg, abort_fun) {
 }
 
 
-assert_gedi_product <- function(x) {
+assert_gedi_product <- function(x, err = TRUE) {
   if (length(x) > 0 && x %in% c("1B", "2A", "2B", "4A")) {
     return(invisible())
   } else {
-    abort_gedi_opts()
+    ifelse(err, abort_gedi_opts(), NULL)
   }
 }
 

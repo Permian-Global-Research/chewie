@@ -140,10 +140,6 @@ chewie_clear_find_cache <- function() {
 #' been an error with the download. If you are having trouble downloading data,
 #' running this command could well help.
 #'
-#' chewie does not provide a helper function to clear the main parquet cache
-#' for safety reasons. In theory this cache should also be stable. To manually
-#' clear it - navigate to the location of `getOption("chewie.parquet.cache")`
-#' and delete the necessary files.
 #'
 #' @export
 chewie_clear_h5_temp_cache <- function() {
@@ -154,22 +150,47 @@ chewie_clear_h5_temp_cache <- function() {
       purrr::walk(file.remove)
   }
 
-  cli::cli_inform(
-    paste0(
-      chew_bold_mag("?"),
-      paste0(
-        "   Do you really want to clear your GEDI h5 temp cache?"
-      )
-    )
-  )
-
-  choice <- menu(c(
-    chew_bold_green("Yes"),
-    chew_bold_red("No!")
-  ))
+  choice <- cache_clear_check("H5")
 
   switch(choice,
     clean_finds(),
+    return(invisible())
+  )
+}
+
+#' @title Clear the GEDI parquet cache
+#' @param directories character; the GEDI product parquet directories to clear.
+#' @rdname chewie-cache
+#' @family manage cache
+#' @details
+#' `chewie_clear_parquet_cache` deletes the cached .parquet files in the GEDI
+#' parquet cache directory, located in `getOption("chewie.parquet.cache")`.
+#'
+#' This function should almost never be used. Situations where this may be
+#' useful might include - requiring to free up disk space, if you are
+#' experiencing issues with the cache, or if there are package updates which
+#' render the existing cache irrelevant or incompatible.
+#' @export
+chewie_clear_parquet_cache <- function(
+    directories = c("none", "1B", "2A", "2B", "4A")) {
+  directories <- rlang::arg_match(directories, multiple = TRUE)
+
+  clean_parquet <- function(pdir) {
+    list.files(pdir, full.names = TRUE) |>
+      purrr::walk(~ unlink(.x, recursive = TRUE))
+    return(invisible())
+  }
+
+  if ("none" %in% directories) {
+    inform_no_select_cache()
+    return(invisible())
+  }
+
+  choice <- cache_clear_check(directories)
+  p_caches <- file.path(getOption("chewie.parquet.cache"), directories)
+
+  switch(choice,
+    purrr::walk(p_caches, clean_parquet),
     return(invisible())
   )
 }
