@@ -2,14 +2,17 @@
 % Please edit documentation in R/chewie-show.r
 \name{chewie_show}
 \alias{chewie_show}
+\alias{chewie_show.sf}
 \alias{chewie_show.chewie.find}
 \title{Show an interactive map of a chewie_* object.}
 \usage{
-chewie_show(
+chewie_show(x, ...)
+
+\method{chewie_show}{sf}(
   x,
-  time_group = c("year", "month"),
-  alpha = 0.5,
-  swath_pal = "Zissou 1",
+  zcol = NULL,
+  alpha = 0.6,
+  pal = "Zissou 1",
   aoi_color = "black",
   zoom = NULL,
   interactive = TRUE,
@@ -21,7 +24,7 @@ chewie_show(
   x,
   time_group = c("year", "month"),
   alpha = 0.5,
-  swath_pal = "Zissou 1",
+  pal = "Zissou 1",
   aoi_color = "black",
   zoom = NULL,
   interactive = TRUE,
@@ -32,12 +35,13 @@ chewie_show(
 \arguments{
 \item{x}{object of class \code{chewie_find} or \code{chewie_grab}.}
 
-\item{time_group}{character; if \code{interactive = TRUE}, group the swaths by
-this time unit. Must be one of \code{"year"} or \code{"month"}.}
+\item{...}{additional arguments passed to \code{mapview::mapview}.}
+
+\item{zcol}{character; name of the column to use for coloring footprints.}
 
 \item{alpha}{numeric; transparency of the swaths.}
 
-\item{swath_pal}{character; name of the color palette to use for the swaths.
+\item{pal}{character; name of the color palette to use for the swaths/footprints.
 see \code{hcl.pals()} for a list of available palettes.}
 
 \item{aoi_color}{character; color of the AOI polygon.}
@@ -51,7 +55,8 @@ If \code{FALSE}, return a static map.}
 \item{file}{character; if \code{interactive = FALSE}, save the static map to this
 file.}
 
-\item{...}{additional arguments passed to \code{mapview::mapview}.}
+\item{time_group}{character; if \code{interactive = TRUE}, group the swaths by
+this time unit. Must be one of \code{"year"} or \code{"month"}.}
 }
 \value{
 interactive leaflet map

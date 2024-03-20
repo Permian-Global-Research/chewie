@@ -6,6 +6,7 @@
 \alias{chewie_get_cache}
 \alias{chewie_clear_find_cache}
 \alias{chewie_clear_h5_temp_cache}
+\alias{chewie_clear_parquet_cache}
 \title{Set GEDI Parquet Cache}
 \usage{
 chewie_setup_cache(
@@ -21,6 +22,8 @@ chewie_get_cache()
 chewie_clear_find_cache()
 
 chewie_clear_h5_temp_cache()
+
+chewie_clear_parquet_cache(directories = c("none", "1B", "2A", "2B", "4A"))
 }
 \arguments{
 \item{.dir}{character path to the directory that should contain the cache.}
@@ -31,6 +34,8 @@ environment and create the directory. If missing, the default cache
 directory is used.}
 
 \item{quiet}{logical if \code{TRUE} then no messages are printed.}
+
+\item{directories}{character; the GEDI product parquet directories to clear.}
 }
 \description{
 Get the path to the GEDI cache directory.
@@ -47,9 +52,12 @@ these files sometimes persist when a download in incomplete or there has
 been an error with the download. If you are having trouble downloading data,
 running this command could well help.
 
-chewie does not provide a helper function to clear the main parquet cache
-for safety reasons. In theory this cache should also be stable. To manually
-clear it - navigate to the location of \code{getOption("chewie.parquet.cache")}
-and delete the necessary files.
+\code{chewie_clear_parquet_cache} deletes the cached .parquet files in the GEDI
+parquet cache directory, located in \code{getOption("chewie.parquet.cache")}.
+
+This function should almost never be used. Situations where this may be
+useful might include - requiring to free up disk space, if you are
+experiencing issues with the cache, or if there are package updates which
+render the existing cache irrelevant or incompatible.
 }
 \concept{manage cache}
