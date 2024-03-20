@@ -1,9 +1,10 @@
 #' @title Show an interactive map of a chewie_* object.
 #' @param x object of class `chewie_find` or `chewie_grab`.
+#' @param zcol character; name of the column to use for coloring footprints.
 #' @param time_group character; if `interactive = TRUE`, group the swaths by
 #' this time unit. Must be one of `"year"` or `"month"`.
 #' @param alpha numeric; transparency of the swaths.
-#' @param swath_pal character; name of the color palette to use for the swaths.
+#' @param pal character; name of the color palette to use for the swaths/footprints.
 #' see `hcl.pals()` for a list of available palettes.
 #' @param aoi_color character; color of the AOI polygon.
 #' @param zoom numeric; zoom level of the map. If `NULL` (default), the zoom
@@ -18,17 +19,10 @@
 #' work with `chewie_find()` and `chewie_grab()` objects.
 #'
 #' @return interactive leaflet map
+#' @rdname chewie_show
 #' @export
 chewie_show <- function(
-    x,
-    time_group = c("year", "month"),
-    alpha = 0.5,
-    swath_pal = "Zissou 1",
-    aoi_color = "black",
-    zoom = NULL,
-    interactive = TRUE,
-    file = tempfile(fileext = ".png"),
-    ...) {
+    x, ...) {
   chk_pkg("mapview", abort_no_mapview)
   UseMethod("chewie_show")
 }
@@ -40,46 +34,108 @@ chewie_show.default <- function(x, ...) {
 
 #' @rdname chewie_show
 #' @export
-chewie_show.chewie.find <- function(
+chewie_show.sf <- function(
     x,
-    time_group = c("year", "month"),
-    alpha = 0.5,
-    swath_pal = "Zissou 1",
+    zcol = NULL,
+    alpha = 0.6,
+    pal = "Zissou 1",
     aoi_color = "black",
     zoom = NULL,
     interactive = TRUE,
     file = tempfile(fileext = ".png"),
     ...) {
-  if (isFALSE(interactive)) {
-    mapview::mapviewOptions(fgb = FALSE)
-    on.exit(mapview::mapviewOptions(fgb = TRUE))
+  pal <- rlang::arg_match(pal, grDevices::hcl.pals())
+  if (!is.null(zcol)) {
+    zcol <- rlang::arg_match(zcol, colnames(x))
   }
+  gprod <- find_gedi_product(x, simple = FALSE, err = FALSE)
+  if (is.null(gprod)) {
+    NextMethod()
+  } else {
+    if (isFALSE(interactive)) {
+      mapview::mapviewOptions(fgb = FALSE)
+      on.exit(mapview::mapviewOptions(fgb = TRUE))
+    }
 
-  bm_opts <- basemap_opts()
+    mv_gen(
+      x, zcol, gprod, alpha, 0.9, pal, aoi_color, zoom, interactive, file,
+      zoom_on_aoi = FALSE, ...
+    )
+  }
+}
 
-  on.exit(mapview::mapviewOptions(basemaps = bm_opts))
+#' @rdname chewie_show
+#' @export
+chewie_show.chewie.find <- function(
+    x,
+    time_group = c("year", "month"),
+    alpha = 0.5,
+    pal = "Zissou 1",
+    aoi_color = "black",
+    zoom = NULL,
+    interactive = TRUE,
+    file = tempfile(fileext = ".png"),
+    ...) {
+  time_group <- rlang::arg_match(time_group, c("year", "month"))
+  pal <- rlang::arg_match(pal, grDevices::hcl.pals())
 
   x$time <- switch(time_group[1],
     year = lubridate::year(x$time_start),
     month = lubridate::month(x$time_start)
   )
 
-  .mv <- mapview::mapview(attributes(x)$aoi,
+  mv_gen(
+    x, "time", sprintf("GEDI swaths (%s)", time_group[1]),
+    alpha, 0, pal, aoi_color, zoom, interactive, file, ...
+  )
+}
+
+basemap_opts <- function() {
+  bm_opts <- mapview::mapviewGetOption("basemaps")
+  mapview::mapviewOptions(basemaps = c(
+    "OpenStreetMap",
+    "CartoDB.Positron",
+    "Esri.WorldImagery"
+  ))
+  return(bm_opts)
+}
+
+aoi_mv <- function(x, aoi_color) {
+  mapview::mapview(attributes(x)$aoi,
     layer.name = "AOI",
     alpha.regions = 0, color = aoi_color, lwd = 2
-  ) +
+  )
+}
+
+mv_gen <- function(
+    x, zcol, layer_name, alpha, b_alpha, pal,
+    aoi_color, zoom, interactive, file, zoom_on_aoi = TRUE, ...) {
+  if (isFALSE(interactive)) {
+    mapview::mapviewOptions(fgb = FALSE)
+    on.exit(mapview::mapviewOptions(fgb = TRUE))
+  }
+
+  on.exit(mapview::mapviewOptions(basemaps = basemap_opts()))
+
+  .mv <- aoi_mv(x, aoi_color) +
     mapview::mapview(x,
-      layer.name = sprintf("GEDI swaths (%s)", time_group[1]),
-      zcol = "time",
+      layer.name = layer_name,
+      zcol = zcol,
       col.regions = grDevices::hcl.colors(
-        n = length(unique(x$time)), palette = swath_pal
+        n = length(unique(x[[zcol]])), palette = pal
       ),
       alpha.regions = alpha,
-      alpha = 0
+      alpha = b_alpha,
+      ...
     )
 
   if (!is.null(zoom)) {
-    cent <- sf::st_centroid(sf::st_union(attributes(x)$aoi)) |>
+    if (zoom_on_aoi) {
+      aoi_cent <- attributes(x)$aoi
+    } else {
+      aoi_cent <- x
+    }
+    cent <- sf::st_centroid(sf::st_union(aoi_cent)) |>
       wk::as_xy() |>
       as.numeric()
 
@@ -94,14 +150,4 @@ chewie_show.chewie.find <- function(
     utils::browseURL(file)
     return(file)
   }
-}
-
-basemap_opts <- function() {
-  bm_opts <- mapview::mapviewGetOption("basemaps")
-  mapview::mapviewOptions(basemaps = c(
-    "OpenStreetMap",
-    "CartoDB.Positron",
-    "Esri.WorldImagery"
-  ))
-  return(bm_opts)
 }
