@@ -121,5 +121,12 @@ collect_gedi <- function(
     gedi_pnts <- sf::st_filter(gedi_pnts, attributes(gedi_find)$aoi)
   }
 
+  attributes(gedi_pnts)$gedi_product <- find_gedi_product(
+    gedi_find,
+    simple = FALSE
+  )
+
+  attributes(gedi_pnts)$aoi <- attributes(gedi_find)$aoi
+
   return(gedi_pnts)
 }
