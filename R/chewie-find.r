@@ -166,9 +166,9 @@ build_sf_set <- function(gedi_response) {
 
 gedi_code_lookup <- function(.gprod) {
   switch(paste0("G", .gprod),
-    G1B = "C1908344278-LPDAAC_ECS",
-    G2A = "C1908348134-LPDAAC_ECS",
-    G2B = "C1908350066-LPDAAC_ECS",
+    G1B = "C2142749196-LPCLOUD",
+    G2A = "C2142771958-LPCLOUD",
+    G2B = "C2142776747-LPCLOUD",
     G4A = "C2237824918-ORNL_CLOUD",
     abort_gedi_opts()
   )
@@ -176,7 +176,7 @@ gedi_code_lookup <- function(.gprod) {
 
 
 build_req_url <- function(.gprod, .bbox, .dr) {
-  .provider <- ifelse(.gprod == "4A", "ORNL_CLOUD", "LPDAAC_ECS")
+  .provider <- ifelse(.gprod == "4A", "ORNL_CLOUD", "LPCLOUD")
   req_url <- paste0(
     "https://cmr.earthdata.nasa.gov/search/granules.json?",
     "pretty=true&provider=",
