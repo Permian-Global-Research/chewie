@@ -1,14 +1,15 @@
-#' @title Find GEDI swaths
-#' @description Find GEDI swaths that intersect with a given spatial object.
+#' @title Find GEDI granules
+#' @description Find GEDI granules that intersect with a given spatial object.
 #' @param x object of class `sf`, `spatVector`, `spatRaster`, `sfc`, `stars`,
-#' `stars_proxy`, or `numeric` see details.
+#' `stars_proxy`, or `numeric` see details. Used to define the search area for
+#' GEDI data.
 #' @param gedi_product character of GEDI product to search for.
 #' @param date_start character or `POSIXct` of the start date to search for GEDI
 #' data. If `NULL` defaults to the start of GEDI operations (2019-03-25).
 #' @param date_end character or `POSIXct` of the end date to search for GEDI
 #' data. If `NULL` defaults to the current date.
-#' @param intersects logical indicating whether to return only swaths that
-#' intersect with the given spatial object. If FALSE all swaths that are
+#' @param intersects logical indicating whether to return only granules that
+#' intersect with the given spatial object. If FALSE all granules that are
 #' contained within the bounding box of the spatial object are returned.
 #' @param cache logical indicating whether to cache the results of the GEDI
 #' search. If TRUE the results of the search will be cached in the directory
@@ -19,6 +20,24 @@
 #' @details
 #' Where x is a numeric it must be of length 4 with values corresponding to the
 #' bounding box coordinates in the order xmin, ymin, xmax, ymax.
+#'
+#' By default, the {sf} package uses the s2 model to carry out geometric
+#' operations. This can sometimes result in the apparent intersection of
+#' GEDI granules and an AOI, possibly resulting in the downloading of more data
+#' than expected. If this is an issue in your case, you can use
+#' `sf::sf_use_s2(use_s2 = FALSE)`. See \link[sf]{sf_use_s2} for more
+#' details.
+#'
+#' @examplesIf interactive()
+#' humboldt <- sf::read_sf(
+#'   system.file("geojson", "humboldt.geojson", package = "chewie")
+#' )
+#' x <- find_gedi(humboldt,
+#'   gedi_product = "2A",
+#'   date_start = "2022-01-01", date_end = "2022-04-01",
+#'   cache = FALSE
+#' )
+#' print(x)
 #'
 #' @export
 find_gedi <- function(
@@ -64,7 +83,7 @@ find_gedi <- function(
       paste0(cache_string, ".rds")
     )
     if (file.exists(cache_file)) {
-      cli::cli_alert_success("Using cached GEDI data")
+      cli::cli_alert_success("Using cached GEDI find result")
       cached_find <- readRDS(cache_file)
       return(chewie_scan(cached_find))
     }
@@ -232,7 +251,6 @@ build_date_range <- function(.sd, .ed) {
 #' `chewie.print.topn`, `chewie.print.nrows`, `chewie.print.trunc.cols`,
 #' `chewie.prettyprint.char`, `chewie.print.width`. Additonal options for
 #' `print.data.table` can also be set to alter the print layout.
-#'
 print.chewie.find <- function(x, ...) {
   chewie_print(x, ...)
 }
@@ -241,7 +259,7 @@ print.chewie.find <- function(x, ...) {
 #' @description `plot.chewie.find` is a method for plotting `chewie.find`
 #' objects.
 #' @param x chewie.find object to print
-#' @param swath_col character; color of the swaths.
+#' @param swath_col character; color of the granules.
 #' @param aoi_col character; color of the aoi.
 #' @param ... arguments passed to `print.sf`
 #' @return a base R plot.

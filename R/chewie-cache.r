@@ -1,4 +1,4 @@
-#' @title Set GEDI Parquet Cache
+#' @title Manage the \{chewie\} cache
 #' @param .dir character path to the directory that should contain the cache.
 #' @param renviron character either 'user', '"project"' or path to the directory
 #' containing the `.Renviron` file to set the `CHEWIE_PARQUET_CACHE`

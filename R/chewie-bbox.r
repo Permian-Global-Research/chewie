@@ -14,55 +14,49 @@
 #' chewie_bbox(terra::rast(f))
 #' f2 <- system.file("ex/lux.shp", package = "terra")
 #' chewie_bbox(sf::read_sf(f2))
-#' @export
+#' @noRd
 chewie_bbox <- function(x, ...) {
   UseMethod("chewie_bbox")
 }
 
-#' @rdname chewie_bbox
-#'
+#' @noRd
 #' @export
 chewie_bbox.SpatRaster <- function(x, ...) {
   terra_ext(x)
 }
 
-#' @rdname chewie_bbox
-#'
+#' @noRd
 #' @export
 chewie_bbox.SpatVector <- function(x, ...) {
   terra_ext(x)
 }
 
-#' @rdname chewie_bbox
-#'
+#' @noRd
 #' @export
 chewie_bbox.sf <- function(x, ...) {
   sf_ext(x)
 }
 
-#' @rdname chewie_bbox
-#'
+#' @noRd
 #' @export
 chewie_bbox.sfc <- function(x, ...) {
   sf_ext(x)
 }
 
-#' @rdname chewie_bbox
-#'
+#' @noRd
 #' @export
 chewie_bbox.stars <- function(x, ...) {
   sf_ext(x)
 }
 
-#' @rdname chewie_bbox
-#'
+#' @noRd
 #' @export
 chewie_bbox.stars_proxy <- function(x, ...) {
   sf_ext(x)
 }
 
-#' @rdname chewie_bbox
-#'
+
+#' @noRd
 #' @export
 #' @details where x is numeric it should be avector of length for with
 #' cordinates orderd as xmin, ymin, xmax, ymax.

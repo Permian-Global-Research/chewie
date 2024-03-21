@@ -49,7 +49,7 @@ g1b_search <- find_gedi(hw,
 )
 print(g1b_search)
 ```
-You'll see that two swaths were found. The returned gedi.find object contains 
+You'll see that two granules were found. The returned gedi.find object contains 
 information about the search, including whether or not the files are cached 
 locally.
 

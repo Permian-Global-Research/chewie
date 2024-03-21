@@ -7,7 +7,7 @@
 \alias{chewie_clear_find_cache}
 \alias{chewie_clear_h5_temp_cache}
 \alias{chewie_clear_parquet_cache}
-\title{Set GEDI Parquet Cache}
+\title{Manage the \{chewie\} cache}
 \usage{
 chewie_setup_cache(
   .dir = chewie_default_dir(),

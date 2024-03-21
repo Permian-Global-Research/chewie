@@ -1,22 +1,24 @@
 #' @title Show an interactive map of a chewie_* object.
 #' @param x object of class `chewie_find` or `chewie_grab`.
 #' @param zcol character; name of the column to use for coloring footprints.
-#' @param time_group character; if `interactive = TRUE`, group the swaths by
+#' @param time_group character; if `interactive = TRUE`, group the granules by
 #' this time unit. Must be one of `"year"` or `"month"`.
-#' @param alpha numeric; transparency of the swaths.
-#' @param pal character; name of the color palette to use for the swaths/footprints.
+#' @param alpha numeric; transparency of the granules or footprints.
+#' @param pal character; name of the color palette to use for the granules/footprints.
 #' see `hcl.pals()` for a list of available palettes.
+#' @param pal_reverse logical; if `TRUE`, reverse the color palette.
 #' @param aoi_color character; color of the AOI polygon.
 #' @param zoom numeric; zoom level of the map. If `NULL` (default), the zoom
-#' level is determined automatically by the extent of the GEDI swaths.
+#' level is determined automatically by the extent of the GEDI granules.
 #' @param interactive logical; if `TRUE` (default), return an interactive map.
 #'  If `FALSE`, return a static map.
 #' @param file character; if `interactive = FALSE`, save the static map to this
 #' file.
-#' @param ... additional arguments passed to `mapview::mapview`.
+#' @param ... additional arguments passed to \link[mapview]{mapview}.
 #' @details
 #' This function is a wrapper around `mapview::mapview()`. It is designed to
-#' work with `chewie_find()` and `chewie_grab()` objects.
+#' work with chewie.find objects generated with \link{find_gedi} and sf objects
+#' returned by \link{collect_gedi}.
 #'
 #' @return interactive leaflet map
 #' @rdname chewie_show
@@ -37,8 +39,9 @@ chewie_show.default <- function(x, ...) {
 chewie_show.sf <- function(
     x,
     zcol = NULL,
-    alpha = 0.6,
-    pal = "Zissou 1",
+    alpha = 0.8,
+    pal = "Plasma",
+    pal_reverse = FALSE,
     aoi_color = "black",
     zoom = NULL,
     interactive = TRUE,
@@ -48,7 +51,11 @@ chewie_show.sf <- function(
   if (!is.null(zcol)) {
     zcol <- rlang::arg_match(zcol, colnames(x))
   }
-  gprod <- find_gedi_product(x, simple = FALSE, err = FALSE)
+  gprod <- paste(
+    find_gedi_product(x, simple = FALSE, err = FALSE),
+    zcol,
+    sep = ": "
+  )
   if (is.null(gprod)) {
     NextMethod()
   } else {
@@ -58,7 +65,8 @@ chewie_show.sf <- function(
     }
 
     mv_gen(
-      x, zcol, gprod, alpha, 0.9, pal, aoi_color, zoom, interactive, file,
+      x, zcol, gprod, alpha, 0.01, pal, pal_reverse, aoi_color, zoom,
+      interactive, file,
       zoom_on_aoi = FALSE, ...
     )
   }
@@ -71,22 +79,37 @@ chewie_show.chewie.find <- function(
     time_group = c("year", "month"),
     alpha = 0.5,
     pal = "Zissou 1",
+    pal_reverse = FALSE,
     aoi_color = "black",
     zoom = NULL,
     interactive = TRUE,
     file = tempfile(fileext = ".png"),
     ...) {
-  time_group <- rlang::arg_match(time_group, c("year", "month"))
+  time_group <- rlang::arg_match(time_group, multiple = TRUE)
+  if (length(time_group > 1)) {
+    time_group <- paste(time_group, collapse = "-")
+  }
   pal <- rlang::arg_match(pal, grDevices::hcl.pals())
 
-  x$time <- switch(time_group[1],
+  x$time <- switch(time_group,
     year = lubridate::year(x$time_start),
-    month = lubridate::month(x$time_start)
+    month = lubridate::month(x$time_start),
+    `year-month` = paste(
+      lubridate::year(x$time_start),
+      lubridate::month(x$time_start),
+      sep = "-"
+    ),
+    `month-year` = paste(
+      lubridate::month(x$time_start),
+      lubridate::year(x$time_start),
+      sep = "-"
+    )
   )
 
   mv_gen(
-    x, "time", sprintf("GEDI swaths (%s)", time_group[1]),
-    alpha, 0, pal, aoi_color, zoom, interactive, file, ...
+    x, "time",
+    sprintf("GEDI %s granules (%s)", find_gedi_product(x), time_group),
+    alpha, 0, pal, pal_reverse, aoi_color, zoom, interactive, file, ...
   )
 }
 
@@ -108,7 +131,7 @@ aoi_mv <- function(x, aoi_color) {
 }
 
 mv_gen <- function(
-    x, zcol, layer_name, alpha, b_alpha, pal,
+    x, zcol, layer_name, alpha_regions, alpha, pal, pal_reverse,
     aoi_color, zoom, interactive, file, zoom_on_aoi = TRUE, ...) {
   if (isFALSE(interactive)) {
     mapview::mapviewOptions(fgb = FALSE)
@@ -117,17 +140,33 @@ mv_gen <- function(
 
   on.exit(mapview::mapviewOptions(basemaps = basemap_opts()))
 
-  .mv <- aoi_mv(x, aoi_color) +
-    mapview::mapview(x,
+  # clean up duplicate args provided in ...
+  dots <- list(...)
+  dots <- dots[!names(dots) %in%
+    c("layer.name", "zcol", "col.regions", "alpha.regions", "alpha")]
+
+  # get number of unique values in zcol
+  n_col <- ifelse(is.null(zcol), 1, length(unique(x[[zcol]])))
+
+  # combine all args
+  all_vars <- c(
+    list(
+      x = x,
       layer.name = layer_name,
       zcol = zcol,
       col.regions = grDevices::hcl.colors(
-        n = length(unique(x[[zcol]])), palette = pal
+        n = n_col,
+        palette = pal,
+        rev = pal_reverse
       ),
-      alpha.regions = alpha,
-      alpha = b_alpha,
-      ...
-    )
+      alpha.regions = alpha_regions,
+      alpha = alpha
+    ),
+    dots
+  )
+
+  .mv <- do.call(mapview::mapview, all_vars) +
+    aoi_mv(x, aoi_color)
 
   if (!is.null(zoom)) {
     if (zoom_on_aoi) {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/chewie-find.r
 \name{find_gedi}
 \alias{find_gedi}
-\title{Find GEDI swaths}
+\title{Find GEDI granules}
 \usage{
 find_gedi(
   x,
@@ -15,7 +15,8 @@ find_gedi(
 }
 \arguments{
 \item{x}{object of class \code{sf}, \code{spatVector}, \code{spatRaster}, \code{sfc}, \code{stars},
-\code{stars_proxy}, or \code{numeric} see details.}
+\code{stars_proxy}, or \code{numeric} see details. Used to define the search area for
+GEDI data.}
 
 \item{gedi_product}{character of GEDI product to search for.}
 
@@ -25,8 +26,8 @@ data. If \code{NULL} defaults to the start of GEDI operations (2019-03-25).}
 \item{date_end}{character or \code{POSIXct} of the end date to search for GEDI
 data. If \code{NULL} defaults to the current date.}
 
-\item{intersects}{logical indicating whether to return only swaths that
-intersect with the given spatial object. If FALSE all swaths that are
+\item{intersects}{logical indicating whether to return only granules that
+intersect with the given spatial object. If FALSE all granules that are
 contained within the bounding box of the spatial object are returned.}
 
 \item{cache}{logical indicating whether to cache the results of the GEDI
@@ -35,10 +36,30 @@ defined by: \code{getOption("chewie.find.gedi.cache")}. If FALSE the results wil
 not be cached.}
 }
 \description{
-Find GEDI swaths that intersect with a given spatial object.
+Find GEDI granules that intersect with a given spatial object.
 }
 \details{
 Where x is a numeric it must be of length 4 with values corresponding to the
 bounding box coordinates in the order xmin, ymin, xmax, ymax.
+
+By default, the {sf} package uses the s2 model to carry out geometric
+operations. This can sometimes result in the apparent intersection of
+GEDI granules and an AOI, possibly resulting in the downloading of more data
+than expected. If this is an issue in your case, you can use
+\code{sf::sf_use_s2(use_s2 = FALSE)}. See \link[sf]{sf_use_s2} for more
+details.
+}
+\examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+humboldt <- sf::read_sf(
+  system.file("geojson", "humboldt.geojson", package = "chewie")
+)
+x <- find_gedi(humboldt,
+  gedi_product = "2A",
+  date_start = "2022-01-01", date_end = "2022-04-01",
+  cache = FALSE
+)
+print(x)
+\dontshow{\}) # examplesIf}
 }
 \concept{find GEDI}

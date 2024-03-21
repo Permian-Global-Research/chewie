@@ -2,7 +2,7 @@
 #'
 #' @description The gedi package provides a set of functions for downloading and carrying out
 #' simple pre processing of GEDI data. See below for a list of these functions.
-#'
+#' @keywords internal
 #' @section Managing Credentials and Cache:
 #' \describe{
 #'   \item{\code{\link{chewie_creds}}}{Set up and manage NASA Earthdata credentials}
@@ -12,6 +12,7 @@
 #'   \item{\code{\link{chewie_get_cache}}}{Get the path to the GEDI cache directory.}
 #'   \item{\code{\link{chewie_clear_find_cache}}}{Clear the find gedi cache.}
 #'   \item{\code{\link{chewie_clear_h5_temp_cache}}}{Clear the h5 temp cache.}
+#'   \item{\code{\link{chewie_clear_parquet_cache}}}{Clear the parquet gedi cache.}
 #' }
 #' @section Downloading GEDI Data:
 #' \describe{
