@@ -2,9 +2,14 @@
 % Please edit documentation in R/chewie-arrow.r
 \name{collect_gedi}
 \alias{collect_gedi}
-\title{Collect GEDI data}
+\title{Collect GEDI data into an sf object}
 \usage{
-collect_gedi(x, gedi_find, intersects = attributes(gedi_find)$intersects)
+collect_gedi(
+  x,
+  gedi_find,
+  intersects = attributes(gedi_find)$intersects,
+  drop_xy_vars = TRUE
+)
 }
 \arguments{
 \item{x}{An arrow dataset object.}
@@ -14,6 +19,9 @@ collect_gedi(x, gedi_find, intersects = attributes(gedi_find)$intersects)
 \item{intersects}{logical; whether to filter the GEDI data based on the
 search extent attributed to the \code{chewie.find} object. Default is to use
 whatever was specified in chewie.find.}
+
+\item{drop_xy_vars}{logical; whether to drop the columns used to create the
+geometry column. Default is \code{TRUE}.}
 }
 \value{
 an sf object

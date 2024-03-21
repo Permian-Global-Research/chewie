@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{chewie.find object to print}
 
-\item{swath_col}{character; color of the swaths.}
+\item{swath_col}{character; color of the granules.}
 
 \item{aoi_col}{character; color of the aoi.}
 

@@ -11,8 +11,9 @@ chewie_show(x, ...)
 \method{chewie_show}{sf}(
   x,
   zcol = NULL,
-  alpha = 0.6,
-  pal = "Zissou 1",
+  alpha = 0.8,
+  pal = "Plasma",
+  pal_reverse = FALSE,
   aoi_color = "black",
   zoom = NULL,
   interactive = TRUE,
@@ -25,6 +26,7 @@ chewie_show(x, ...)
   time_group = c("year", "month"),
   alpha = 0.5,
   pal = "Zissou 1",
+  pal_reverse = FALSE,
   aoi_color = "black",
   zoom = NULL,
   interactive = TRUE,
@@ -35,19 +37,21 @@ chewie_show(x, ...)
 \arguments{
 \item{x}{object of class \code{chewie_find} or \code{chewie_grab}.}
 
-\item{...}{additional arguments passed to \code{mapview::mapview}.}
+\item{...}{additional arguments passed to \link[mapview]{mapview}.}
 
 \item{zcol}{character; name of the column to use for coloring footprints.}
 
-\item{alpha}{numeric; transparency of the swaths.}
+\item{alpha}{numeric; transparency of the granules or footprints.}
 
-\item{pal}{character; name of the color palette to use for the swaths/footprints.
+\item{pal}{character; name of the color palette to use for the granules/footprints.
 see \code{hcl.pals()} for a list of available palettes.}
+
+\item{pal_reverse}{logical; if \code{TRUE}, reverse the color palette.}
 
 \item{aoi_color}{character; color of the AOI polygon.}
 
 \item{zoom}{numeric; zoom level of the map. If \code{NULL} (default), the zoom
-level is determined automatically by the extent of the GEDI swaths.}
+level is determined automatically by the extent of the GEDI granules.}
 
 \item{interactive}{logical; if \code{TRUE} (default), return an interactive map.
 If \code{FALSE}, return a static map.}
@@ -55,7 +59,7 @@ If \code{FALSE}, return a static map.}
 \item{file}{character; if \code{interactive = FALSE}, save the static map to this
 file.}
 
-\item{time_group}{character; if \code{interactive = TRUE}, group the swaths by
+\item{time_group}{character; if \code{interactive = TRUE}, group the granules by
 this time unit. Must be one of \code{"year"} or \code{"month"}.}
 }
 \value{
@@ -66,5 +70,6 @@ Show an interactive map of a chewie_* object.
 }
 \details{
 This function is a wrapper around \code{mapview::mapview()}. It is designed to
-work with \code{chewie_find()} and \code{chewie_grab()} objects.
+work with chewie.find objects generated with \link{find_gedi} and sf objects
+returned by \link{collect_gedi}.
 }

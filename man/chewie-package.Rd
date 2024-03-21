@@ -19,6 +19,7 @@ simple pre processing of GEDI data. See below for a list of these functions.
 \item{\code{\link{chewie_get_cache}}}{Get the path to the GEDI cache directory.}
 \item{\code{\link{chewie_clear_find_cache}}}{Clear the find gedi cache.}
 \item{\code{\link{chewie_clear_h5_temp_cache}}}{Clear the h5 temp cache.}
+\item{\code{\link{chewie_clear_parquet_cache}}}{Clear the parquet gedi cache.}
 }
 }
 
@@ -56,3 +57,4 @@ Useful links:
 \strong{Maintainer}: Hugh Graham \email{hugh.graham@permianglobal.com} (\href{https://orcid.org/0000-0001-9451-5010}{ORCID})
 
 }
+\keyword{internal}
