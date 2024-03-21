@@ -108,7 +108,6 @@ under the hood).
 ```{r, show-find-data, include=FALSE}
 granule_map <- chewie_show(
   gedi_2a_search,
-  time_group = "month",
   zoom = 10,
   interactive = FALSE,
   file = "man/figures/README-show-find-data-1.png"
@@ -117,7 +116,6 @@ granule_map <- chewie_show(
 ```{r, show-find-data-example, eval=FALSE}
 chewie_show(
   gedi_2a_search,
-  time_group = "month",
   zoom = 8
 )
 ```
