@@ -3,7 +3,7 @@
 
 # chewie
 
-<img src="man/figures/chewie-hex.png" style="float:right; height:300px;">
+<img src="man/figures/chewie-hex.png"  align="right" height="300" style="float:right; height:300px;">
 
 <!-- badges: start -->
 
@@ -54,12 +54,8 @@ working with arrow datasets.
 
 ``` r
 library(chewie)
-#> ✔ NASA Earthdata Credentials already set.
-#> ✔ GEDI cache set in the following directory:
-#> → "/home/hugh/.chewie"
 library(dplyr, warn.conflicts = FALSE)
 library(sf)
-#> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.3.1; sf_use_s2() is TRUE
 ```
 
 Here are some useful helper functions to set up your credentials (using
@@ -96,7 +92,7 @@ gedi_2a_search <- x <- find_gedi(prairie_creek,
 
 print(gedi_2a_search)
 #> 
-#> ── chewie.find ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> ── chewie.find ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #> • GEDI-2A
 #>                     id          time_start            time_end                                                   url cached
 #>                 <char>              <POSc>              <POSc>                                                <char> <lgcl>
@@ -107,7 +103,7 @@ print(gedi_2a_search)
 #> 5: G2725131643-LPCLOUD 2022-03-14 10:39:08 2022-03-14 12:12:01 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
 #> 1 variable(s) not shown: [geometry <sfc_POLYGON>]
 #> 
-#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ```
 
 Whilst there is a `plot` method for *chewie.find* objects, a great
@@ -155,16 +151,16 @@ print(gedi_2a_sf)
 #> # A tibble: 1,067 × 11
 #>     beam date_time           elev_highestreturn elev_lowestmode   rh0   rh25
 #>  * <int> <dttm>                           <dbl>           <dbl> <dbl>  <dbl>
-#>  1     1 2022-01-22 01:46:50             -16.3          -22.7   -4.82 -0.930
-#>  2     1 2022-01-22 01:46:50              -9.63         -23.4   -3.96 -0.290
-#>  3     1 2022-01-22 01:46:50              -3.79         -24.9   -1.60  2.99 
-#>  4     1 2022-01-22 01:46:50             103.            52.4   -2.73  4.93 
-#>  5     1 2022-01-22 01:46:50              74.8           14.7   -3.10  2.39 
-#>  6     1 2022-01-22 01:46:50              58.9            4.67  -2.24  2.88 
-#>  7     1 2022-01-22 01:46:50              48.9           -0.938 -3.44  3.25 
-#>  8     1 2022-01-22 01:46:50              46.4          -12.5   -2.65  4.34 
-#>  9     1 2022-01-22 01:46:50              50.7           -4.77  -1.72 19.8  
-#> 10     1 2022-01-22 01:46:50              50.5           -1.67  -1.27 13.9  
+#>  1     1 2022-03-05 09:02:18               89.9            51.2 -1.61 17.1  
+#>  2     1 2022-03-05 09:02:18              124.            112.  -4.08  0.590
+#>  3     1 2022-03-05 09:02:19              138.            124.  -1.87  2.88 
+#>  4     1 2022-03-05 09:02:19              126.             57.5 -2.28  5.99 
+#>  5     1 2022-03-05 09:02:19              106.             90.9 -1.64  3.33 
+#>  6     1 2022-03-05 09:02:19               86.9            24.2 -2.65  0.930
+#>  7     1 2022-03-05 09:02:19              101.             24.9 -1.72 20.7  
+#>  8     1 2022-03-05 09:02:19              137.            120.  -2.09  4    
+#>  9     1 2022-03-05 09:02:19              182.            103.  -1.83 44.8  
+#> 10     1 2022-03-05 09:02:19              197.            187.  -2.84  0.780
 #> # ℹ 1,057 more rows
 #> # ℹ 5 more variables: rh50 <dbl>, rh75 <dbl>, rh95 <dbl>, rh100 <dbl>,
 #> #   geometry <POINT [°]>
