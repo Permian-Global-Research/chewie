@@ -1,0 +1,25 @@
+url: ~
+template:
+  bootstrap: 5
+  bootswatch: simplex
+reference:
+  - title: Managing Credentials and Cache
+    contents:
+      - chewie_creds
+      - chewie_health_check
+      - contains("cache")
+  - title: Download (or restore cached) GEDI data
+    contents:
+      - find_gedi
+      - grab_gedi
+  - title: Reading GEDI data
+    contents:
+      - collect_gedi
+      - extract_waveforms
+  - title: Visualising GEDI data
+    contents:
+      - chewie_show
+  - title: Useful generics
+    contents:
+      - print.chewie.find
+      - plot.chewie.find
