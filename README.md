@@ -1,11 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# chewie<img src="man/figures/chewie-hex.png" align="right" height="200" alt=""/>
+# chewie
 
-<!-- badges: start -->
-
-[![Lifecycle:
+<img src="man/figures/chewie-hex.png" style="float:right; height:300px;">
+<!-- badges: start --> [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
@@ -23,7 +22,7 @@ achieve this:
     and `select` data as required without needing to load all shots,
     from a given swath/granule, into memory.
 
-  - There is support for spatial filtering of swaths that intersect an
+  - There is support for spatial filtering of granules that intersect an
     area of interest and not only by bounding box; this frequently
     reduces the amount of irrelevant data that is downloaded.
 
@@ -72,40 +71,37 @@ chewie_health_check() # to check your credentials and cache setup.
 ```
 
 In this chunk we search for some GEDI 2A data that intersects with the
-Haywood county in North Carolina. We then plot the footprints of the
-swaths that intersect with this area to check out what we’ve got. Note
-that by default, both `find_gedi` and `grab_gedi` cache their outputs so
-when these functions are re-run, the data will be loaded from the cache
+Prairie Creek Redwoods State Park, California (the dataset is included
+with the package). We then plot the footprints of the granules that
+intersect with this area to check out what we’ve got. Note that by
+default, both `find_gedi` and `grab_gedi` cache their outputs so when
+these functions are re-run, the data will be loaded from the cache
 rather than downloaded again, even in a different R session.
 
-we can print and plot the results of `find_gedi` to check that we have
-the data we want.
-
 ``` r
-nc <- system.file("gpkg", "nc.gpkg", package = "sf")
-hw <- subset(read_sf(nc), NAME == "Haywood")
+prairie_creek <- system.file("geojson", "nat-parks-hum.geojson", package = "chewie") |>
+  sf::read_sf(
+    query = "SELECT UNITNAME FROM \"nat-parks-hum\" WHERE UNITNAME = 'Prairie Creek Redwoods SP'"
+  )
 
-gedi_2a_search <- find_gedi(hw,
+gedi_2a_search <- x <- find_gedi(prairie_creek,
   gedi_product = "2A",
-  date_start = "2022-12-31"
+  date_start = "2022-01-01",
+  date_end = "2022-04-01"
 )
-#> ! No end date was provided - A Non-permenant cache is in effect.
-#> ℹ The cache will be invalidated on 2024-05-01T00:00:00.
-#>   To establish a permanent cache set the end date using the `date_end`
-#>   argument.
-#> ✔ Using cached GEDI data
+#> ✔ Using cached GEDI find result
 
 print(gedi_2a_search)
 #> 
 #> ── chewie.find ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#> •  GEDI-2A
-#>                        id          time_start            time_end                                                   url cached
-#>                    <char>              <POSc>              <POSc>                                                <char> <lgcl>
-#> 1: G2752113657-LPDAAC_ECS 2023-01-09 02:25:28 2023-01-09 03:58:19 https://e4ftl01.cr.usgs.gov//GEDI_L1_L2/GEDI/GEDI0...   TRUE
-#> 2: G2752559659-LPDAAC_ECS 2023-01-11 08:34:47 2023-01-11 10:07:37 https://e4ftl01.cr.usgs.gov//GEDI_L1_L2/GEDI/GEDI0...   TRUE
-#> 3: G2752391704-LPDAAC_ECS 2023-01-31 17:30:11 2023-01-31 19:03:00 https://e4ftl01.cr.usgs.gov//GEDI_L1_L2/GEDI/GEDI0...   TRUE
-#> 4: G2752261157-LPDAAC_ECS 2023-02-02 23:38:56 2023-02-03 01:11:45 https://e4ftl01.cr.usgs.gov//GEDI_L1_L2/GEDI/GEDI0...   TRUE
-#> 5: G2753021606-LPDAAC_ECS 2023-02-04 15:53:09 2023-02-04 17:26:01 https://e4ftl01.cr.usgs.gov//GEDI_L1_L2/GEDI/GEDI0...   TRUE
+#> • GEDI-2A
+#>                     id          time_start            time_end                                                   url cached
+#>                 <char>              <POSc>              <POSc>                                                <char> <lgcl>
+#> 1: G2724056750-LPCLOUD 2022-01-22 01:09:09 2022-01-22 02:42:01 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
+#> 2: G2725123149-LPCLOUD 2022-03-01 09:59:35 2022-03-01 11:32:27 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
+#> 3: G2725124517-LPCLOUD 2022-03-05 08:24:36 2022-03-05 09:57:28 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
+#> 4: G2725130349-LPCLOUD 2022-03-10 12:13:49 2022-03-10 13:46:41 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
+#> 5: G2725131643-LPCLOUD 2022-03-14 10:39:08 2022-03-14 12:12:01 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
 #> 1 variable(s) not shown: [geometry <sfc_POLYGON>]
 #> 
 #> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -113,8 +109,8 @@ print(gedi_2a_search)
 
 Whilst there is a `plot` method for *chewie.find* objects, a great
 alternative is to plot a leaflet map with `chewie_show`, which can be
-static or interactive (this uses the fantastic {mapview} under the
-hood).
+static or interactive (this uses the fantastic
+{[mapview](https://r-spatial.github.io/mapview/)} under the hood).
 
 ``` r
 chewie_show(
@@ -129,9 +125,10 @@ chewie_show(
 Now we use `grab_gedi` to download the data - this function internally,
 converts the data to parquet format and stores it in the cache. The data
 is as an arrow dataset. We can then use any {dplyr} verbs to
-filter/select the data as we wish before finally using `collect_gedi` to
-convert the data to a sf object. If no filtering/selection is carried
-out then `collect_gedi` will return all the available columns.
+`filter`/`select` the data as we wish before finally using
+`collect_gedi` to convert the data to a sf object. If no
+filtering/selection is carried out then `collect_gedi` will return all
+the available columns/rows.
 
 ``` r
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
@@ -140,34 +137,33 @@ gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
     degrade_flag == 0
   ) |>
   select(
-    beam, date_time, solar_elevation, lat_lowestmode, lon_lowestmode,
-    elev_highestreturn, elev_lowestmode, rh0, rh25, rh50, rh75, rh100
+    beam, date_time, lat_lowestmode, lon_lowestmode, elev_highestreturn,
+    elev_lowestmode, rh0, rh25, rh50, rh75, rh95, rh100
   ) |>
   collect_gedi(gedi_find = gedi_2a_search)
 #> ✔ All data found in cache
 
 print(gedi_2a_sf)
-#> Simple feature collection with 2798 features and 12 fields
+#> Simple feature collection with 1067 features and 10 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -82.95697 ymin: 35.29232 xmax: -82.74454 ymax: 35.44537
+#> Bounding box:  xmin: -124.0764 ymin: 41.34658 xmax: -123.9979 ymax: 41.41663
 #> Geodetic CRS:  WGS 84
-#> # A tibble: 2,798 × 13
-#>     beam date_time           solar_elevation lat_lowestmode lon_lowestmode
-#>  * <int> <dttm>                        <dbl>          <dbl>          <dbl>
-#>  1     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  2     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  3     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  4     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  5     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  6     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  7     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  8     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#>  9     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#> 10     2 2023-02-04 16:28:13            35.3           35.3          -82.9
-#> # ℹ 2,788 more rows
-#> # ℹ 8 more variables: elev_highestreturn <dbl>, elev_lowestmode <dbl>,
-#> #   rh0 <dbl>, rh25 <dbl>, rh50 <dbl>, rh75 <dbl>, rh100 <dbl>,
+#> # A tibble: 1,067 × 11
+#>     beam date_time           elev_highestreturn elev_lowestmode   rh0  rh25
+#>  * <int> <dttm>                           <dbl>           <dbl> <dbl> <dbl>
+#>  1     5 2022-01-22 01:46:50             -17.3           -22.0  -4.93 -1.23
+#>  2     5 2022-01-22 01:46:50             -18.4           -23.2  -5.20 -1.30
+#>  3     5 2022-01-22 01:46:50             -19.6           -24.8  -4.78 -1.15
+#>  4     5 2022-01-22 01:46:50             -15.0           -23.0  -7.40 -1.34
+#>  5     5 2022-01-22 01:46:50              -4.63          -19.4  -6.92 -1.38
+#>  6     5 2022-01-22 01:46:50              -2.58          -23.6  -3.03  2.99
+#>  7     5 2022-01-22 01:46:50             -17.0           -23.6  -4.34 -1.15
+#>  8     5 2022-01-22 01:46:50             -11.7           -23.9  -4.56 -1.23
+#>  9     5 2022-01-22 01:46:50              22.7           -21.0  -1.53 23.0 
+#> 10     5 2022-01-22 01:46:50              37.7            -5.24 -4.07  5.27
+#> # ℹ 1,057 more rows
+#> # ℹ 5 more variables: rh50 <dbl>, rh75 <dbl>, rh95 <dbl>, rh100 <dbl>,
 #> #   geometry <POINT [°]>
 ```
 
@@ -177,7 +173,7 @@ Finally, we can plot the data. Again we can use the generic
 ``` r
 chewie_show(
   gedi_2a_sf,
-  zcol = "rh90",
+  zcol = "rh95",
   zoom = 12
 )
 ```

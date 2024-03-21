@@ -13,8 +13,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-# chewie<img src="man/figures/chewie-hex.png" align="right" height="200" alt=""/>
+# chewie 
 
+<img src="man/figures/chewie-hex.png" style="float:right; height:300px;">
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
@@ -32,7 +33,7 @@ achieve this:
   `mutate` and `select` data as required without needing to load all shots, from
   a given swath/granule, into memory.
 
--  There is support for spatial filtering of swaths that intersect an area of 
+-  There is support for spatial filtering of granules that intersect an area of 
   interest and not only by bounding box; this frequently reduces the amount 
   of irrelevant data that is downloaded.
 
@@ -77,23 +78,23 @@ chewie_creds() # to set up your credentials
 chewie_health_check() # to check your credentials and cache setup.
 ```
 
-In this chunk we search for some GEDI 2A data that intersects with the Haywood
-county in North Carolina. We then plot the footprints of the swaths that
-intersect with this area to check out what we've got. Note that by default,
-both `find_gedi` and `grab_gedi` cache their outputs so when these functions are
-re-run, the data will be loaded from the cache rather than downloaded again, 
-even in a different R session.
-
-we can print and plot the results of `find_gedi` to check that we have the data
-we want.
+In this chunk we search for some GEDI 2A data that intersects with the Prairie
+Creek Redwoods State Park, California (the dataset is included with the package). 
+We then plot the footprints of the granules that intersect with this area to 
+check out what we've got. Note that by default, both `find_gedi` and `grab_gedi` 
+cache their outputs so when these functions are re-run, the data will be loaded 
+from the cache rather than downloaded again, even in a different R session.
 
 ```{r find-data}
-nc <- system.file("gpkg", "nc.gpkg", package = "sf")
-hw <- subset(read_sf(nc), NAME == "Haywood")
+prairie_creek <- system.file("geojson", "nat-parks-hum.geojson", package = "chewie") |>
+  sf::read_sf(
+    query = "SELECT UNITNAME FROM \"nat-parks-hum\" WHERE UNITNAME = 'Prairie Creek Redwoods SP'"
+  )
 
-gedi_2a_search <- find_gedi(hw,
+gedi_2a_search <- x <- find_gedi(prairie_creek,
   gedi_product = "2A",
-  date_start = "2022-12-31"
+  date_start = "2022-01-01",
+  date_end = "2022-04-01"
 )
 
 print(gedi_2a_search)
@@ -101,9 +102,10 @@ print(gedi_2a_search)
 
 Whilst there is a `plot` method for *chewie.find* objects, a great alternative 
 is to plot a leaflet map with `chewie_show`, which can be static or 
-interactive (this uses the fantastic {mapview} under the hood).
+interactive (this uses the fantastic {[mapview](https://r-spatial.github.io/mapview/)} 
+under the hood).
 ```{r, show-find-data, include=FALSE}
-swath_map <- chewie_show(
+granule_map <- chewie_show(
   gedi_2a_search,
   time_group = "month",
   zoom = 10,
@@ -124,10 +126,10 @@ knitr::include_graphics("man/figures/README-show-find-data-1.png")
 
 Now we use `grab_gedi` to download the data - this function internally, converts
 the data to parquet format and stores it in the cache. The data is as an arrow
-dataset. We can then use any {dplyr} verbs to filter/select the data as we wish 
+dataset. We can then use any {dplyr} verbs to `filter`/`select` the data as we wish 
 before finally using `collect_gedi` to convert the data to a sf object. If no
 filtering/selection is carried out then `collect_gedi` will return all the 
-available columns.
+available columns/rows.
 
 ```{r collect-data}
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
@@ -136,8 +138,8 @@ gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
     degrade_flag == 0
   ) |>
   select(
-    beam, date_time, solar_elevation, lat_lowestmode, lon_lowestmode,
-    elev_highestreturn, elev_lowestmode, rh0, rh25, rh50, rh75, rh100
+    beam, date_time, lat_lowestmode, lon_lowestmode, elev_highestreturn,
+    elev_lowestmode, rh0, rh25, rh50, rh75, rh95, rh100
   ) |>
   collect_gedi(gedi_find = gedi_2a_search)
 
@@ -150,7 +152,7 @@ function.
 ```{r, show-2a-data, include=FALSE}
 swath_map <- chewie_show(
   gedi_2a_sf,
-  zcol = "rh100",
+  zcol = "rh95",
   zoom = 12,
   interactive = FALSE,
   file = "man/figures/README-show-2a-data-1.png"
@@ -159,7 +161,7 @@ swath_map <- chewie_show(
 ```{r, show-2a-data-example, eval=FALSE}
 chewie_show(
   gedi_2a_sf,
-  zcol = "rh90",
+  zcol = "rh95",
   zoom = 12
 )
 ```
