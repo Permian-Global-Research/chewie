@@ -27,3 +27,25 @@ enables the analysis and comparison of multiple plots. If you wish to filter
 the shots that you want to analyse, simply filter the results of 'collect_gedi'
 before passing to this function.
 }
+\examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+prairie_creek <- sf::read_sf(
+  system.file("geojson", "prairie-creek.geojson", package = "chewie")
+)
+prairie_creek_find_1b <- find_gedi(prairie_creek,
+  gedi_product = "1B",
+  date_start = "2022-01-01", date_end = "2022-04-01",
+  cache = FALSE
+)
+
+prairie_creek_grab_1b <- grab_gedi(prairie_creek_find_1b)
+
+prairie_creek_1b_sf <- collect_gedi(
+  prairie_creek_grab_1b,
+  prairie_creek_find_1b
+)
+
+prairie_creek_waveforms <- collect_waveforms(prairie_creek_1b_sf)
+print(prairie_creek_waveforms)
+\dontshow{\}) # examplesIf}
+}

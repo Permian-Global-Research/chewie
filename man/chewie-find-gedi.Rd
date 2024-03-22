@@ -54,12 +54,12 @@ details.
 humboldt <- sf::read_sf(
   system.file("geojson", "humboldt.geojson", package = "chewie")
 )
-x <- find_gedi(humboldt,
+humboldt_find_2a <- find_gedi(humboldt,
   gedi_product = "2A",
   date_start = "2022-01-01", date_end = "2022-04-01",
   cache = FALSE
 )
-print(x)
+print(humboldt_find_2a)
 \dontshow{\}) # examplesIf}
 }
 \concept{find GEDI}

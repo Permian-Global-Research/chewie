@@ -2,7 +2,6 @@
 #' @description Collect waveform data from GEDI 1B data
 #' @param x A tibble or data.frame object returned from `collect_gedi`.
 #' @return a tibble containing the waveform data.
-#' @export
 #' @details
 #' This function is used to collect the waveform data from GEDI 1B data returned
 #' from `collect_gedi`. The waveform amplitude is converted to a float value with
@@ -14,6 +13,27 @@
 #' enables the analysis and comparison of multiple plots. If you wish to filter
 #' the shots that you want to analyse, simply filter the results of 'collect_gedi'
 #' before passing to this function.
+#' @examplesIf interactive()
+#' prairie_creek <- sf::read_sf(
+#'   system.file("geojson", "prairie-creek.geojson", package = "chewie")
+#' )
+#' prairie_creek_find_1b <- find_gedi(prairie_creek,
+#'   gedi_product = "1B",
+#'   date_start = "2022-01-01", date_end = "2022-04-01",
+#'   cache = FALSE
+#' )
+#'
+#' prairie_creek_grab_1b <- grab_gedi(prairie_creek_find_1b)
+#'
+#' prairie_creek_1b_sf <- collect_gedi(
+#'   prairie_creek_grab_1b,
+#'   prairie_creek_find_1b
+#' )
+#'
+#' prairie_creek_waveforms <- collect_waveforms(prairie_creek_1b_sf)
+#' print(prairie_creek_waveforms)
+#'
+#' @export
 extract_waveforms <- function(x) {
   if (!"rxwaveform" %in% names(x) ||
     !"shot_number" %in% names(x)) {
@@ -36,7 +56,7 @@ extract_waveforms <- function(x) {
     xc,
     function(shot_number, date_time, elevation_bin0,
              elevation_lastbin, rx_sample_count, rxwaveform) {
-      df <- data.table::data.table(
+      data.table::data.table(
         shot_number = shot_number,
         date_time = date_time,
         rxelevation = rev(seq(

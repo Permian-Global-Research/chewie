@@ -4,6 +4,7 @@
 #' @param time_group character; if `interactive = TRUE`, group the granules by
 #' this time unit. Must be one of `"year"` or `"month"`.
 #' @param alpha numeric; transparency of the granules or footprints.
+#' @param border_alpha numeric; transparency of the granule/footprint borders.
 #' @param pal character; name of the color palette to use for the granules/footprints.
 #' see `hcl.pals()` for a list of available palettes.
 #' @param pal_reverse logical; if `TRUE`, reverse the color palette.
@@ -15,12 +16,43 @@
 #' @param file character; if `interactive = FALSE`, save the static map to this
 #' file.
 #' @param ... additional arguments passed to \link[mapview]{mapview}.
+#' @return interactive leaflet map if `interactive = TRUE`, otherwise the path
+#' to the saved static map image.
 #' @details
-#' This function is a wrapper around `mapview::mapview()`. It is designed to
+#' This function is a wrapper around \link[mapview]{mapview}. It is designed to
 #' work with chewie.find objects generated with \link{find_gedi} and sf objects
 #' returned by \link{collect_gedi}.
 #'
-#' @return interactive leaflet map
+#' @examplesIf interactive()
+#' prairie_creek <- sf::read_sf(system.file(
+#'   "geojson", "prairie-creek.geojson",
+#'   package = "chewie"
+#' ))
+#'
+#' gedi_2a_search <- x <- find_gedi(prairie_creek,
+#'   gedi_product = "2A",
+#'   date_start = "2022-01-01",
+#'   date_end = "2022-04-01"
+#' )
+#'
+#' chewie_show(gedi_2a_search, zoom = 8)
+#' chewie_show(
+#'   gedi_2a_search,
+#'   zoom = 10,
+#'   interactive = FALSE,
+#'   file = tempfile(fileext = ".png")
+#' )
+#'
+#' gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
+#'   collect_gedi(gedi_find = gedi_2a_search)
+#'
+#' chewie_show(
+#'   gedi_2a_sf,
+#'   zcol = "rh95",
+#'   zoom = 13,
+#'   alpha = 0.5,
+#' )
+#'
 #' @rdname chewie_show
 #' @export
 chewie_show <- function(
@@ -40,6 +72,7 @@ chewie_show.sf <- function(
     x,
     zcol = NULL,
     alpha = 0.8,
+    border_alpha = 0.01,
     pal = "Plasma",
     pal_reverse = FALSE,
     aoi_color = "black",
@@ -65,7 +98,7 @@ chewie_show.sf <- function(
     }
 
     mv_gen(
-      x, zcol, gprod, alpha, 0.01, pal, pal_reverse, aoi_color, zoom,
+      x, zcol, gprod, alpha, border_alpha, pal, pal_reverse, aoi_color, zoom,
       interactive, file,
       zoom_on_aoi = FALSE, ...
     )
@@ -78,6 +111,7 @@ chewie_show.chewie.find <- function(
     x,
     time_group = c("year", "month"),
     alpha = 0.5,
+    border_alpha = 0.5,
     pal = "Zissou 1",
     pal_reverse = FALSE,
     aoi_color = "black",
@@ -109,18 +143,9 @@ chewie_show.chewie.find <- function(
   mv_gen(
     x, "time",
     sprintf("GEDI %s granules (%s)", find_gedi_product(x), time_group),
-    alpha, 0, pal, pal_reverse, aoi_color, zoom, interactive, file, ...
+    alpha, border_alpha, pal, pal_reverse, aoi_color, zoom, interactive, file,
+    ...
   )
-}
-
-basemap_opts <- function() {
-  bm_opts <- mapview::mapviewGetOption("basemaps")
-  mapview::mapviewOptions(basemaps = c(
-    "OpenStreetMap",
-    "CartoDB.Positron",
-    "Esri.WorldImagery"
-  ))
-  return(bm_opts)
 }
 
 aoi_mv <- function(x, aoi_color) {
@@ -137,8 +162,6 @@ mv_gen <- function(
     mapview::mapviewOptions(fgb = FALSE)
     on.exit(mapview::mapviewOptions(fgb = TRUE))
   }
-
-  on.exit(mapview::mapviewOptions(basemaps = basemap_opts()))
 
   # clean up duplicate args provided in ...
   dots <- list(...)
