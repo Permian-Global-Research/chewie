@@ -40,3 +40,23 @@ This will save a lot of time and memory. However, make sure that, when
 selecting columns, you do not remove the \code{lat_lowestmode} and
 \code{lon_lowestmode} columns as these are required to create the geometry column.
 }
+\examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+prairie_creek <- sf::read_sf(
+  system.file("geojson", "prairie-creek.geojson", package = "chewie")
+)
+prairie_creek_find_4a <- find_gedi(prairie_creek,
+  gedi_product = "4A",
+  date_start = "2022-01-01", date_end = "2022-04-01",
+  cache = FALSE
+)
+
+prairie_creek_grab_4a <- grab_gedi(prairie_creek_find_4a)
+
+prairie_creek_4a_sf <- collect_gedi(
+  prairie_creek_grab_4a,
+  prairie_creek_find_4a
+)
+print(prairie_creek_4a_sf)
+\dontshow{\}) # examplesIf}
+}

@@ -63,7 +63,6 @@ open_gedi <- function(x) {
 #' whatever was specified in chewie.find.
 #' @param drop_xy_vars logical; whether to drop the columns used to create the
 #' geometry column. Default is `TRUE`.
-#' @export
 #' @details
 #' This function is used to collect the GEDI data returned from `grab_gedi` as
 #' an sf object. It is largely a wrapper for dplyr::collect but converts to sf
@@ -75,6 +74,25 @@ open_gedi <- function(x) {
 #' selecting columns, you do not remove the `lat_lowestmode` and
 #' `lon_lowestmode` columns as these are required to create the geometry column.
 #' @return an sf object
+#'
+#' @examplesIf interactive()
+#' prairie_creek <- sf::read_sf(
+#'   system.file("geojson", "prairie-creek.geojson", package = "chewie")
+#' )
+#' prairie_creek_find_4a <- find_gedi(prairie_creek,
+#'   gedi_product = "4A",
+#'   date_start = "2022-01-01", date_end = "2022-04-01",
+#'   cache = FALSE
+#' )
+#'
+#' prairie_creek_grab_4a <- grab_gedi(prairie_creek_find_4a)
+#'
+#' prairie_creek_4a_sf <- collect_gedi(
+#'   prairie_creek_grab_4a,
+#'   prairie_creek_find_4a
+#' )
+#' print(prairie_creek_4a_sf)
+#' @export
 collect_gedi <- function(
     x, gedi_find,
     intersects = attributes(gedi_find)$intersects,

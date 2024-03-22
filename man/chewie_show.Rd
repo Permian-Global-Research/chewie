@@ -12,6 +12,7 @@ chewie_show(x, ...)
   x,
   zcol = NULL,
   alpha = 0.8,
+  border_alpha = 0.01,
   pal = "Plasma",
   pal_reverse = FALSE,
   aoi_color = "black",
@@ -25,6 +26,7 @@ chewie_show(x, ...)
   x,
   time_group = c("year", "month"),
   alpha = 0.5,
+  border_alpha = 0.5,
   pal = "Zissou 1",
   pal_reverse = FALSE,
   aoi_color = "black",
@@ -42,6 +44,8 @@ chewie_show(x, ...)
 \item{zcol}{character; name of the column to use for coloring footprints.}
 
 \item{alpha}{numeric; transparency of the granules or footprints.}
+
+\item{border_alpha}{numeric; transparency of the granule/footprint borders.}
 
 \item{pal}{character; name of the color palette to use for the granules/footprints.
 see \code{hcl.pals()} for a list of available palettes.}
@@ -63,13 +67,46 @@ file.}
 this time unit. Must be one of \code{"year"} or \code{"month"}.}
 }
 \value{
-interactive leaflet map
+interactive leaflet map if \code{interactive = TRUE}, otherwise the path
+to the saved static map image.
 }
 \description{
 Show an interactive map of a chewie_* object.
 }
 \details{
-This function is a wrapper around \code{mapview::mapview()}. It is designed to
+This function is a wrapper around \link[mapview]{mapview}. It is designed to
 work with chewie.find objects generated with \link{find_gedi} and sf objects
 returned by \link{collect_gedi}.
+}
+\examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+prairie_creek <- sf::read_sf(system.file(
+  "geojson", "prairie-creek.geojson",
+  package = "chewie"
+))
+
+gedi_2a_search <- x <- find_gedi(prairie_creek,
+  gedi_product = "2A",
+  date_start = "2022-01-01",
+  date_end = "2022-04-01"
+)
+
+chewie_show(gedi_2a_search, zoom = 8)
+chewie_show(
+  gedi_2a_search,
+  zoom = 10,
+  interactive = FALSE,
+  file = tempfile(fileext = ".png")
+)
+
+gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
+  collect_gedi(gedi_find = gedi_2a_search)
+
+chewie_show(
+  gedi_2a_sf,
+  zcol = "rh95",
+  zoom = 13,
+  alpha = 0.5,
+)
+\dontshow{\}) # examplesIf}
 }

@@ -12,30 +12,26 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 <!-- badges: end -->
 
 The goal of chewie is to make downloading GEDI data as fast and as
-simple as possible. This includes point-level products: 1B, 2A, 2B and
-4A. Here is a quick summary of design choices that enables {chewie} to
-achieve this:
+simple as possible. This includes the point-level products: 1B, 2A, 2B
+and 4A. Here is a quick summary of design choices that enables {chewie}
+to achieve this:
 
-  - chewie adopts an R-centric approach to downloading GEDI data. Data
-    are downloaded and converted to parquet files which can then be read
-    using [{arrow}](https://arrow.apache.org/docs/r/index.html) and
+  - Data are downloaded and converted to parquet files which can then be
+    read using [{arrow}](https://arrow.apache.org/docs/r/index.html) and
     converted to [sf](https://r-spatial.github.io/sf/) objects. This
     approach is performative and enables the use of
     [dplyr](https://dplyr.tidyverse.org/) verbs to `filter`, `mutate`
     and `select` data as required without needing to load all shots,
     from a given swath/granule, into memory.
 
-  - There is support for spatial filtering of granules that intersect an
-    area of interest and not only by bounding box; this frequently
-    reduces the amount of irrelevant data that is downloaded.
-
   - A system-level cache is used to store the data. This means that once
     a file has been downloaded it will not be downloaded again even if
     working in a different project (it is also possible to specify a
-    different cache location for each project).
+    unique cache location for each project).
 
-  - The scope of this package is deliberately narrow. It is not intended
-    to include functionality for complex post processing or modelling.
+  - There is support for spatial filtering of granules that intersect an
+    area of interest and not only by a bounding box; this frequently
+    reduces the amount of irrelevant data that is downloaded.
 
 ## Installation
 
@@ -54,7 +50,7 @@ working with arrow datasets.
 
 ``` r
 library(chewie)
-library(dplyr, warn.conflicts = FALSE)
+library(dplyr)
 library(sf)
 ```
 
@@ -69,19 +65,19 @@ chewie_creds() # to set up your credentials
 chewie_health_check() # to check your credentials and cache setup.
 ```
 
-In this chunk we search for some GEDI 2A data that intersects with the
-Prairie Creek Redwoods State Park, California (the dataset is included
-with the package). We then plot the footprints of the granules that
-intersect with this area to check out what we’ve got. Note that by
-default, both `find_gedi` and `grab_gedi` cache their outputs so when
-these functions are re-run, the data will be loaded from the cache
-rather than downloaded again, even in a different R session.
+Now, let’s search for GEDI 2A data that intersects with the Prairie
+Creek Redwoods State Park, California (the dataset is included with the
+package). We then plot the footprints of the granules that intersect
+with this area to check out what we’ve got. Note that by default, both
+`find_gedi` and `grab_gedi` cache their outputs so when these functions
+are re-run, the data will be loaded from the cache rather than
+downloaded again, even in a different R session.
 
 ``` r
-prairie_creek <- system.file("geojson", "nat-parks-hum.geojson", package = "chewie") |>
-  sf::read_sf(
-    query = "SELECT UNITNAME FROM \"nat-parks-hum\" WHERE UNITNAME = 'Prairie Creek Redwoods SP'"
-  )
+prairie_creek <- sf::read_sf(system.file(
+  "geojson", "prairie-creek.geojson",
+  package = "chewie"
+))
 
 gedi_2a_search <- x <- find_gedi(prairie_creek,
   gedi_product = "2A",
@@ -92,7 +88,7 @@ gedi_2a_search <- x <- find_gedi(prairie_creek,
 
 print(gedi_2a_search)
 #> 
-#> ── chewie.find ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> ── chewie.find ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #> • GEDI-2A
 #>                     id          time_start            time_end                                                   url cached
 #>                 <char>              <POSc>              <POSc>                                                <char> <lgcl>
@@ -103,7 +99,7 @@ print(gedi_2a_search)
 #> 5: G2725131643-LPCLOUD 2022-03-14 10:39:08 2022-03-14 12:12:01 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
 #> 1 variable(s) not shown: [geometry <sfc_POLYGON>]
 #> 
-#> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ```
 
 Whilst there is a `plot` method for *chewie.find* objects, a great
@@ -150,16 +146,16 @@ print(gedi_2a_sf)
 #> # A tibble: 1,067 × 11
 #>     beam date_time           elev_highestreturn elev_lowestmode   rh0   rh25
 #>  * <int> <dttm>                           <dbl>           <dbl> <dbl>  <dbl>
-#>  1     1 2022-01-22 01:46:50             -16.3          -22.7   -4.82 -0.930
-#>  2     1 2022-01-22 01:46:50              -9.63         -23.4   -3.96 -0.290
-#>  3     1 2022-01-22 01:46:50              -3.79         -24.9   -1.60  2.99 
-#>  4     1 2022-01-22 01:46:50             103.            52.4   -2.73  4.93 
-#>  5     1 2022-01-22 01:46:50              74.8           14.7   -3.10  2.39 
-#>  6     1 2022-01-22 01:46:50              58.9            4.67  -2.24  2.88 
-#>  7     1 2022-01-22 01:46:50              48.9           -0.938 -3.44  3.25 
-#>  8     1 2022-01-22 01:46:50              46.4          -12.5   -2.65  4.34 
-#>  9     1 2022-01-22 01:46:50              50.7           -4.77  -1.72 19.8  
-#> 10     1 2022-01-22 01:46:50              50.5           -1.67  -1.27 13.9  
+#>  1     5 2022-03-05 09:02:19              112.             90.0 -3.52  0.180
+#>  2     1 2022-03-05 09:02:18               89.9            51.2 -1.61 17.1  
+#>  3     1 2022-03-05 09:02:18              124.            112.  -4.08  0.590
+#>  4     1 2022-03-05 09:02:19              138.            124.  -1.87  2.88 
+#>  5     1 2022-03-05 09:02:19              126.             57.5 -2.28  5.99 
+#>  6     1 2022-03-05 09:02:19              106.             90.9 -1.64  3.33 
+#>  7     1 2022-03-05 09:02:19               86.9            24.2 -2.65  0.930
+#>  8     1 2022-03-05 09:02:19              101.             24.9 -1.72 20.7  
+#>  9     1 2022-03-05 09:02:19              137.            120.  -2.09  4    
+#> 10     1 2022-03-05 09:02:19              182.            103.  -1.83 44.8  
 #> # ℹ 1,057 more rows
 #> # ℹ 5 more variables: rh50 <dbl>, rh75 <dbl>, rh95 <dbl>, rh100 <dbl>,
 #> #   geometry <POINT [°]>
@@ -172,13 +168,15 @@ Finally, we can plot the data. Again we can use the generic
 chewie_show(
   gedi_2a_sf,
   zcol = "rh95",
-  zoom = 12
+  zoom = 13,
+  alpha = 0.5,
+  aoi_color = "white"
 )
 ```
 
 <img src="man/figures/README-show-2a-data-1.png" width="100%" />
 
-## Other relevant packages
+## Other relevant packages/software
 
   - [{rGEDI}](https://github.com/carlos-alberto-silva/rGEDI) provides
     the ability download GEDI data but also a great deal of additional
@@ -187,6 +185,13 @@ chewie_show(
   - [{GEDI4R}](https://github.com/VangiElia/GEDI4R) which similarly
     provides a suit of tools for downloading, visualising and modelling
     GEDI data, but with a focus on the 4A product.
+
+  - [pyGEDI](https://github.com/EduinHSERNA/pyGEDI) is a Python package
+    for downloading and visualising GEDI data.
+
+  - [GEDI-Data-Resources](https://github.com/nasa/GEDI-Data-Resources)
+    is a collection of scripts for both python and R that provide
+    examples of how to download and process GEDI data.
 
 Both of these packages have been a great source of inspiration; we would
 like to thank the authors for their great work\!

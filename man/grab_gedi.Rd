@@ -9,8 +9,8 @@ grab_gedi(x, add_vars = NULL, progress = TRUE, timeout = 7200)
 \arguments{
 \item{x}{A chewie.find.x object.}
 
-\item{add_vars}{A named list of GEDI variables to add to the returned dataset.
-See details.}
+\item{add_vars}{A named list of GEDI variables to add to the returned
+dataset. See details.}
 
 \item{progress}{A logical indicating whether to show a progress bar.}
 
@@ -25,7 +25,7 @@ Download GEDI data from the NASA Earthdata in hdf5 format.
 \details{
 This function is the main handler for gedi data - it checks the cache to see
 if the required GEDI data are already downloaded, and if not, downloads them
-from the NASA Earthdata. Once downloaded each file is converted to the
+from the NASA Earthdata cloud. Once downloaded each file is converted to
 parquet format and saved in the cache directory. This saves a huge amount of
 disk space and enables dynamic reading and filtering of the returned "open"
 arrow dataset.
@@ -45,8 +45,30 @@ Note that, this feature is somewhat experimental - non existent variables or
 incorrectly spelled variables will fail silently and not be added to the
 returned dataset.
 
-https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
-https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
-https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
-https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
+For more information on the GEDI hdf5 files and the variables they contain
+see the following links:
+
+1B: https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
+
+2A: https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
+
+2B: https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
+
+4A: https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
+}
+\examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+prairie_creek <- sf::read_sf(
+  system.file("geojson", "prairie-creek.geojson", package = "chewie")
+)
+prairie_creek_find_2b <- find_gedi(prairie_creek,
+  gedi_product = "2B",
+  date_start = "2022-01-01", date_end = "2022-04-01",
+  cache = FALSE
+)
+
+prairie_creek_grab_2b <- grab_gedi(
+  prairie_creek_find_2b
+)
+\dontshow{\}) # examplesIf}
 }

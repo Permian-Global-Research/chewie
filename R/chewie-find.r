@@ -32,12 +32,12 @@
 #' humboldt <- sf::read_sf(
 #'   system.file("geojson", "humboldt.geojson", package = "chewie")
 #' )
-#' x <- find_gedi(humboldt,
+#' humboldt_find_2a <- find_gedi(humboldt,
 #'   gedi_product = "2A",
 #'   date_start = "2022-01-01", date_end = "2022-04-01",
 #'   cache = FALSE
 #' )
-#' print(x)
+#' print(humboldt_find_2a)
 #'
 #' @export
 find_gedi <- function(
@@ -52,8 +52,6 @@ find_gedi <- function(
   bbox <- paste(chewie_bbox(x), collapse = ",")
 
   date_range <- build_date_range(date_start, date_end)
-
-
 
   if (isTRUE(cache)) {
     if (is.null(date_end)) {

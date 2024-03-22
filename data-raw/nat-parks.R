@@ -17,4 +17,14 @@ hum <- read_sf(system.file("geojson", "humboldt.geojson", package = "chewie"))
 
 np_hum <- st_filter(np_boundaries, hum)
 
+
 write_sf(np_hum, "inst/geojson/nat-parks-hum.geojson", delete_dsn = TRUE)
+
+system.file(
+  "geojson", "nat-parks-hum.geojson",
+  package = "chewie"
+) |>
+  sf::read_sf(
+    query = "SELECT UNITNAME FROM \"nat-parks-hum\" WHERE UNITNAME = 'Prairie Creek Redwoods SP'"
+  ) |>
+  write_sf("inst/geojson/prairie-creek.geojson", delete_dsn = TRUE)
