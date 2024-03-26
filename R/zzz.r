@@ -22,10 +22,7 @@
 
   chewie_set_cache_opts()
 
-  invisible()
-}
-
-.onAttach <- function(lib, pkg) {
   chewie_health_check(.test = FALSE, .report_cache = FALSE)
+
   invisible()
 }
