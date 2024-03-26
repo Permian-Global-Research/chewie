@@ -31,9 +31,32 @@ check_n_make_dir <- function(x) {
   }
 }
 
+#' @title Combine a list of data.tables into a single data.table
+#' @param .l A list of data.tables
+#' @return A single data.table
+#' @noRd
+#' @keywords internal
 dt_cbindlist <- function(.l) {
   data.table::setDT(
     unlist(.l, recursive = FALSE),
     check.names = TRUE
   )[]
+}
+
+#' @title Get the path to either the user or project `.Renviron` file
+#' @keywords internal
+#' @noRd
+find_renviron <- function() {
+  # Check the current working directory
+  cwd_renviron <- normalizePath(file.path(getwd(), ".Renviron"), mustWork = FALSE)
+  if (file.exists(cwd_renviron)) {
+    return(cwd_renviron)
+  }
+  # Check the home directory
+  home_renviron <- normalizePath("~/.Renviron", mustWork = FALSE)
+  if (file.exists(home_renviron)) {
+    return(home_renviron)
+  }
+  # If neither file exists, return NULL
+  return(NULL)
 }
