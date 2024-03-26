@@ -56,6 +56,11 @@ abort_netrc_exists <- function(x) {
     "i" = paste0(
       "Use ", chew_bold_cyan("`force=TRUE`"),
       " to overwrite it."
+    ),
+    paste0(
+      chew_bold_yel("OR"),
+      " Use: ", chew_bold_cyan("`chewie::chewie_creds(netrc='{x}')`"),
+      " to use this file."
     )
   ))
 }
@@ -181,11 +186,11 @@ abort_missing_project_renv <- function(x) {
 
 
 abort_bool <- function(x) {
-  arg <- names(x)
+  # browser()
   cli::cli_abort(c(
     paste0(
       "The provided value for ",
-      chew_bold_mag("`{arg}`"),
+      chew_bold_mag("`{x}`"),
       " is not a boolean."
     ),
     "i" = "Please provide either TRUE or FALSE."
@@ -233,10 +238,17 @@ inform_env_success <- function(x, .quiet) {
 }
 
 inform_ask_env_overwrite <- function(x) {
-  cli::cli_inform(c(
-    "!" = "Environment variable  `{x}` is already set.",
-    ">" = "Do you want to overwrite it?"
-  ))
+  if (!is.na(chewie_get_env(x))) {
+    cli::cli_inform(c(
+      "!" = "Environment variable  `{x}` is already set.",
+      ">" = "Do you want to overwrite it?"
+    ))
+  } else {
+    cli::cli_inform(c(
+      "!" = "Environment variable  `{x}` is not set.",
+      ">" = "Do you want to set it?"
+    ))
+  }
 }
 
 inform_cache_set_success <- function(x) {
