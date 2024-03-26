@@ -31,7 +31,7 @@ chewie_creds <- function(
     pwd = NULL,
     quiet = FALSE,
     test = TRUE,
-    renviron = "user") {
+    renviron = "auto") {
   if (is.null(netrc)) {
     if (isFALSE(quiet) && interactive()) {
       if (!is.null(usr) || !is.null(pwd)) {
@@ -48,13 +48,16 @@ chewie_creds <- function(
 
   if (!is.null(netrc)) {
     if (chewie_validate_netrc(netrc, .test = test)) {
-      chewie_set_netrc_env(netrc)
+      chewie_set_netrc_env(netrc, renviron = renviron)
       inform_env_success(netrc, .quiet = quiet)
       return(invisible())
     }
   }
 
+  # def_path <- FALSE
+
   if (is.null(path)) {
+    # def_path <- TRUE
     path <- file.path(chewie_default_dir(), ".netrc")
   }
 
@@ -93,8 +96,9 @@ chewie_creds <- function(
 #' @noRd
 chewie_test_creds <- function(.netrc = chewie_get_env(), .error = TRUE) {
   test_url <- paste0(
-    "https://e4ftl01.cr.usgs.gov//GEDI_L1_L2/GEDI/GEDI02_A.002/2022.12.03/",
-    "GEDI02_A_2022337234828_O22520_03_T07992_02_003_02_V002.h5"
+    "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/",
+    "GEDI02_A.002/GEDI02_A_2022022010909_O17620_02_T07806_02_003_02_V002/",
+    "GEDI02_A_2022022010909_O17620_02_T07806_02_003_02_V002.h5"
   )
 
   if (curl::has_internet()) {
@@ -210,9 +214,8 @@ chewie_write_netrc <- function(.path, .usr, .pwd) {
 }
 
 #' @title Register NASA Earthdata Login Account
-#' @param .netrc character path to an existing `.netrc` file.
 #' @noRd
-chewie_register <- function(.netrc) {
+chewie_register <- function() {
   cli::cli_inform(paste0(
     chew_bold_cyan("?"),
     "  Do You Have a NASA Earthdata Login Account?"
@@ -231,14 +234,14 @@ chewie_register <- function(.netrc) {
 }
 
 #' @title Remove NASA Earthdata Credentials environment variable
-#' @param renviron character either 'user', '"project"' or path to the directory
+#' @param renviron character either "auto",  "user", "project" or path to the directory
 #' containing the `.Renviron` file.
 #' @rdname chewie-credentials
 #' @family manage credentials
 #' @export
 #' @details `chewie_env_clean` can be used to manually remove the `CHEWIE_NETRC`
 #' environment and delete the associated `.netrc` file.
-chewie_clean_netrc <- function(renviron = "user") {
+chewie_clean_netrc <- function(renviron = "auto") {
   check_n_del <- function(x) {
     if (file.exists(x)) {
       file.remove(x)
@@ -277,7 +280,7 @@ chewie_clean_netrc <- function(renviron = "user") {
 
 #' @title Set NASA Earthdata Credentials environment
 #' @param netrc character path to an existing `.netrc` file.
-#' @param renviron character either 'user', '"project"' or path to the directory
+#' @param renviron character either "auto" "user", '"project"' or path to the directory
 #' containing the `.Renviron` file to set the `CHEWIE_NETRC` environment.
 #' @rdname chewie-credentials
 #' @family manage credentials
@@ -285,7 +288,7 @@ chewie_clean_netrc <- function(renviron = "user") {
 #' @details `chewie_set_netrc_env` is most likely not required but can be used to
 #' manually set the `CHEWIE_NETRC` environment variable which is used for
 #' authenticating downloads from the NASA Earthdata API.
-chewie_set_netrc_env <- function(netrc, renviron = "user") {
+chewie_set_netrc_env <- function(netrc, renviron = "auto") {
   add_env_var("CHEWIE_NETRC", netrc, renviron)
 }
 
