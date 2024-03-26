@@ -169,7 +169,12 @@ mv_gen <- function(
     c("layer.name", "zcol", "col.regions", "alpha.regions", "alpha")]
 
   # get number of unique values in zcol
-  n_col <- ifelse(is.null(zcol), 1, length(unique(x[[zcol]])))
+  zcol_vals <- unique(x[[zcol]])
+  if (inherits(zcol_vals, "character")) {
+    n_col <- ifelse(is.null(zcol), 1, length(zcol_vals))
+  } else {
+    n_col <- ifelse(is.null(zcol), 1, 10)
+  }
 
   # combine all args
   all_vars <- c(
@@ -188,8 +193,10 @@ mv_gen <- function(
     dots
   )
 
-  .mv <- do.call(mapview::mapview, all_vars) +
-    aoi_mv(x, aoi_color)
+  .mv <- suppressWarnings({
+    do.call(mapview::mapview, all_vars) +
+      aoi_mv(x, aoi_color)
+  })
 
   if (!is.null(zoom)) {
     if (zoom_on_aoi) {
