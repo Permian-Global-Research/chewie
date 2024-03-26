@@ -8,10 +8,13 @@
 #' @param timeout A numeric indicating the timeout in seconds.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param gedi_prod A character vector indicating the GEDI product.
+#' @param nfiles A numeric indicating the total number of files to download.
+#' @param add_vars A named list of GEDI variables to add to the returned dataset.
+#' @param delete_h5 A logical indicating whether to delete the hdf5 file after
 #' @noRd
 chewie_mk_parquet <- function(
     df,
-    .dir, timeout, progress, gedi_prod, nfiles, add_vars) {
+    .dir, timeout, progress, gedi_prod, nfiles, add_vars, delete_h5) {
   s_id <- df$id
   id <- df$row_num
 
@@ -44,25 +47,21 @@ chewie_mk_parquet <- function(
     unlink(df$destfile)
 
     # report success
-    colfunc <- ifelse(id == nfiles, chew_bold_green, chew_bold_cyan)
-
     if (id == nfiles) {
       cli::cli_alert_success(paste0(
-        "   Converted {cli::qty(id)}",
-        colfunc("{id}"),
-        "/",
+        "   Converted ",
         chew_bold_green("{nfiles}"),
         " file{?s} to parquet format"
       ))
-    } else {
-      cli::cli_alert_danger(paste0(
-        "   Error converting {cli::qty(id)}file ",
-        colfunc("{id}"),
-        "/",
-        chew_bold_red("{nfiles}"),
-        " to parquet format"
-      ))
     }
+  } else {
+    cli::cli_inform(c("x" = paste0(
+      "   Error converting {cli::qty(id)}file ",
+      chew_bold_cyan("{id}"),
+      "/",
+      chew_bold_red("{nfiles}"),
+      " to parquet format"
+    ), "i" = "check file: ", cli::style_italic("{df$destfile}")))
   }
 
   return(df)
@@ -102,6 +101,9 @@ chewie_missing_gedi <- function(x) {
 #' dataset. See details.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param timeout A numeric indicating the timeout in seconds.
+#' @param delete_h5 A logical indicating whether to delete the hdf5 file after
+#' conversion to parquet. Default is TRUE. these files are saved in
+#' `getOption("chewie.h5.cache")`.
 #' @export
 #' @returns An arrow_dplyr_query object.
 #' @details
@@ -155,7 +157,7 @@ chewie_missing_gedi <- function(x) {
 #' )
 #'
 grab_gedi <- function(
-    x, add_vars = NULL, progress = TRUE, timeout = 7200) {
+    x, add_vars = NULL, progress = TRUE, timeout = 7200, delete_h5 = TRUE) {
   .dir <- getOption("chewie.h5.cache")
   st_time <- Sys.time()
 
@@ -200,7 +202,7 @@ grab_gedi <- function(
         dd_full_split,
         ~ chewie_mk_parquet(
           .x,
-          .dir, timeout, progress, gedi_product, nfiles, add_vars
+          .dir, timeout, progress, gedi_product, nfiles, add_vars, delete_h5
         ),
         .progress = progress
       ) |>
