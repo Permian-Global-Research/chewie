@@ -8,8 +8,8 @@
 #'
 #' @export
 chewie_health_check <- function(.test = TRUE, .report_cache = TRUE) {
-  assert_bool(c(".test" = .test))
-  assert_bool(c(".report_cache" = .report_cache))
+  assert_bool(.test)
+  assert_bool(.report_cache)
 
   if (is.na(chewie_get_env())) {
     inform_env_health("No NASA Earthdata Credentials set.")
