@@ -4,7 +4,13 @@
 \alias{grab_gedi}
 \title{Download GEDI data or access from cahce}
 \usage{
-grab_gedi(x, add_vars = NULL, progress = TRUE, timeout = 7200)
+grab_gedi(
+  x,
+  add_vars = NULL,
+  progress = TRUE,
+  timeout = 7200,
+  delete_h5 = TRUE
+)
 }
 \arguments{
 \item{x}{A chewie.find.x object.}
@@ -15,6 +21,10 @@ dataset. See details.}
 \item{progress}{A logical indicating whether to show a progress bar.}
 
 \item{timeout}{A numeric indicating the timeout in seconds.}
+
+\item{delete_h5}{A logical indicating whether to delete the hdf5 file after
+conversion to parquet. Default is TRUE. these files are saved in
+\code{getOption("chewie.h5.cache")}.}
 }
 \value{
 An arrow_dplyr_query object.
@@ -44,17 +54,6 @@ would be: \code{add_vars = list(solar_elevation = "geolocation/solar_elevation")
 Note that, this feature is somewhat experimental - non existent variables or
 incorrectly spelled variables will fail silently and not be added to the
 returned dataset.
-
-For more information on the GEDI hdf5 files and the variables they contain
-see the following links:
-
-1B: https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
-
-2A: https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
-
-2B: https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
-
-4A: https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
 }
 \examples{
 \dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
@@ -71,4 +70,16 @@ prairie_creek_grab_2b <- grab_gedi(
   prairie_creek_find_2b
 )
 \dontshow{\}) # examplesIf}
+}
+\seealso{
+For more information on the GEDI hdf5 files and the variables they contain
+see the following links:
+
+1B: https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
+
+2A: https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
+
+2B: https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
+
+4A: https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
 }

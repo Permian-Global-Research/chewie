@@ -15,12 +15,12 @@ chewie_creds(
   pwd = NULL,
   quiet = FALSE,
   test = TRUE,
-  renviron = "user"
+  renviron = "auto"
 )
 
-chewie_clean_netrc(renviron = "user")
+chewie_clean_netrc(renviron = "auto")
 
-chewie_set_netrc_env(netrc, renviron = "user")
+chewie_set_netrc_env(netrc, renviron = "auto")
 
 chewie_get_netrc()
 }
@@ -41,7 +41,7 @@ messaging.}
 
 \item{test}{logical whether to test the credentials after setting them.}
 
-\item{renviron}{character either 'user', '"project"' or path to the directory
+\item{renviron}{character either "auto" "user", '"project"' or path to the directory
 containing the \code{.Renviron} file to set the \code{CHEWIE_NETRC} environment.}
 }
 \description{
