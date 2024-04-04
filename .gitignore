@@ -20,3 +20,5 @@ inst/doc
 /doc/
 /Meta/
 docs
+
+data-raw/chewie-test-cache/*
