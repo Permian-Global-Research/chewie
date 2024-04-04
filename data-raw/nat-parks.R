@@ -11,12 +11,11 @@ download.file(np_url, np_dest)
 
 np_boundaries <- sf::st_read(np_dest) |>
   sf::st_make_valid()
-mapview(np_boundaries, alpha.regions = 0.1)
 
 hum <- read_sf(system.file("geojson", "humboldt.geojson", package = "chewie"))
 
 np_hum <- st_filter(np_boundaries, hum)
-
+# mapview::mapview(np_hum, alpha.regions = 0.1)
 
 write_sf(np_hum, "inst/geojson/nat-parks-hum.geojson", delete_dsn = TRUE)
 
