@@ -34,7 +34,7 @@ open_gedi <- function(x) {
         longitude_bin0 <= bounds$xmax,
         latitude_bin0 >= bounds$ymin,
         latitude_bin0 <= bounds$ymax,
-        swath_id %in% x$id
+        granule_id %in% x$id
       ) |>
       add_time()
   } else {
@@ -44,7 +44,7 @@ open_gedi <- function(x) {
         lat_lowestmode <= bounds$ymax,
         lon_lowestmode >= bounds$xmin,
         lon_lowestmode <= bounds$xmax,
-        swath_id %in% x$id
+        granule_id %in% x$id
       ) |>
       add_time()
   }

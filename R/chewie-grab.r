@@ -30,7 +30,7 @@ chewie_mk_parquet <- function(
         "chewie.parquet.cache"
       ),
       gedi_prod,
-      paste0("swath_id=", s_id)
+      paste0("granule_id=", s_id)
     )
     check_n_make_dir(save_dir)
 
@@ -44,7 +44,10 @@ chewie_mk_parquet <- function(
         )
       )
     )
-    unlink(df$destfile)
+
+    if (delete_h5) {
+      file.remove(df$destfile)
+    }
 
     # report success
     if (id == nfiles) {
@@ -176,7 +179,6 @@ grab_gedi <- function(
 
   if (nfiles > 0) {
     inform_n_to_download(gedi_product, nfiles)
-
     # here we run the download in parallel
     down_df <- curl::multi_download(
       x_to_down$url,

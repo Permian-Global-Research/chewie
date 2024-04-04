@@ -19,9 +19,6 @@ chewie_setup_cache <- function(
   di_find_gedi <- file.path(.dir, "find-gedi-cache")
 
   ovw <- add_env_var("CHEWIE_CACHE_HOME", .dir, renviron)
-  if (!isTRUE(ovw)) {
-    return(invisible())
-  }
 
   check_n_make_dir(dir_parquet)
   check_n_make_dir(dir_h5)

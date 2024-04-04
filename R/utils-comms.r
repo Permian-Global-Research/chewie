@@ -186,7 +186,6 @@ abort_missing_project_renv <- function(x) {
 
 
 abort_bool <- function(x) {
-  # browser()
   cli::cli_abort(c(
     paste0(
       "The provided value for ",
