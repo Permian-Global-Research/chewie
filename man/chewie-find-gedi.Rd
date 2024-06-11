@@ -42,7 +42,7 @@ Find GEDI granules that intersect with a given spatial object.
 Where x is a numeric it must be of length 4 with values corresponding to the
 bounding box coordinates in the order xmin, ymin, xmax, ymax.
 
-By default, the {sf} package uses the s2 model to carry out geometric
+By default, the \{sf\} package uses the s2 model to carry out geometric
 operations. This can sometimes result in the apparent intersection of
 GEDI granules and an AOI, possibly resulting in the downloading of more data
 than expected. If this is an issue in your case, you can use

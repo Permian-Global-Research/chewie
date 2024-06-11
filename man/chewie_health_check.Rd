@@ -2,7 +2,7 @@
 % Please edit documentation in R/chewie-health-check.r
 \name{chewie_health_check}
 \alias{chewie_health_check}
-\title{Check the status of the {chewie}}
+\title{Check the status of \{chewie\}}
 \usage{
 chewie_health_check(.test = TRUE, .report_cache = TRUE)
 }

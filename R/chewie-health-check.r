@@ -1,4 +1,4 @@
-#' @title Check the status of the {chewie}
+#' @title Check the status of \{chewie\}
 #' @description checks the NASA Earthdata Credentials and GEDI Cache
 #' environment variables
 #' @param .test logical; whether to test the credentials (requires internet
