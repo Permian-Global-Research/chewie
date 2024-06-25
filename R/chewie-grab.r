@@ -149,27 +149,6 @@ chewie_mk_parquet <- function(
       )
     )
     unlink(df$destfile)
-
-    # report success
-    # colfunc <- ifelse(id == nfiles, chew_bold_green, chew_bold_cyan)
-
-    # if (id == nfiles) {
-    #   cli::cli_alert_success(paste0(
-    #     "   Converted {cli::qty(id)}",
-    #     colfunc("{id}"),
-    #     "/",
-    #     chew_bold_green("{nfiles}"),
-    #     " file{?s} to parquet format"
-    #   ))
-    # } else {
-    #   cli::cli_alert_danger(paste0(
-    #     "   Error converting {cli::qty(id)}file ",
-    #     colfunc("{id}"),
-    #     "/",
-    #     chew_bold_red("{nfiles}"),
-    #     " to parquet format"
-    #   ))
-    # }
   }
 
   return(df)
