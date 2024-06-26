@@ -120,8 +120,7 @@ collect_gedi <- function(
     lat_col <- "latitude_avg"
     lon_col <- "longitude_avg"
   } else {
-    if (!"lat_lowestmode" %in% names(x) ||
-      !"lon_lowestmode" %in% names(x)) {
+    if (!"lat_lowestmode" %in% names(x) || !"lon_lowestmode" %in% names(x)) {
       abort_missing_lon_lat(gedi_find)
     }
     lat_col <- "lat_lowestmode"

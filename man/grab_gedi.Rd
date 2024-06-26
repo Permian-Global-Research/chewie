@@ -9,6 +9,7 @@ grab_gedi(
   add_vars = NULL,
   progress = TRUE,
   timeout = 7200,
+  batchsize = 10,
   delete_h5 = TRUE
 )
 }
@@ -21,6 +22,10 @@ dataset. See details.}
 \item{progress}{A logical indicating whether to show a progress bar.}
 
 \item{timeout}{A numeric indicating the timeout in seconds.}
+
+\item{batchsize}{A numeric indicating the number of files to download in
+parallel. where batchsize is less than the number of files to download, the
+files will be downloaded in chunks of batchsize.}
 
 \item{delete_h5}{A logical indicating whether to delete the hdf5 file after
 conversion to parquet. Default is TRUE. these files are saved in
@@ -41,7 +46,7 @@ disk space and enables dynamic reading and filtering of the returned "open"
 arrow dataset.
 
 Info about \code{add_vars}:
-{chewie} will only cache specific variables made available in the GEDI hdf5
+\{chewie\} will only cache specific variables made available in the GEDI hdf5
 files. This is in part to reduce disk space but also to improve performance
 and make working with these data simpler. However, some users may wish to
 access other variables not cached by default. In this case the \code{add_vars}

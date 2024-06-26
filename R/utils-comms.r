@@ -324,11 +324,16 @@ inform_n_to_convert <- function(gedi_product, nfiles) {
   )))
 }
 
-inform_n_to_download <- function(gedi_product, nfiles) {
+inform_n_to_download <- function(gedi_product, nfiles, batches = NULL) {
   cli::cli_inform(c(">" = paste0(
     "Downloading {nfiles} ",
     chew_bold_yel(gedi_product),
-    " Data files."
+    " Data files",
+    if (!is.null(batches)) {
+      paste0(" in {batches} batches.")
+    } else {
+      "."
+    }
   )))
 }
 

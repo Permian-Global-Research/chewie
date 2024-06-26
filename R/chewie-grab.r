@@ -1,102 +1,3 @@
-#' @title Download GEDI data
-#' @description internal function to download GEDI data from the NASA Earthdata
-#' in hdf5 format, write as parquet, and return a dataframe of the download summary.
-#' @param .url A character vector of url to download.
-#' @param s_id A character vector of swath id.
-#' @param id A numeric indicating the iterator number
-#' @param .dir A character vector of the directory to save the hdf5 file.
-#' @param timeout A numeric indicating the timeout in seconds.
-#' @param progress A logical indicating whether to show a progress bar.
-#' @param gedi_prod A character vector indicating the GEDI product.
-#' @param nfiles A numeric indicating the total number of files to download.
-#' @param add_vars A named list of GEDI variables to add to the returned dataset.
-#' @param delete_h5 A logical indicating whether to delete the hdf5 file after
-#' @noRd
-chewie_mk_parquet <- function(
-    df,
-    .dir, timeout, progress, gedi_prod, nfiles, add_vars, delete_h5) {
-  s_id <- df$id
-  id <- df$row_num
-
-  attr(df, "class") <- c(
-    paste0("chewie.download.", gedi_prod),
-    class(df)
-  )
-
-  if (isTRUE(check_status_codes(df))) {
-    gedi_dt <- chewie_convert(df, extra_vars = add_vars)
-    save_dir <- file.path(
-      getOption(
-        "chewie.parquet.cache"
-      ),
-      gedi_prod,
-      paste0("granule_id=", s_id)
-    )
-    check_n_make_dir(save_dir)
-
-    arrow::write_parquet(
-      dplyr::as_tibble(gedi_dt),
-      file.path(
-        save_dir,
-        paste0(
-          tools::file_path_sans_ext(basename(df$destfile)),
-          ".parquet"
-        )
-      )
-    )
-
-    if (delete_h5) {
-      file.remove(df$destfile)
-    }
-
-    # report success
-    if (id == nfiles) {
-      cli::cli_alert_success(paste0(
-        "   Converted ",
-        chew_bold_green("{nfiles}"),
-        " file{?s} to parquet format"
-      ))
-    }
-  } else {
-    cli::cli_inform(c("x" = paste0(
-      "   Error converting {cli::qty(id)}file ",
-      chew_bold_cyan("{id}"),
-      "/",
-      chew_bold_red("{nfiles}"),
-      " to parquet format"
-    ), "i" = "check file: ", cli::style_italic("{df$destfile}")))
-  }
-
-  return(df)
-}
-
-#' @title filter find for uncached data
-#' @description internal function to filter a chewie.find object for data that
-#' is not already cached.
-#' @param x A chewie.find object.
-#' @details mainly for more informative messaging.
-#' @noRd
-chewie_missing_gedi <- function(x) {
-  x <- chewie_scan(x)
-  n_swaths <- nrow(x)
-  to_download <- x[!x$cached, ]
-
-  if (nrow(to_download) == 0) {
-    cli::cli_alert_success("All data found in cache")
-  } else {
-    if (nrow(to_download) != n_swaths) {
-      cli::cli_inform(
-        c(
-          "i" = "{n_swaths - nrow(to_download)} of {n_swaths}
-                    file{?s}  found in cache"
-        )
-      )
-    }
-  }
-  return(to_download)
-}
-
-
 #' @title Download GEDI data or access from cahce
 #' @description Download GEDI data from the NASA Earthdata in hdf5 format.
 #' @param x A chewie.find.x object.
@@ -104,6 +5,9 @@ chewie_missing_gedi <- function(x) {
 #' dataset. See details.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param timeout A numeric indicating the timeout in seconds.
+#' @param batchsize A numeric indicating the number of files to download in
+#' parallel. where batchsize is less than the number of files to download, the
+#' files will be downloaded in chunks of batchsize.
 #' @param delete_h5 A logical indicating whether to delete the hdf5 file after
 #' conversion to parquet. Default is TRUE. these files are saved in
 #' `getOption("chewie.h5.cache")`.
@@ -118,7 +22,7 @@ chewie_missing_gedi <- function(x) {
 #' arrow dataset.
 #'
 #' Info about `add_vars`:
-#' {chewie} will only cache specific variables made available in the GEDI hdf5
+#' \{chewie\} will only cache specific variables made available in the GEDI hdf5
 #' files. This is in part to reduce disk space but also to improve performance
 #' and make working with these data simpler. However, some users may wish to
 #' access other variables not cached by default. In this case the `add_vars`
@@ -160,7 +64,9 @@ chewie_missing_gedi <- function(x) {
 #' )
 #'
 grab_gedi <- function(
-    x, add_vars = NULL, progress = TRUE, timeout = 7200, delete_h5 = TRUE) {
+    x, add_vars = NULL,
+    progress = TRUE, timeout = 7200,
+    batchsize = 10, delete_h5 = TRUE) {
   .dir <- getOption("chewie.h5.cache")
   st_time <- Sys.time()
 
@@ -178,43 +84,109 @@ grab_gedi <- function(
   nfiles <- nrow(x_to_down)
 
   if (nfiles > 0) {
-    inform_n_to_download(gedi_product, nfiles)
-    # here we run the download in parallel
-    down_df <- curl::multi_download(
-      x_to_down$url,
-      destfiles = file.path(.dir, basename(x_to_down$url)),
-      resume = TRUE,
-      timeout = timeout,
-      progress = progress,
-      multiplex = TRUE,
-      netrc = TRUE,
-      netrc_file = Sys.getenv("CHEWIE_NETRC")
+    # split the urls into chunks to download in parallel
+    x2d_chunks <- x_to_down |>
+      dplyr::mutate(group = ceiling(
+        seq_len(dplyr::n()) /
+          (dplyr::n() /
+            (dplyr::n() / batchsize))
+      )) |>
+      dplyr::group_by(group) |>
+      dplyr::group_split()
+
+    urlchunks <- setNames(x2d_chunks, paste0("chunk_", seq_along(x2d_chunks)))
+
+    dl_df <- download_wrap(
+      x2d_chunks, .dir, timeout,
+      progress, gedi_product, add_vars
     )
-
-    dd_full_split <- sf::st_drop_geometry(x_to_down) |>
-      dplyr::select(destfile, id) |>
-      dplyr::mutate(row_num = dplyr::row_number()) |>
-      dplyr::right_join(down_df, by = "destfile") |>
-      dplyr::group_split(row_num)
-
-    inform_n_to_convert(gedi_product, nfiles)
-
-    dl_df <-
-      purrr::map(
-        dd_full_split,
-        ~ chewie_mk_parquet(
-          .x,
-          .dir, timeout, progress, gedi_product, nfiles, add_vars, delete_h5
-        ),
-        .progress = progress
-      ) |>
-      purrr::list_rbind()
 
     log_staus_codes(dl_df, nfiles)
     inform_time(st_time, "Download")
   }
 
   return(open_gedi(x))
+}
+
+#' @title Download GEDI data
+#' @description internal function to download GEDI data from the NASA Earthdata
+#' in hdf5 format, write as parquet, and return a dataframe of the download summary.
+#' @param .url A character vector of url to download.
+#' @param s_id A character vector of swath id.
+#' @param id A numeric indicating the iterator number
+#' @param .dir A character vector of the directory to save the hdf5 file.
+#' @param timeout A numeric indicating the timeout in seconds.
+#' @param progress A logical indicating whether to show a progress bar.
+#' @param gedi_prod A character vector indicating the GEDI product.
+#' @param nfiles A numeric indicating the number of files to download.
+#' @param add_vars A named list of GEDI variables to add to the returned dataset.
+#' @param delete_h5 A logical indicating whether to delete the hdf5 file after
+#' @noRd
+chewie_mk_parquet <- function(
+    df,
+    .dir, timeout, progress, gedi_prod, nfiles, add_vars, delete_h5) {
+  s_id <- df$id
+  id <- df$row_num
+
+  attr(df, "class") <- c(
+    paste0("chewie.download.", gedi_prod),
+    class(df)
+  )
+
+  if (isTRUE(check_status_codes(df))) {
+    gedi_dt <- chewie_convert(df, extra_vars = add_vars)
+    save_dir <- file.path(
+      getOption(
+        "chewie.parquet.cache"
+      ),
+      gedi_prod,
+      paste0("granule_id=", s_id)
+    )
+    check_n_make_dir(save_dir)
+
+    arrow::write_parquet(
+      dplyr::as_tibble(gedi_dt),
+      file.path(
+        save_dir,
+        paste0(
+          tools::file_path_sans_ext(basename(df$destfile)),
+          ".parquet"
+        )
+      )
+    )
+
+    if (delete_h5) {
+      file.remove(df$destfile)
+    }
+  }
+
+  return(df)
+}
+
+#' @title filter find for uncached data
+#' @description internal function to filter a chewie.find object for data that
+#' is not already cached.
+#' @param x A chewie.find object.
+#' @details mainly for more informative messaging.
+#' @noRd
+chewie_missing_gedi <- function(x) {
+  x <- chewie_scan(x)
+  n_swaths <- nrow(x)
+  to_download <- x[!x$cached, ]
+
+  if (nrow(to_download) == 0) {
+    cli::cli_alert_success("All data found in cache")
+  } else {
+    if (nrow(to_download) != n_swaths) {
+      cli::cli_inform(
+        c(
+          "i" = "{n_swaths - nrow(to_download)} of {n_swaths}
+                    file{?s}  found in cache"
+        )
+      )
+    }
+  }
+  return(to_download)
 }
 
 check_status_codes <- function(x) {
@@ -242,4 +214,68 @@ log_staus_codes <- function(x, n) {
     inform_download_completed(length(completed), n)
   }
   return(invisible())
+}
+
+
+#' Download GEDI data from the LPDAAC
+#' @param url_batched A list of character vectors of urls to download.
+#' @param dir A character vector of the directory to save the hdf5 file.
+#' @param timeout A numeric indicating the timeout in seconds.
+#' @param progress A logical indicating whether to show a progress bar.
+#' @param gedi_product A character vector indicating the GEDI product.
+#' @noRd
+#' @keywords internal
+download_wrap <- function(
+    url_batched, dir, timeout,
+    progress, gedi_product, add_vars) {
+  n <- sum(vapply(url_batched, nrow, 1L))
+  n_batch <- length(url_batched)
+  if (n_batch == 1) {
+    n_batch <- NULL
+  }
+  inform_n_to_download(gedi_product, n, n_batch)
+
+  dl_f <- function(x2d_chunk) {
+    df_down <- curl::multi_download(
+      x2d_chunk$url,
+      destfiles = file.path(dir, basename(x2d_chunk$url)),
+      resume = TRUE,
+      timeout = timeout,
+      progress = progress,
+      multiplex = TRUE,
+      netrc = TRUE,
+      netrc_file = Sys.getenv("CHEWIE_NETRC")
+    )
+
+    dd_full_split <- sf::st_drop_geometry(x2d_chunk) |>
+      dplyr::select(destfile, id) |>
+      dplyr::mutate(row_num = dplyr::row_number()) |>
+      dplyr::right_join(df_down, by = "destfile") |>
+      dplyr::group_split(row_num)
+
+    inform_n_to_convert(gedi_product, n) # maybe this is overkill?
+
+    purrr::map(
+      dd_full_split,
+      ~ chewie_mk_parquet(
+        .x,
+        dir, timeout, progress, gedi_product, nrow(x2d_chunk), add_vars
+      ),
+      .progress = progress
+    ) |>
+      purrr::list_rbind()
+  }
+
+  # here we run the download chunks in parallel
+  options(cli.spinner = "earth")
+  purrr::map(
+    url_batched,
+    dl_f,
+    .progress = list(
+      type = "iterator",
+      format = "{cli::pb_spin} Downloading chunk {cli::pb_current}/{cli::pb_total}",
+      clear = TRUE
+    )
+  ) |>
+    purrr::list_rbind()
 }
