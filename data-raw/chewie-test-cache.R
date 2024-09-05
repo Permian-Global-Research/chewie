@@ -4,7 +4,7 @@ if (!file.exists(".Renviron")) {
 
 # quit()
 
-# library(chewie)
+library(devtools)
 devtools::load_all()
 library(furrr)
 
@@ -22,6 +22,37 @@ prairie_creek <- system.file(
   package = "chewie"
 ) |>
   sf::read_sf()
+
+
+# --- more dev first:
+
+chewie::chewie_clear_parquet_cache("2B")
+
+pc_find <- find_gedi(prairie_creek,
+  gedi_product = "2B",
+  date_start = "2023-01-01",
+  date_end = "2023-01-31",
+  intersects = TRUE,
+  cache = TRUE
+)
+
+x <- grab_gedi(pc_find, delete_h5 = FALSE)
+
+y <- chewie::collect_gedi(x, pc_find) |>
+  dplyr::mutate(
+    pai_z5_10m = dplyr::case_when(
+      pai_z5_10m == -9999 ~ NA,
+      .default = pai_z5_10m
+    )
+  )
+
+chewie_show(y, zcol = "pai_z5_10m")
+
+dplyr::collect(x)
+
+dim(x)
+
+
 
 get_raw_test_files <- function(gedi_prod) {
   pc_find <- find_gedi(prairie_creek,
@@ -66,6 +97,12 @@ cds <- make_inst_cache()
 gfinds <- list.files(getOption("chewie.find.gedi.cache"),
   recursive = TRUE, full.names = TRUE
 )
+
+getOption("chewie.find.gedi.cache")
+getOption("chewie.parquet.cache")
+getOption("chewie.h5.cache")
+
+
 file.copy(gfinds, cds$find_gedi)
 
 # clip and move parquet cache.
