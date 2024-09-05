@@ -94,11 +94,12 @@ grab_gedi <- function(
       dplyr::group_by(group) |>
       dplyr::group_split()
 
-    urlchunks <- setNames(x2d_chunks, paste0("chunk_", seq_along(x2d_chunks)))
+    # TODO: is this needed?
+    # urlchunks <- setNames(x2d_chunks, paste0("chunk_", seq_along(x2d_chunks)))
 
     dl_df <- download_wrap(
       x2d_chunks, .dir, timeout,
-      progress, gedi_product, add_vars
+      progress, gedi_product, add_vars, delete_h5
     )
 
     log_staus_codes(dl_df, nfiles)
@@ -108,25 +109,23 @@ grab_gedi <- function(
   return(open_gedi(x))
 }
 
-#' @title Download GEDI data
-#' @description internal function to download GEDI data from the NASA Earthdata
-#' in hdf5 format, write as parquet, and return a dataframe of the download summary.
-#' @param .url A character vector of url to download.
-#' @param s_id A character vector of swath id.
-#' @param id A numeric indicating the iterator number
-#' @param .dir A character vector of the directory to save the hdf5 file.
+#' @title convert GEDI hdf5 to parquet
+#' @description internal function to convert GEDI hdf5 files to parquet format.
+#' @param df a dataframe returned from `curl::multi_download`.
+#' @param .dir A character vector of the directory to save the parquet file.
 #' @param timeout A numeric indicating the timeout in seconds.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param gedi_prod A character vector indicating the GEDI product.
 #' @param nfiles A numeric indicating the number of files to download.
-#' @param add_vars A named list of GEDI variables to add to the returned dataset.
+#' @param add_vars A named list of GEDI variables to add to the returned
+#' dataset.
 #' @param delete_h5 A logical indicating whether to delete the hdf5 file after
+#' conversion to parquet.
 #' @noRd
 chewie_mk_parquet <- function(
     df,
     .dir, timeout, progress, gedi_prod, nfiles, add_vars, delete_h5) {
   s_id <- df$id
-  id <- df$row_num
 
   attr(df, "class") <- c(
     paste0("chewie.download.", gedi_prod),
@@ -152,7 +151,8 @@ chewie_mk_parquet <- function(
           tools::file_path_sans_ext(basename(df$destfile)),
           ".parquet"
         )
-      )
+      ),
+      compression = "brotli" # TODO: this needs some thought...
     )
 
     if (delete_h5) {
@@ -223,11 +223,15 @@ log_staus_codes <- function(x, n) {
 #' @param timeout A numeric indicating the timeout in seconds.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param gedi_product A character vector indicating the GEDI product.
+#' @param add_vars A named list of GEDI variables to add to the returned
+#' dataset.
+#' @param delete_h5 A logical indicating whether to delete the hdf5 file after
+#' conversion to parquet.
 #' @noRd
 #' @keywords internal
 download_wrap <- function(
     url_batched, dir, timeout,
-    progress, gedi_product, add_vars) {
+    progress, gedi_product, add_vars, delete_h5) {
   n <- sum(vapply(url_batched, nrow, 1L))
   n_batch <- length(url_batched)
   if (n_batch == 1) {
@@ -238,7 +242,7 @@ download_wrap <- function(
   dl_f <- function(x2d_chunk) {
     df_down <- curl::multi_download(
       x2d_chunk$url,
-      destfiles = file.path(dir, basename(x2d_chunk$url)),
+      destfiles = normalizePath(file.path(dir, basename(x2d_chunk$url))),
       resume = TRUE,
       timeout = timeout,
       progress = progress,
@@ -248,6 +252,7 @@ download_wrap <- function(
     )
 
     dd_full_split <- sf::st_drop_geometry(x2d_chunk) |>
+      dplyr::mutate(destfile = normalizePath(destfile)) |>
       dplyr::select(destfile, id) |>
       dplyr::mutate(row_num = dplyr::row_number()) |>
       dplyr::right_join(df_down, by = "destfile") |>
@@ -259,7 +264,8 @@ download_wrap <- function(
       dd_full_split,
       ~ chewie_mk_parquet(
         .x,
-        dir, timeout, progress, gedi_product, nrow(x2d_chunk), add_vars
+        dir, timeout, progress, gedi_product,
+        nrow(x2d_chunk), add_vars, delete_h5
       ),
       .progress = progress
     ) |>
@@ -273,7 +279,8 @@ download_wrap <- function(
     dl_f,
     .progress = list(
       type = "iterator",
-      format = "{cli::pb_spin} Downloading chunk {cli::pb_current}/{cli::pb_total}",
+      format =
+        "{cli::pb_spin} Downloading chunk {cli::pb_current}/{cli::pb_total}",
       clear = TRUE
     )
   ) |>
