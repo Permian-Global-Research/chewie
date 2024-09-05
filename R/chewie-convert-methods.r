@@ -23,15 +23,17 @@ l1b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
   }
 
   # functions for extracting waveforms for each shot.
+
+
+  vals <- dt_builder(l1b_beam, colnames_1b, extra_vals) |>
+    dt_cbindlist()
+
   rxwave <- Vectorize(
     function(rx_starts, rx_counts) {
       end_idx <- rx_starts + rx_counts - 1
       compress_waveform(all_rx_wav[rx_starts:end_idx])
     }
   )
-
-  vals <- dt_builder(l1b_beam, colnames_1b, extra_vals) |>
-    dt_cbindlist()
 
   # get the rx waveforms
   data.table::set(vals,
@@ -44,6 +46,8 @@ l1b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
 
   return(vals)
 }
+
+
 
 
 #' @title Convert GEDI 2A hdf data to a data.table
@@ -82,24 +86,45 @@ l2a_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
 #' @param extra_vals A named list of extra variables to add to the returned data.table.
 #' @noRd
 l2b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
-  g2b_profiler <- function(.colname, .beam) {
-    t(.beam[[.colname]][, 1:.beam[[.colname]]$dims[2]]) |>
+  g2b_profiler <- function(.colname, .beam, dz, maxz) {
+    var_dims <- .beam[[.colname]]$dims
+    t(.beam[[.colname]][, 1:var_dims[2]]) |>
       data.table::data.table() |>
       data.table::setnames(
-        paste0(.colname, seq(0, 145, 5), "_", seq(5, 150, 5), "m")
-      ) |>
-      list()
+        paste0(.colname, seq(0, maxz - dz, dz), "_", seq(dz, maxz, dz), "m")
+      )
   }
 
   l2b_beam <- h5_con[[beam_id]]
 
-  vals <- dt_builder(l2b_beam, colnames_2b, extra_vals)
+  vals <- dt_builder(
+    l2b_beam,
+    colnames_generic(
+      l2b_beam,
+      c("cover_z", "pai_z", "pavd_z", "pgap_theta_z")
+    )
+  )
 
-  pavd_z <- g2b_profiler("pavd_z", l2b_beam)
+  ancil_grp <- vals$ancillary
 
-  pai_z <- g2b_profiler("pai_z", l2b_beam)
+  z_vars <- c("cover_z", "pai_z", "pavd_z") |>
+    purrr::map(
+      ~ g2b_profiler(.x, l2b_beam, ancil_grp$dz, ancil_grp$maxheight_cuttoff)
+    )
 
-  return(dt_cbindlist(c(vals, pavd_z, pai_z)))
+  add_waveform(l2b_beam, vals$beam, "pgap_theta_z", compress = FALSE)
+
+  # build final data.table
+  vals$ancillary <- NULL # remove ancillary group from vals
+  comb_list <- c(vals, z_vars)
+  names(comb_list) <- NULL
+  comb_dt <- dt_cbindlist(comb_list)
+
+  # Drop columns that end with .[numeric]
+  drop_cols <- grep("\\.\\d+$", colnames(comb_dt), value = TRUE)
+  comb_dt <- comb_dt[, !colnames(comb_dt) %in% drop_cols, with = FALSE]
+
+  return(comb_dt)
 }
 
 #' @title Convert GEDI 4A hdf data to a data.table
@@ -114,14 +139,47 @@ l2b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
 #' all of the possible columns. may change or other datasets might change...
 l4a_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
   l4a_beam <- h5_con[[beam_id]]
-  dt_builder(l4a_beam, colnames_4a, l4a_beam) |>
+  dt_builder(l4a_beam, colnames_generic, l4a_beam) |>
     dt_cbindlist()
 }
 
+#' @title add a 1d array or waveform to a data.table as a list column
+#' @description internal function for adding a 1D array to a data.table as a list
+#' column.
+#' @param beam A H5Group object.
+#' @param dt A data.table object.
+#' @param arr1d A numeric vector.
+#' @param id A character string of the column name to add.
+#' @param compress A logical indicating whether to compress the waveform data.
+#' @noRd
+#' @keywords internal
+add_waveform <- function(beam, dt, id, compress = TRUE) {
+  arr1d <- beam[[id]][]
+  rxwave <- Vectorize(
+    function(rx_st, rx_co) {
+      end_idx <- rx_st + rx_co - 1
+      if (compress) {
+        return(compress_waveform(arr1d[rx_st:end_idx]))
+      } else {
+        return(arr1d[rx_st:end_idx])
+      }
+    }
+  )
+
+  # get the rx waveforms
+  data.table::set(dt,
+    j = id,
+    value = rxwave(
+      dt$rx_sample_start_index,
+      dt$rx_sample_count
+    )
+  )
+}
 
 #' @ title convert waveform to integer
 #' @param x numeric vector of waveform values
 #' @noRd
+#' @keywords internal
 compress_waveform <- function(x) {
   I(as.integer(x * 1e4))
 }
@@ -130,19 +188,28 @@ compress_waveform <- function(x) {
 #' @description internal function for constructing data.tables from 1D GEDI
 #' hdf5 datasets
 #' @param .beam A `H5Group` object consituting a beam.
-#' @param .f A function to get the column names for a given GEDI product.
-#' @param .ev A named list of extra variables to add to the returned data.table.
+#' @param .l a named list of groups containing the datasets to extract.
 #' @noRd
-dt_builder <- function(.beam, .f, .ev) {
-  dt_list <- purrr::imap(
-    .f(.ev),
-    purrr::safely(function(.x, .y) {
-      setNames(data.table::data.table(.beam[[.x]][]), .y)
-    })
+dt_builder <- function(.beam, .l) {
+  purrr::imap(
+    .l,
+    function(.x, .y) {
+      purrr::map(
+        .x,
+        function(.x) {
+          if (.y == "beam") {
+            return(setNames(data.table::data.table(.beam[[.x]][]), .x))
+          } else {
+            open_grp <- hdf5r::openGroup(.beam, .y)
+            return(setNames(data.table::data.table(open_grp[[.x]][]), .x))
+          }
+        }
+      )
+    }
   ) |>
-    purrr::map(purrr::pluck, "result")
-  names(dt_list) <- NULL
-  return(dt_list)
+    purrr::map(
+      dt_cbindlist
+    )
 }
 
 #' @title column names and hdf locations for gedi 4A variables
@@ -150,14 +217,23 @@ dt_builder <- function(.beam, .f, .ev) {
 #' @details here the .ev argument is the hdf5 file itself. and any
 #' extra variables are ignored. This is because this will return all available
 #' variables in the hdf5 file.
-colnames_4a <- function(.ev) {
-  l <- hdf5r::list.datasets(.ev) |>
-    sub("^[^/]*/", "", x = _) |>
-    unique()
-  l <- setNames(l, basename(l))
-  as.list(l)
-}
+colnames_generic <- function(.ev, drop_cols = NULL) {
+  grps <- hdf5r::list.groups(.ev)
+  grp_data <- purrr::map(grps, ~ hdf5r::openGroup(.ev, .x)) |>
+    purrr::map(hdf5r::list.datasets) |>
+    purrr::set_names(grps)
 
+  main <- list(hdf5r::list.datasets(.ev, recursive = FALSE)) |>
+    purrr::set_names("beam")
+
+  all_dat <- c(main, grp_data)
+
+  if (!is.null(drop_cols)) {
+    all_dat <- purrr::map(all_dat, ~ setdiff(.x, drop_cols))
+  }
+
+  return(all_dat)
+}
 
 
 #' @title column names and hdf locations for gedi 1B variables
