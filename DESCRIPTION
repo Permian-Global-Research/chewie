@@ -24,7 +24,8 @@ Imports:
     sf,
     wk,
     tibble,
-    mapview
+    mapview,
+    furrr
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
 Suggests: 
