@@ -1,16 +1,19 @@
 if (!file.exists(".Renviron")) {
   file.create(".Renviron")
 }
-
+chewie::chewie_clear_parquet_cache("2B")
+chewie::chewie_clear_parquet_cache("2A")
+chewie::chewie_clear_parquet_cache("1B")
+chewie::chewie_clear_parquet_cache("4A")
 # quit()
 
 library(devtools)
 devtools::load_all()
-library(furrr)
+# library(furrr)
 
-chewie_setup_cache("data-raw/chewie-test-cache", renviron = "project")
-chewie_health_check()
-chewie_get_cache()
+# chewie_setup_cache("data-raw/chewie-test-cache", renviron = "project")
+# chewie_health_check()
+# chewie_get_cache()
 # chewie_clear_find_cache()
 # chewie_clear_parquet_cache("2A")
 # chewie_creds()
@@ -26,7 +29,6 @@ prairie_creek <- system.file(
 
 # --- more dev first:
 
-chewie::chewie_clear_parquet_cache("2B")
 
 pc_find <- find_gedi(prairie_creek,
   gedi_product = "2B",
@@ -36,23 +38,91 @@ pc_find <- find_gedi(prairie_creek,
   cache = TRUE
 )
 
-x <- grab_gedi(pc_find, delete_h5 = FALSE)
+# getOption("chewie.parquet.codec")
 
-y <- chewie::collect_gedi(x, pc_find) |>
+
+x <- grab_gedi(pc_find, delete_h5 = FALSE, compression = "snappy")
+
+
+y <- x |>
+  dplyr::select(-pgap_theta_z) |>
+  chewie::collect_gedi(pc_find) |>
   dplyr::mutate(
     pai_z5_10m = dplyr::case_when(
       pai_z5_10m == -9999 ~ NA,
       .default = pai_z5_10m
+    ),
+    cover = dplyr::case_when(
+      cover == -9999 ~ NA,
+      .default = cover
     )
   )
 
-chewie_show(y, zcol = "pai_z5_10m")
-
-dplyr::collect(x)
-
-dim(x)
 
 
+# chewie_show(y, zcol = "cover")
+
+pc_find2a <- find_gedi(prairie_creek,
+  gedi_product = "2A",
+  date_start = "2023-01-01",
+  date_end = "2023-01-31",
+  intersects = TRUE,
+  cache = TRUE
+)
+
+# chewie_show(pc_find2a)
+
+# getOption("chewie.parquet.codec")
+
+
+x <- grab_gedi(pc_find2a, delete_h5 = FALSE)
+
+x
+y <- x |>
+  dplyr::select(lat_lowestmode, lon_lowestmode, rx_cumulative_a1_98) |>
+  collect_gedi(pc_find2a)
+
+
+chewie_show(y, zcol = "rx_cumulative_a1_98")
+
+pc_find_1b <- find_gedi(prairie_creek,
+  gedi_product = "1B",
+  date_start = "2023-01-01",
+  date_end = "2023-01-31",
+  intersects = TRUE,
+  cache = TRUE
+)
+
+# future::plan("multisession")
+
+x <- grab_gedi(pc_find_1b, delete_h5 = FALSE, compression = "snappy")
+
+wv <- chewie::extract_waveforms(collect_gedi(x, pc_find_1b))
+
+
+pc_find_4a <- find_gedi(prairie_creek,
+  gedi_product = "4A",
+  date_start = "2023-01-01",
+  date_end = "2023-01-31",
+  intersects = TRUE,
+  cache = TRUE
+)
+
+
+x <- grab_gedi(pc_find_4a, delete_h5 = FALSE)
+
+y4a <- x |>
+  collect_gedi(pc_find_4a) |>
+  dplyr::mutate(
+    agbd = dplyr::case_when(
+      agbd == -9999 ~ NA,
+      .default = agbd
+    )
+  )
+
+y4a
+
+chewie_show(y4a, zcol = "agbd")
 
 get_raw_test_files <- function(gedi_prod) {
   pc_find <- find_gedi(prairie_creek,
@@ -112,7 +182,7 @@ clip_n_save_parquet <- function(x) {
 
   gp <- chewie:::find_gedi_product(x)
   s_id <- x$id
-  # browser()
+
   xc <- x |>
     chewie:::open_gedi() |>
     dplyr::select(!date_time) |>
@@ -120,7 +190,7 @@ clip_n_save_parquet <- function(x) {
 
   if (gp == "1B") {
     three_beams <- sort(unique(xc$beam))[1:3]
-    # browser()
+
     xc <- xc |>
       dplyr::filter(beam %in% three_beams)
   }
