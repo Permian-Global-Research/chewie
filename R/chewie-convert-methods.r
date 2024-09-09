@@ -3,48 +3,36 @@
 #' object.
 #' @param beam_id A character string of the beam id to read.
 #' @param h5_con A `H5File` object.
-#' @param extra_vals A named list of extra variables to add to the returned data.table.
 #' @noRd
-l1b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
-  # extract the beam and required vectors
+l1b_h5_to_dt <- function(beam_id, h5_con) {
   l1b_beam <- h5_con[[beam_id]]
-  all_rx_wav <- l1b_beam[["rxwaveform"]][]
 
-  # we could include txwaveform but it is a lot more work for minimal gain - if
-  # there is a clear need for this we could consider adding it.
-  if ("txwaveform" %in% extra_vals) {
-    extra_vals <- setdiff(extra_vals, "txwaveform")
-    no_tx_waveform_warn()
-  }
-
-  # we don't want to extract rxwaveform in this way so if given we will remove.
-  if ("rxwaveform" %in% extra_vals) {
-    extra_vals <- setdiff(extra_vals, "rxwaveform")
-  }
-
-  # functions for extracting waveforms for each shot.
-
-
-  vals <- dt_builder(l1b_beam, colnames_1b, extra_vals) |>
-    dt_cbindlist()
-
-  rxwave <- Vectorize(
-    function(rx_starts, rx_counts) {
-      end_idx <- rx_starts + rx_counts - 1
-      compress_waveform(all_rx_wav[rx_starts:end_idx])
-    }
-  )
-
-  # get the rx waveforms
-  data.table::set(vals,
-    j = "rxwaveform",
-    value = rxwave(
-      vals$rx_sample_start_index,
-      vals$rx_sample_count
+  vals <- dt_builder(
+    l1b_beam,
+    colnames_generic(l1b_beam,
+      drop_cols = c(
+        "txwaveform", "rxwaveform", "surface_type"
+      ),
+      drop_groups = "ancillary"
     )
   )
 
-  return(vals)
+  bind_vals <- dt_cbindlist(vals)
+
+  add_waveform(l1b_beam, bind_vals, "rxwaveform", compress = TRUE)
+
+  geo_grp <- hdf5r::openGroup(l1b_beam, "geolocation")
+
+  surface_type <- data.table::data.table(geo_grp[["surface_type"]][, ])
+  data.table::setnames(
+    surface_type,
+    paste0(
+      "surface_type_",
+      c("land", "ocean", "sea_ice", "land_ice", "inland_water")
+    )
+  )
+
+  return(cbind(bind_vals, surface_type))
 }
 
 
@@ -55,27 +43,65 @@ l1b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
 #' object.
 #' @param beam_id A character string of the beam id to read.
 #' @param h5_con A `H5File` object.
-#' @param extra_vals A named list of extra variables to add to the returned data.table.
 #' @noRd
-l2a_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
+l2a_h5_to_dt <- function(beam_id, h5_con) {
   l2a_beam <- h5_con[[beam_id]]
 
-  vals <- dt_builder(l2a_beam, colnames_2a, extra_vals)
+  drp_grps <- c(
+    "ancillary",
+    "rx_1gaussfit", "rx_1gaussfit/ancillary",
+    "rx_assess", "rx_assess/ancillary",
+    paste0("rx_processing_a", 1:6),
+    paste0("rx_processing_a", 1:6, "/ancillary")
+  )
 
-  if ("shot_number" %in% hdf5r::list.datasets(l2a_beam)) {
-    if (length(l2a_beam[["rh"]]$dims) == 2) {
-      rh_matrix <- t(l2a_beam[["rh"]][, ])
-    } else {
-      rh_matrix <- t(l2a_beam[["rh"]][])
-    }
-    rh <- data.table::data.table(rh_matrix) |>
-      data.table::setnames(paste0("rh", seq(0, 100))) |>
-      list()
-  } else {
-    rh <- NULL
-  }
 
-  return(dt_cbindlist(c(vals, rh)))
+  vals <- dt_builder(
+    l2a_beam,
+    colnames_generic(
+      l2a_beam,
+      drop_cols = c(
+        "rh",
+        paste0("elevs_allmodes_a", 1:6),
+        paste0("lats_allmodes_a", 1:6),
+        paste0("lons_allmodes_a", 1:6),
+        paste0("rh_a", 1:6)
+      ),
+      drop_groups = drp_grps
+    )
+  )
+
+  rh <- construct_101_df(l2a_beam, "rh")
+
+  geo_grp <- hdf5r::openGroup(l2a_beam, "geolocation")
+
+  rha_n <- purrr::map(
+    paste0("rh_a", 1:6),
+    ~ construct_101_df(geo_grp, .x)
+  )
+
+  mode_list <- purrr::map(
+    c("elevs_allmodes_a", "lats_allmodes_a", "lons_allmodes_a"),
+    ~ purrr::map(
+      paste0(.x, 1:6),
+      ~ construct_modes_df(geo_grp, .x)
+    )
+  ) |>
+    purrr::flatten()
+
+  rx_cum_list <- paste0("rx_processing_a", 1:6) |>
+    purrr::map(
+      ~ hdf5r::openGroup(l2a_beam, .x)
+    ) |>
+    purrr::imap(
+      ~ construct_101_df(.x, "rx_cumulative", name_suffix = paste0("a", .y))
+    )
+
+  dt_list <- c(
+    vals, list(rh), rha_n, mode_list, rx_cum_list
+  )
+
+  return(dt_cbindlist(dt_list))
 }
 
 #' @title Convert GEDI 2B hdf data to a data.table
@@ -83,9 +109,9 @@ l2a_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
 #' object.
 #' @param beam_id A character string of the beam id to read.
 #' @param h5_con A `H5File` object.
-#' @param extra_vals A named list of extra variables to add to the returned data.table.
+#' data.table.
 #' @noRd
-l2b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
+l2b_h5_to_dt <- function(beam_id, h5_con) {
   g2b_profiler <- function(.colname, .beam, dz, maxz) {
     var_dims <- .beam[[.colname]]$dims
     t(.beam[[.colname]][, 1:var_dims[2]]) |>
@@ -97,11 +123,13 @@ l2b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
 
   l2b_beam <- h5_con[[beam_id]]
 
+
   vals <- dt_builder(
     l2b_beam,
     colnames_generic(
       l2b_beam,
-      c("cover_z", "pai_z", "pavd_z", "pgap_theta_z")
+      drop_cols = c("cover_z", "pai_z", "pavd_z", "pgap_theta_z"),
+      drop_groups = c("rx_processing")
     )
   )
 
@@ -117,35 +145,83 @@ l2b_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
   # build final data.table
   vals$ancillary <- NULL # remove ancillary group from vals
   comb_list <- c(vals, z_vars)
-  names(comb_list) <- NULL
-  comb_dt <- dt_cbindlist(comb_list)
 
-  # Drop columns that end with .[numeric]
-  drop_cols <- grep("\\.\\d+$", colnames(comb_dt), value = TRUE)
-  comb_dt <- comb_dt[, !colnames(comb_dt) %in% drop_cols, with = FALSE]
-
-  return(comb_dt)
+  return(dt_cbindlist(comb_list))
 }
+
+
 
 #' @title Convert GEDI 4A hdf data to a data.table
 #' @description Internal function for reading GEDI 4A hdf data as a data.table
 #' object.
 #' @param beam_id A character string of the beam id to read.
 #' @param h5_con A `H5File` object.
-#' @param extra_vals A named list of extra variables to add to the returned data.table.
 #' @noRd
 #' @details
-#' This function is a little different to the others - by default it retrieves
-#' all of the possible columns. may change or other datasets might change...
-l4a_h5_to_dt <- function(beam_id, h5_con, extra_vals) {
+#' We are ignoring the agb_prediction group for now. This seems like a lot of
+#' extra data for minimal gain but we can consider retaining it...
+l4a_h5_to_dt <- function(beam_id, h5_con) {
   l4a_beam <- h5_con[[beam_id]]
-  dt_builder(l4a_beam, colnames_generic, l4a_beam) |>
-    dt_cbindlist()
+
+  xvar <- data.table::data.table(t(l4a_beam[["xvar"]][, ]))
+
+  xvar <- construct_modes_df(l4a_beam, "xvar", type = "pred")
+
+  vals <- dt_builder(
+    l4a_beam,
+    colnames_generic(l4a_beam,
+      drop_cols = c("xvar"),
+      drop_groups = c("agbd_prediction")
+    )
+  ) |> dt_cbindlist()
+
+  return(cbind(vals, xvar))
+}
+
+#' @title convert 2D matrix to a data.table
+#' @description internal function for converting a 2D matrix to a data.table
+#' @param beam A H5Group object.
+#' @param col_name A character string of the column name to extract.
+#' @noRd
+#' @keywords internal
+matrix_2d_as_dt <- function(beam, col_name) {
+  t_mat <- t(beam[[col_name]][, ])
+  data.table::data.table(t_mat)
+}
+
+#' @title construct a dataframe of modes from a GEDI hdf5 dataset
+#' @param beam A H5Group object.
+#' @param col_name A character string of the column name to extract.
+#' @noRd
+#' @keywords internal
+construct_modes_df <- function(beam, col_name, type = "mode") {
+  df_mode <- matrix_2d_as_dt(beam, col_name)
+  data.table::setnames(
+    df_mode,
+    paste(col_name, type, seq(1, ncol(df_mode)), sep = "_")
+  )
+  return(df_mode)
+}
+
+#' Construct a dataframe of 101 columns from a GEDI 101 hdf5 dataset
+#' @param beam A H5Group object.
+#' @param col_name A character string of the column name to extract.
+#' @noRd
+#' @keywords internal
+construct_101_df <- function(beam, col_name, name_suffix = NULL) {
+  df101 <- matrix_2d_as_dt(beam, col_name)
+  if (is.null(name_suffix)) {
+    name_vec <- paste(col_name, seq(0, 100), sep = "_")
+  } else {
+    name_vec <- paste(col_name, name_suffix, seq(0, 100), sep = "_")
+  }
+  data.table::setnames(df101, name_vec)
+  return(df101)
 }
 
 #' @title add a 1d array or waveform to a data.table as a list column
-#' @description internal function for adding a 1D array to a data.table as a list
-#' column.
+#' @description internal function for adding a 1D array to a data.table as a
+#' list column.
 #' @param beam A H5Group object.
 #' @param dt A data.table object.
 #' @param arr1d A numeric vector.
@@ -159,9 +235,9 @@ add_waveform <- function(beam, dt, id, compress = TRUE) {
     function(rx_st, rx_co) {
       end_idx <- rx_st + rx_co - 1
       if (compress) {
-        return(compress_waveform(arr1d[rx_st:end_idx]))
+        return(I(as.integer(arr1d[rx_st:end_idx] * 1e4)))
       } else {
-        return(arr1d[rx_st:end_idx])
+        return(I(as.integer(arr1d[rx_st:end_idx])))
       }
     }
   )
@@ -176,13 +252,6 @@ add_waveform <- function(beam, dt, id, compress = TRUE) {
   )
 }
 
-#' @ title convert waveform to integer
-#' @param x numeric vector of waveform values
-#' @noRd
-#' @keywords internal
-compress_waveform <- function(x) {
-  I(as.integer(x * 1e4))
-}
 
 #' @title build a data.table from a gedi hdf5 file
 #' @description internal function for constructing data.tables from 1D GEDI
@@ -200,6 +269,12 @@ dt_builder <- function(.beam, .l) {
           if (.y == "beam") {
             return(setNames(data.table::data.table(.beam[[.x]][]), .x))
           } else {
+            # browser if .y == "rx_1gaussfit"
+            if (.y == "rx_1gaussfit") {
+              browser()
+              # TODO: move from here
+            }
+
             open_grp <- hdf5r::openGroup(.beam, .y)
             return(setNames(data.table::data.table(open_grp[[.x]][]), .x))
           }
@@ -213,12 +288,18 @@ dt_builder <- function(.beam, .l) {
 }
 
 #' @title column names and hdf locations for gedi 4A variables
+#' @param .ev A `H5File` object.
+#' @param drop_cols A character vector of columns to drop.
+#' @param drop_groups A character vector of groups to drop.
 #' @noRd
-#' @details here the .ev argument is the hdf5 file itself. and any
+#' @details here the .ev argument is the opened hdf5 file itself. and any
 #' extra variables are ignored. This is because this will return all available
 #' variables in the hdf5 file.
-colnames_generic <- function(.ev, drop_cols = NULL) {
+colnames_generic <- function(.ev, drop_cols = NULL, drop_groups = NULL) {
   grps <- hdf5r::list.groups(.ev)
+
+  grps <- setdiff(grps, drop_groups)
+
   grp_data <- purrr::map(grps, ~ hdf5r::openGroup(.ev, .x)) |>
     purrr::map(hdf5r::list.datasets) |>
     purrr::set_names(grps)
@@ -254,93 +335,4 @@ colnames_1b <- function(.ev = NULL) {
     shot_number = "shot_number"
   ), .ev)
   return(l[!duplicated(unlist(l))])
-}
-
-#' @title column names and hdf locations for gedi 2A variables
-#' @noRd
-colnames_2a <- function(.ev = NULL) {
-  l <- c(list(
-    beam = "beam",
-    degrade_flag = "degrade_flag",
-    delta_time = "delta_time",
-    elev_highestreturn = "elev_highestreturn",
-    elev_lowestmode = "elev_lowestmode",
-    lat_lowestmode = "lat_lowestmode",
-    lon_lowestmode = "lon_lowestmode",
-    quality_flag = "quality_flag",
-    sensitivity = "sensitivity",
-    shot_number = "shot_number",
-    solar_elevation = "solar_elevation"
-  ), .ev)
-  return(l[!duplicated(unlist(l))])
-}
-
-#' @title column names and hdf locations for gedi 2B variables
-#' @noRd
-colnames_2b <- function(.ev = NULL) {
-  l <- c(list(
-    algorithmrun_flag = "algorithmrun_flag",
-    ancillary = "ancillary",
-    beam = "beam",
-    channel = "channel",
-    cover = "cover",
-    delta_time = "delta_time",
-    fhd_normal = "fhd_normal",
-    degrade_flag = "geolocation/degrade_flag",
-    digital_elevation_model = "geolocation/digital_elevation_model",
-    elev_highestreturn = "geolocation/elev_highestreturn",
-    elev_lowestmode = "geolocation/elev_lowestmode",
-    elevation_bin0 = "geolocation/elevation_bin0",
-    elevation_bin0_error = "geolocation/elevation_bin0_error",
-    elevation_lastbin = "geolocation/elevation_lastbin",
-    elevation_lastbin_error = "geolocation/elevation_lastbin_error",
-    height_bin0 = "geolocation/height_bin0",
-    height_lastbin = "geolocation/height_lastbin",
-    lat_highestreturn = "geolocation/lat_highestreturn",
-    lat_lowestmode = "geolocation/lat_lowestmode",
-    latitude_bin0 = "geolocation/latitude_bin0",
-    latitude_bin0_error = "geolocation/latitude_bin0_error",
-    latitude_lastbin = "geolocation/latitude_lastbin",
-    latitude_lastbin_error = "geolocation/latitude_lastbin_error",
-    local_beam_azimuth = "geolocation/local_beam_azimuth",
-    local_beam_elevation = "geolocation/local_beam_elevation",
-    lon_highestreturn = "geolocation/lon_highestreturn",
-    lon_lowestmode = "geolocation/lon_lowestmode",
-    longitude_bin0 = "geolocation/longitude_bin0",
-    longitude_bin0_error = "geolocation/longitude_bin0_error",
-    longitude_lastbin = "geolocation/longitude_lastbin",
-    longitude_lastbin_error = "geolocation/longitude_lastbin_error",
-    solar_azimuth = "geolocation/solar_azimuth",
-    solar_elevation = "geolocation/solar_elevation",
-    l2a_quality_flag = "l2a_quality_flag",
-    l2b_quality_flag = "l2b_quality_flag",
-    land_cover_data = "land_cover_data",
-    landsat_treecover = "land_cover_data/landsat_treecover",
-    modis_nonvegetated = "land_cover_data/modis_nonvegetated",
-    modis_nonvegetated_sd = "land_cover_data/modis_nonvegetated_sd",
-    modis_treecover = "land_cover_data/modis_treecover",
-    modis_treecover_sd = "land_cover_data/modis_treecover_sd",
-    master_frac = "master_frac",
-    master_int = "master_int",
-    num_detectedmodes = "num_detectedmodes",
-    omega = "omega",
-    pai = "pai",
-    pgap_theta = "pgap_theta",
-    pgap_theta_error = "pgap_theta_error",
-    rg = "rg",
-    rh100 = "rh100",
-    rhog = "rhog",
-    rhog_error = "rhog_error",
-    rhov = "rhov",
-    rhov_error = "rhov_error",
-    rossg = "rossg",
-    rv = "rv",
-    selected_l2a_algorithm = "selected_l2a_algorithm",
-    selected_rg_algorithm = "selected_rg_algorithm",
-    sensitivity = "sensitivity",
-    shot_number = "shot_number",
-    stale_return_flag = "stale_return_flag",
-    surface_flag = "surface_flag"
-  ), .ev)
-  l[!duplicated(unlist(l))]
 }
