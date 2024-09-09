@@ -33,14 +33,29 @@ check_n_make_dir <- function(x) {
 
 #' @title Combine a list of data.tables into a single data.table
 #' @param .l A list of data.tables
+#' @param drop_names Logical. If TRUE, the names of the data.tables are dropped
+#' @param drop_duplicates Logical. If TRUE, columns that end with .[numeric]
+#' are dropped this is not generally useful but handy for combining data.tables
+#' derived from different groups of a GEDI hdf5 file.
 #' @return A single data.table
 #' @noRd
 #' @keywords internal
-dt_cbindlist <- function(.l) {
-  data.table::setDT(
+dt_cbindlist <- function(.l, drop_names = TRUE, drop_duplicates = TRUE) {
+  if (drop_names) {
+    names(.l) <- NULL
+  }
+
+  dt <- data.table::setDT(
     unlist(.l, recursive = FALSE),
     check.names = TRUE
   )[]
+
+  if (drop_duplicates) {
+    # Drop columns that end with .[numeric]
+    drop_cols <- grep("\\.\\d+$", colnames(dt), value = TRUE)
+    dt[, !colnames(dt) %in% drop_cols, with = FALSE]
+  }
+  return(dt)
 }
 
 #' @title Get the path to either the user or project `.Renviron` file
