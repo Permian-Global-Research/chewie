@@ -1,5 +1,15 @@
 .onLoad <- function(lib, pkg) {
   op <- options()
+
+  # TODO: consider the ordering of these codecs which is preferred for chewie?
+  arrow_comp_avail <- sapply(
+    c("brotli", "zstd", "gzip", "snappy", "bz2", "lz4", "lzo", "uncompressed"),
+    arrow::codec_is_available
+  )
+
+  # select first true value in arrow_comp_avail
+  arrow_comp_pref <- names(arrow_comp_avail)[arrow_comp_avail][1]
+
   op_chewie <- list(
     # data.table options...
     chewie.print.topn = 5L,
@@ -11,8 +21,12 @@
     chewie.print.trunc.cols = TRUE,
     chewie.prettyprint.char = 50L,
     # chewie options...
-    chewie.print.width = 130L
+    chewie.print.width = 130L,
+    chewie.parquet.codec = arrow_comp_pref
   )
+
+
+
   toset <- !(names(op_chewie) %in% names(op))
   if (any(toset)) options(op_chewie[toset])
 
