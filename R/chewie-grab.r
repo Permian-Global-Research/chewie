@@ -1,7 +1,6 @@
 #' @title Download GEDI data or access from cahce
 #' @description Download GEDI data from the NASA Earthdata in hdf5 format.
 #' @param x A chewie.find.x object.
-#' @param add_vars A named list of GEDI variables to add to the returned
 #' dataset. See details.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param timeout A numeric indicating the timeout in seconds.
@@ -11,6 +10,10 @@
 #' @param delete_h5 A logical indicating whether to delete the hdf5 file after
 #' conversion to parquet. Default is TRUE. these files are saved in
 #' `getOption("chewie.h5.cache")`.
+#' @param compression A character vector indicating the compression codec to
+#' use. Default is `getOption("chewie.parquet.codec")`. see
+#' `?arrow::write_parquet`. must be one of: "zstd", "brotli", "gzip", "snappy",
+#' "bz2", "lz4", "lzo" or "uncompressed".
 #' @export
 #' @returns An arrow_dplyr_query object.
 #' @details
@@ -21,20 +24,11 @@
 #' disk space and enables dynamic reading and filtering of the returned "open"
 #' arrow dataset.
 #'
-#' Info about `add_vars`:
+#'
 #' \{chewie\} will only cache specific variables made available in the GEDI hdf5
 #' files. This is in part to reduce disk space but also to improve performance
-#' and make working with these data simpler. However, some users may wish to
-#' access other variables not cached by default. In this case the `add_vars`
-#' argument can be used to add these variables to the returned dataset.
-#' These must be provided as a named list in the format:
-#' `list(new_var_name = "path/to/variable")`. The path to the variable is
-#' relative to the root of the hdf5 file. For example, to add the
-#' `solar_elevation` variable to the returned dataset, the `add_vars` argument
-#' would be: `add_vars = list(solar_elevation = "geolocation/solar_elevation")`.
-#' Note that, this feature is somewhat experimental - non existent variables or
-#' incorrectly spelled variables will fail silently and not be added to the
-#' returned dataset.
+#' and make working with these data simpler. If you require additional variables
+#' to be cached, please raise an issue on the \{chewie\} GitHub repository.
 #'
 #' @seealso
 #' For more information on the GEDI hdf5 files and the variables they contain
@@ -64,10 +58,15 @@
 #' )
 #'
 grab_gedi <- function(
-    x, add_vars = NULL,
+    x,
     progress = TRUE, timeout = 7200,
-    batchsize = 10, delete_h5 = TRUE) {
+    batchsize = 10, delete_h5 = TRUE,
+    compression = getOption("chewie.parquet.codec")) {
   .dir <- getOption("chewie.h5.cache")
+  compression <- rlang::arg_match(
+    compression,
+    c("zstd", "brotli", "gzip", "snappy", "bz2", "lz4", "lzo", "uncompressed")
+  )
   st_time <- Sys.time()
 
   if (!dir.exists(.dir)) {
@@ -99,7 +98,8 @@ grab_gedi <- function(
 
     dl_df <- download_wrap(
       x2d_chunks, .dir, timeout,
-      progress, gedi_product, add_vars, delete_h5
+      progress, gedi_product,
+      delete_h5, compression
     )
 
     log_staus_codes(dl_df, nfiles)
@@ -117,14 +117,14 @@ grab_gedi <- function(
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param gedi_prod A character vector indicating the GEDI product.
 #' @param nfiles A numeric indicating the number of files to download.
-#' @param add_vars A named list of GEDI variables to add to the returned
 #' dataset.
 #' @param delete_h5 A logical indicating whether to delete the hdf5 file after
 #' conversion to parquet.
+#' @param codec A character vector indicating the compression codec to use.
 #' @noRd
 chewie_mk_parquet <- function(
     df,
-    .dir, timeout, progress, gedi_prod, nfiles, add_vars, delete_h5) {
+    .dir, timeout, progress, gedi_prod, nfiles, delete_h5, codec) {
   s_id <- df$id
 
   attr(df, "class") <- c(
@@ -133,7 +133,7 @@ chewie_mk_parquet <- function(
   )
 
   if (isTRUE(check_status_codes(df))) {
-    gedi_dt <- chewie_convert(df, extra_vars = add_vars)
+    gedi_dt <- chewie_convert(df)
     save_dir <- file.path(
       getOption(
         "chewie.parquet.cache"
@@ -152,10 +152,10 @@ chewie_mk_parquet <- function(
           ".parquet"
         )
       ),
-      compression = "brotli" # TODO: this needs some thought...
+      compression = codec # TODO: this needs some thought...
     )
 
-    if (delete_h5) {
+    if (isTRUE(delete_h5)) {
       file.remove(df$destfile)
     }
   }
@@ -223,15 +223,15 @@ log_staus_codes <- function(x, n) {
 #' @param timeout A numeric indicating the timeout in seconds.
 #' @param progress A logical indicating whether to show a progress bar.
 #' @param gedi_product A character vector indicating the GEDI product.
-#' @param add_vars A named list of GEDI variables to add to the returned
 #' dataset.
 #' @param delete_h5 A logical indicating whether to delete the hdf5 file after
 #' conversion to parquet.
+#' @param codec A character vector indicating the compression codec to use.
 #' @noRd
 #' @keywords internal
 download_wrap <- function(
     url_batched, dir, timeout,
-    progress, gedi_product, add_vars, delete_h5) {
+    progress, gedi_product, delete_h5, codec) {
   n <- sum(vapply(url_batched, nrow, 1L))
   n_batch <- length(url_batched)
   if (n_batch == 1) {
@@ -260,12 +260,14 @@ download_wrap <- function(
 
     inform_n_to_convert(gedi_product, n) # maybe this is overkill?
 
-    purrr::map(
+    # now we are making the file sizes bigger this should be available to users.
+    # furrr::future_map( # not for debugging
+    purrr::map( # for debugging only
       dd_full_split,
       ~ chewie_mk_parquet(
         .x,
         dir, timeout, progress, gedi_product,
-        nrow(x2d_chunk), add_vars, delete_h5
+        nrow(x2d_chunk), delete_h5, codec
       ),
       .progress = progress
     ) |>
