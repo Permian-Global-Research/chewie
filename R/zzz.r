@@ -3,7 +3,7 @@
 
   # TODO: consider the ordering of these codecs which is preferred for chewie?
   arrow_comp_avail <- sapply(
-    c("brotli", "zstd", "gzip", "snappy", "bz2", "lz4", "lzo", "uncompressed"),
+    c("snappy", "brotli", "zstd", "gzip", "bz2", "lz4", "lzo", "uncompressed"),
     arrow::codec_is_available
   )
 
