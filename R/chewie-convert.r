@@ -50,9 +50,15 @@ chewie_convert.chewie.download.4A <- function(x, ...) {
   )
 }
 
-
+#' @title caller function to covert hdf5 files to data.table.
+#' @param x A `chewie.download` object.
+#' @param .f a function to use to convert `x`
+#' @param .progress logical. Should progress bar be displayed?
+#' @noRd
+#' @keywords internal
 h5_to_gedi_dt <- function(x, .f, .progress = TRUE) {
   h5_open <- hdf5r::H5File$new(x$destfile, mode = "r")
+
   on.exit(h5_open$close())
   grps <- hdf5r::list.groups(h5_open, recursive = FALSE)
   beam_ids <- grps[startsWith(grps, "BEAM")]

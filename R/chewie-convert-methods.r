@@ -278,12 +278,6 @@ dt_builder <- function(.beam, .l) {
           if (.y == "beam") {
             return(setNames(data.table::data.table(.beam[[.x]][]), .x))
           } else {
-            # browser if .y == "rx_1gaussfit"
-            if (.y == "rx_1gaussfit") {
-              browser()
-              # TODO: move from here
-            }
-
             open_grp <- hdf5r::openGroup(.beam, .y)
             return(setNames(data.table::data.table(open_grp[[.x]][]), .x))
           }
