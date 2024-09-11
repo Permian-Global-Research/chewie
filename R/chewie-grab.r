@@ -245,26 +245,30 @@ download_wrap <- function(
   dl_f <- function(x2d_chunk) {
     df_down <- curl::multi_download(
       x2d_chunk$url,
-      destfiles = normalizePath(file.path(dir, basename(x2d_chunk$url))),
+      destfiles = normalizePath(
+        file.path(dir, basename(x2d_chunk$url)),
+        mustWork = FALSE
+      ),
       resume = TRUE,
       timeout = timeout,
       progress = progress,
       multiplex = TRUE,
       netrc = TRUE,
       netrc_file = Sys.getenv("CHEWIE_NETRC")
-    )
+    ) |>
+      dplyr::mutate(destfile = normalizePath(destfile, mustWork = FALSE))
+
 
     dd_full_split <- sf::st_drop_geometry(x2d_chunk) |>
-      dplyr::mutate(destfile = normalizePath(destfile)) |>
+      dplyr::mutate(destfile = normalizePath(destfile, mustWork = FALSE)) |>
       dplyr::select(destfile, id) |>
-      dplyr::mutate(row_num = dplyr::row_number()) |>
+      # dplyr::mutate(row_num = dplyr::row_number()) |>
       dplyr::right_join(df_down, by = "destfile") |>
-      dplyr::group_split(row_num)
+      dplyr::group_split(dplyr::row_number())
 
-    inform_n_to_convert(gedi_product, n) # maybe this is overkill?
 
-    # now we are making the file sizes bigger this should be available to users.
-    # furrr::future_map( # too RAM intensive..
+    inform_n_to_convert(gedi_product, length(dd_full_split))
+
     purrr::map( #
       dd_full_split,
       ~ chewie_mk_parquet(
