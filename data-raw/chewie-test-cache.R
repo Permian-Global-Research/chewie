@@ -40,13 +40,13 @@ pc_find <- find_gedi(prairie_creek,
 
 # getOption("chewie.parquet.codec")
 
+x <- grab_gedi(pc_find, delete_h5 = FALSE)
 
-x <- grab_gedi(pc_find, delete_h5 = FALSE, compression = "snappy")
-
+collect_gedi(x, pc_find)
 
 y <- x |>
   dplyr::select(-pgap_theta_z) |>
-  chewie::collect_gedi(pc_find) |>
+  chewie::collect_gedi(pc_find, intersects = TRUE) |>
   dplyr::mutate(
     pai_z5_10m = dplyr::case_when(
       pai_z5_10m == -9999 ~ NA,
@@ -59,8 +59,7 @@ y <- x |>
   )
 
 
-
-# chewie_show(y, zcol = "cover")
+chewie_show(y, zcol = "cover")
 
 pc_find2a <- find_gedi(prairie_creek,
   gedi_product = "2A",
@@ -76,8 +75,8 @@ pc_find2a <- find_gedi(prairie_creek,
 
 
 x <- grab_gedi(pc_find2a, delete_h5 = FALSE)
-
-x
+y <- collect_gedi(x, pc_find2a)
+colnames(y)
 y <- x |>
   dplyr::select(lat_lowestmode, lon_lowestmode, rx_cumulative_a1_98) |>
   collect_gedi(pc_find2a)
@@ -95,7 +94,11 @@ pc_find_1b <- find_gedi(prairie_creek,
 
 # future::plan("multisession")
 
-x <- grab_gedi(pc_find_1b, delete_h5 = FALSE, compression = "snappy")
+x <- grab_gedi(pc_find_1b, delete_h5 = FALSE)
+
+y <- collect_gedi(x, pc_find_1b)
+colnames(y)
+
 
 wv <- chewie::extract_waveforms(collect_gedi(x, pc_find_1b))
 
@@ -110,6 +113,12 @@ pc_find_4a <- find_gedi(prairie_creek,
 
 
 x <- grab_gedi(pc_find_4a, delete_h5 = FALSE)
+
+
+y <- collect_gedi(x, pc_find_4a)
+colnames(y)
+
+
 
 y4a <- x |>
   collect_gedi(pc_find_4a) |>
