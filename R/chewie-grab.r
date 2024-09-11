@@ -160,6 +160,8 @@ chewie_mk_parquet <- function(
     }
   }
 
+  gc()
+
   return(df)
 }
 
@@ -190,7 +192,8 @@ chewie_missing_gedi <- function(x) {
 }
 
 check_status_codes <- function(x) {
-  if (any(x$status_code %in% c(200, 206, 416)) || any(isFALSE(x$success))) {
+  # TODO: what do we need here -  are we okay with just the 2nd condition?
+  if (all(x$status_code %in% c(200, 206, 416)) || all(x$success)) {
     return(TRUE)
   } else {
     return(FALSE)
@@ -261,8 +264,8 @@ download_wrap <- function(
     inform_n_to_convert(gedi_product, n) # maybe this is overkill?
 
     # now we are making the file sizes bigger this should be available to users.
-    # furrr::future_map( # not for debugging
-    purrr::map( # for debugging only
+    # furrr::future_map( # too RAM intensive..
+    purrr::map( #
       dd_full_split,
       ~ chewie_mk_parquet(
         .x,
