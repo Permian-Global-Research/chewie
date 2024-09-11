@@ -36,8 +36,6 @@ l1b_h5_to_dt <- function(beam_id, h5_con) {
 }
 
 
-
-
 #' @title Convert GEDI 2A hdf data to a data.table
 #' @description Internal function for reading GEDI 2A hdf data as a data.table
 #' object.
@@ -49,6 +47,7 @@ l2a_h5_to_dt <- function(beam_id, h5_con) {
 
   drp_grps <- c(
     "ancillary",
+    "geolocation",
     "rx_1gaussfit", "rx_1gaussfit/ancillary",
     "rx_assess", "rx_assess/ancillary",
     paste0("rx_processing_a", 1:6),
@@ -73,21 +72,24 @@ l2a_h5_to_dt <- function(beam_id, h5_con) {
 
   rh <- construct_101_df(l2a_beam, "rh")
 
-  geo_grp <- hdf5r::openGroup(l2a_beam, "geolocation")
 
-  rha_n <- purrr::map(
-    paste0("rh_a", 1:6),
-    ~ construct_101_df(geo_grp, .x)
-  )
+  # --- I think these are unnecessary for now --- TODO: discuss
+  # geo_grp <- hdf5r::openGroup(l2a_beam, "geolocation")
 
-  mode_list <- purrr::map(
-    c("elevs_allmodes_a", "lats_allmodes_a", "lons_allmodes_a"),
-    ~ purrr::map(
-      paste0(.x, 1:6),
-      ~ construct_modes_df(geo_grp, .x)
-    )
-  ) |>
-    purrr::flatten()
+  # rha_n <- purrr::map(
+  #   paste0("rh_a", 1:6),
+  #   ~ construct_101_df(geo_grp, .x)
+  # )
+
+  # mode_list <- purrr::map(
+  #   c("elevs_allmodes_a", "lats_allmodes_a", "lons_allmodes_a"),
+  #   ~ purrr::map(
+  #     paste0(.x, 1:6),
+  #     ~ construct_modes_df(geo_grp, .x)
+  #   )
+  # ) |>
+  #   purrr::flatten()
+  # --------------------------------------------
 
   rx_cum_list <- paste0("rx_processing_a", 1:6) |>
     purrr::map(
@@ -98,7 +100,8 @@ l2a_h5_to_dt <- function(beam_id, h5_con) {
     )
 
   dt_list <- c(
-    vals, list(rh), rha_n, mode_list, rx_cum_list
+    vals, list(rh), rx_cum_list
+    # , rha_n, mode_list, # comment out for now
   )
 
   return(dt_cbindlist(dt_list))
@@ -112,17 +115,7 @@ l2a_h5_to_dt <- function(beam_id, h5_con) {
 #' data.table.
 #' @noRd
 l2b_h5_to_dt <- function(beam_id, h5_con) {
-  g2b_profiler <- function(.colname, .beam, dz, maxz) {
-    var_dims <- .beam[[.colname]]$dims
-    t(.beam[[.colname]][, 1:var_dims[2]]) |>
-      data.table::data.table() |>
-      data.table::setnames(
-        paste0(.colname, seq(0, maxz - dz, dz), "_", seq(dz, maxz, dz), "m")
-      )
-  }
-
   l2b_beam <- h5_con[[beam_id]]
-
 
   vals <- dt_builder(
     l2b_beam,
@@ -150,7 +143,6 @@ l2b_h5_to_dt <- function(beam_id, h5_con) {
 }
 
 
-
 #' @title Convert GEDI 4A hdf data to a data.table
 #' @description Internal function for reading GEDI 4A hdf data as a data.table
 #' object.
@@ -171,11 +163,28 @@ l4a_h5_to_dt <- function(beam_id, h5_con) {
     l4a_beam,
     colnames_generic(l4a_beam,
       drop_cols = c("xvar"),
-      drop_groups = c("agbd_prediction")
+      drop_groups = c("agbd_prediction", "geolocation")
     )
   ) |> dt_cbindlist()
 
   return(cbind(vals, xvar))
+}
+
+#' @title profile GEDI 2B data
+#' @description internal function for profiling GEDI 2B data
+#' @param .colname A character string of the column name to extract.
+#' @param .beam A H5Group object.
+#' @param dz A numeric value of the height increment.
+#' @param maxz A numeric value of the maximum height.
+#' @noRd
+#' @keywords internal
+g2b_profiler <- function(.colname, .beam, dz, maxz) {
+  var_dims <- .beam[[.colname]]$dims
+  t(.beam[[.colname]][, 1:var_dims[2]]) |>
+    data.table::data.table() |>
+    data.table::setnames(
+      paste0(.colname, seq(0, maxz - dz, dz), "_", seq(dz, maxz, dz), "m")
+    )
 }
 
 #' @title convert 2D matrix to a data.table
@@ -314,25 +323,4 @@ colnames_generic <- function(.ev, drop_cols = NULL, drop_groups = NULL) {
   }
 
   return(all_dat)
-}
-
-
-#' @title column names and hdf locations for gedi 1B variables
-#' @noRd
-colnames_1b <- function(.ev = NULL) {
-  l <- c(list(
-    degrade = "geolocation/degrade",
-    elevation_bin0 = "geolocation/elevation_bin0",
-    elevation_lastbin = "geolocation/elevation_lastbin",
-    latitude_bin0 = "geolocation/latitude_bin0",
-    latitude_lastbin = "geolocation/latitude_lastbin",
-    longitude_bin0 = "geolocation/longitude_bin0",
-    longitude_lastbin = "geolocation/longitude_lastbin",
-    beam = "beam",
-    delta_time = "delta_time",
-    rx_sample_count = "rx_sample_count",
-    rx_sample_start_index = "rx_sample_start_index",
-    shot_number = "shot_number"
-  ), .ev)
-  return(l[!duplicated(unlist(l))])
 }
