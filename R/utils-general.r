@@ -53,7 +53,12 @@ dt_cbindlist <- function(.l, drop_names = TRUE, drop_duplicates = TRUE) {
   if (drop_duplicates) {
     # Drop columns that end with .[numeric]
     drop_cols <- grep("\\.\\d+$", colnames(dt), value = TRUE)
-    dt[, !colnames(dt) %in% drop_cols, with = FALSE]
+    if (length(drop_cols) > 0) {
+      lapply(
+        drop_cols,
+        function(col) data.table::set(dt, j = col, value = NULL)
+      )
+    }
   }
   return(dt)
 }
