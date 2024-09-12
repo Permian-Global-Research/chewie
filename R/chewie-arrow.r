@@ -97,6 +97,10 @@ collect_gedi <- function(
     x, gedi_find,
     intersects = attributes(gedi_find)$intersects,
     drop_xy_vars = TRUE) {
+  assert_classes(x, c("arrow_dplyr_query", "ArrowObject", "ArrowTabular"))
+  assert_classes(gedi_find, "chewie.find")
+  assert_bool(intersects)
+  assert_bool(drop_xy_vars)
   if ("shot_number" %in% names(x)) {
     # convert shot_number to from Int64 to character; required if saving with sf
     x <- x |>
