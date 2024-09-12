@@ -1,3 +1,5 @@
+options("chewie.testing" = TRUE)
+
 if (!file.exists(".Renviron")) {
   file.create(".Renviron")
 }
@@ -15,12 +17,9 @@ devtools::load_all()
 # library(furrr)
 
 # chewie_setup_cache("data-raw/chewie-test-cache", renviron = "project")
-# chewie_health_check()
-# chewie_get_cache()
+chewie_health_check()
+chewie_get_cache()
 # chewie_clear_find_cache()
-# chewie_clear_parquet_cache("2A")
-# chewie_creds()
-# chewie_creds(netrc = "/home/hugh/.chewie/.netrc")
 
 # --- Download test GEDI data -------------------------------------------------
 prairie_creek <- system.file(
@@ -43,11 +42,9 @@ get_raw_test_files <- function(gedi_prod) {
 }
 
 gedi_products <- c("1B", "2A", "2B", "4A")
-future::plan("multisession", workers = length(gedi_products))
 
-furrr::future_walk(
-  gedi_products, get_raw_test_files,
-  .options = furrr::furrr_options(seed = 5446)
+purrr::walk(
+  gedi_products, get_raw_test_files
 )
 
 # ----- copy reduced data to inst -------------
@@ -124,35 +121,14 @@ clip_n_save_parquet <- function(x) {
 
 purrr::walk(gfinds, clip_n_save_parquet)
 
-
-
-
-
-
-
-
-# pc_find <- find_gedi(prairie_creek,
-#   gedi_product = "1B",
-#   date_start = "2023-01-01",
-#   date_end = "2023-01-31",
-#   intersects = TRUE,
-#   cache = FALSE
-# )
-
-# pc_grab <- grab_gedi(pc_find, delete_h5 = FALSE)
-
-# pc_sf <- pc_grab |>
-#   dplyr::filter(
-#     quality_flag == 1,
-#     degrade_flag == 0
-#   ) |>
-#   collect_gedi(gedi_find = pc_find)
-
-# chewie_show(pc_grab,
-#   zcol = "rh95", zoom = 11
-# )
-
-
 chewie_setup_cache("inst/chewie-test-cache", renviron = "project", quiet = TRUE)
-chewie_health_check()
 chewie_get_cache()
+# for now delete the h5 directory.
+unlink(getOption("chewie.h5.cache"), recursive = TRUE)
+
+zip::zip(paste0(chewie_get_cache(), ".zip"),
+  chewie_get_cache(),
+  mode = "cherry-pick"
+)
+
+unlink(chewie_get_cache(), recursive = TRUE)
