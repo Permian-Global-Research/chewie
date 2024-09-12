@@ -127,12 +127,6 @@ purrr::walk(gfinds, clip_n_save_parquet)
 
 
 
-mapview::mapview(xc |>
-  dplyr::select(!rxwaveform) |>
-  sf::st_as_sf(coords = c("longitude_bin0", "latitude_bin0")) |>
-  sf::st_set_crs(4326))
-
-
 
 
 
