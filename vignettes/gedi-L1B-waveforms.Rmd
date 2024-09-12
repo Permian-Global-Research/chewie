@@ -12,6 +12,26 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
+options("chewie.testing" = TRUE)
+temp_dir <- tempdir()
+
+if (!file.exists(".Renviron")) {
+  file.create(".Renviron")
+}
+
+cache_zip <- system.file(
+  "chewie-test-cache.zip",
+  package = "chewie"
+)
+
+utils::unzip(
+  cache_zip,
+  exdir = temp_dir
+)
+temp_cache <- file.path(temp_dir, "chewie-test-cache")
+
+chewie::chewie_setup_cache(temp_cache, renviron = "project")
 ```
 
 This vignette demonstrates how to use the `chewie` package to download and
@@ -20,54 +40,54 @@ extract GEDI Level 1B waveforms.
 First let's load the `chewie` package and the `ggplot2` package for plotting.
 
 ```{r setup}
-library(chewie)
-library(ggplot2)
-library(sf)
-library(dplyr)
+suppressPackageStartupMessages({
+  library(chewie)
+  library(ggplot2)
+  library(sf)
+  library(dplyr)
+})
 ```
 
-First, we define an area of interest. In this case, we will use the Haywood County
-area of North Carolina which is included in the `nc.gpkg` dataset that comes
-with the `sf` package. You can alternatively use the `st_read()` function to
+First, we define an area of interest. In this case, we will use prairie creek
+national park as our area of interest. The `chewie` package provides a number
+of example spatial vector data sets that can be used for this purpose. Here we
+use the `prairie-creek.geojson` data set, which is a simple polygon defining
+the park boundary. You can alternatively use the `st_read()` function to
 read in your own spatial vector data.
 
 ```{r define-aoi}
-nc <- system.file("gpkg", "nc.gpkg", package = "sf") |>
+pcreek <- system.file(
+  "geojson", "prairie-creek.geojson",
+  package = "chewie"
+) |>
   sf::read_sf()
-hw <- subset(nc, NAME %in% c("Haywood"))
 ```
 
 Now we can search for GEDI Level 1B products that intersect with our area of
-interest. We will search for products that were collected on or after February
-3, 2023. Note that no end date is provided, so the search will return all
-products collected after the start date.
+interest. We will search for products that were collected between January 1st
+and January 31st, 2023.
 
 ```{r find-gedi}
-g1b_search <- find_gedi(hw,
+g1b_search <- find_gedi(pcreek,
   gedi_product = "1B",
-  date_start = "2023-02-03"
+  date_start = "2023-01-01",
+  date_end = "2023-01-31"
 )
 print(g1b_search)
 ```
-You'll see that two granules were found. The returned gedi.find object contains 
-information about the search, including whether or not the files are cached 
-locally.
+You'll see that only one granule was found. The returned `gedi.find` object 
+contains information about the search, including whether or not the files are 
+cached locally.
 
 Now we can download the GEDI Level 1B products. However, note that the `grab_gedi()`
 function will not download the products if they are already cached locally. It 
 first checks the cache and grabs the relevant files if they exist. If they do
-not exist, they'll be downloaded from the LPDAAC server. {chewie} will, by 
+not exist, they'll be downloaded from the LPCLOUD bucket. {chewie} will, by 
 default only download specific data columns. There are many variables contained
-in the raw hdf5 files; if you want to download additional variables, you can
-specify them using the `add_vars` argument.
+in the raw hdf5 files.
 
 ```{r grab-gedi}
-gedi_1b_arr <- grab_gedi(g1b_search,
-  add_vars = list(
-    rx_energy = "rx_energy",
-    solar_elevation = "geolocation/solar_elevation"
-  )
-)
+gedi_1b_arrow <- grab_gedi(g1b_search)
 ```
 
 The  `grab_gedi()` function returns a *arrow_dplyr_query* object. If the user 
@@ -79,7 +99,7 @@ This could be done using `dplyr::collect`. However, the `collect_gedi()` functio
 is a wrapper around `dplyr::collect` that also converts the data to an `sf`
 object, immediately providing a spatial context for the data. 
 ```{r plot-gedi}
-g1b_sf <- collect_gedi(gedi_1b_arr, g1b_search)
+g1b_sf <- collect_gedi(gedi_1b_arrow, g1b_search)
 
 print(g1b_sf)
 
@@ -89,13 +109,14 @@ plot(attributes(g1b_search)$aoi, add = TRUE, border = "#7700ff")
 
 So, here's the cool bit about the way the Level-1B data are extracted. We can
 access the full waveform for every shot in the data set by using the 
-`extract_waveforms()` function. This generates a longform data frame with 
+`extract_waveforms()` function. This generates a long-form data frame with 
 waveform amplitude, relative elevation, and shot number for each shot. This enables
-the combined analysis and comparison of many waveforms across space and time. 
+the combined analysis and comparison of many waveforms across space (and time 
+when we have multiple granules). 
 
-For example, here we take 50 of the waveforms...
+For example, here we take 8 of the waveforms...
 ```{r extract-waveforms}
-g1b_wvf <- extract_waveforms(g1b_sf[50:60, ])
+g1b_wvf <- extract_waveforms(g1b_sf[100:108, ])
 
 print(g1b_wvf)
 ```
@@ -134,6 +155,6 @@ g1b_wvf |>
     mean_wvf = mean(rxwaveform),
     mean_elev = mean(rxelevation)
   ) |>
-  wvf_ggplot("mean_wvf", "id", .ylab = "Sequence Order") +
+  wvf_ggplot("mean_wvf", "id", .ylab = "Sequence order") +
   scale_x_reverse()
 ```

@@ -34,7 +34,7 @@ open_gedi <- function(x) {
         longitude_bin0 <= bounds$xmax,
         latitude_bin0 >= bounds$ymin,
         latitude_bin0 <= bounds$ymax,
-        swath_id %in% x$id
+        granule_id %in% x$id
       ) |>
       add_time()
   } else {
@@ -44,7 +44,7 @@ open_gedi <- function(x) {
         lat_lowestmode <= bounds$ymax,
         lon_lowestmode >= bounds$xmin,
         lon_lowestmode <= bounds$xmax,
-        swath_id %in% x$id
+        granule_id %in% x$id
       ) |>
       add_time()
   }
@@ -97,6 +97,10 @@ collect_gedi <- function(
     x, gedi_find,
     intersects = attributes(gedi_find)$intersects,
     drop_xy_vars = TRUE) {
+  assert_classes(x, c("arrow_dplyr_query", "ArrowObject", "ArrowTabular"))
+  assert_classes(gedi_find, "chewie.find")
+  assert_bool(intersects)
+  assert_bool(drop_xy_vars)
   if ("shot_number" %in% names(x)) {
     # convert shot_number to from Int64 to character; required if saving with sf
     x <- x |>
@@ -120,8 +124,7 @@ collect_gedi <- function(
     lat_col <- "latitude_avg"
     lon_col <- "longitude_avg"
   } else {
-    if (!"lat_lowestmode" %in% names(x) ||
-      !"lon_lowestmode" %in% names(x)) {
+    if (!"lat_lowestmode" %in% names(x) || !"lon_lowestmode" %in% names(x)) {
       abort_missing_lon_lat(gedi_find)
     }
     lat_col <- "lat_lowestmode"

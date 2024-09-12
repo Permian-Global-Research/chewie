@@ -149,7 +149,7 @@ chewie_show.chewie.find <- function(
 }
 
 aoi_mv <- function(x, aoi_color) {
-  mapview::mapview(attributes(x)$aoi,
+  mapview::mapview(sf::st_as_sf(attributes(x)$aoi),
     layer.name = "AOI",
     alpha.regions = 0, color = aoi_color, lwd = 2
   )
@@ -158,18 +158,18 @@ aoi_mv <- function(x, aoi_color) {
 mv_gen <- function(
     x, zcol, layer_name, alpha_regions, alpha, pal, pal_reverse,
     aoi_color, zoom, interactive, file, zoom_on_aoi = TRUE, ...) {
-  if (isFALSE(interactive)) {
-    mapview::mapviewOptions(fgb = FALSE)
-    on.exit(mapview::mapviewOptions(fgb = TRUE))
-  }
-
   # clean up duplicate args provided in ...
   dots <- list(...)
   dots <- dots[!names(dots) %in%
     c("layer.name", "zcol", "col.regions", "alpha.regions", "alpha")]
 
   # get number of unique values in zcol
-  n_col <- ifelse(is.null(zcol), 1, length(unique(x[[zcol]])))
+  zcol_vals <- unique(x[[zcol]])
+  if (inherits(zcol_vals, "character")) {
+    n_col <- ifelse(is.null(zcol), 1, length(zcol_vals))
+  } else {
+    n_col <- ifelse(is.null(zcol), 1, 10)
+  }
 
   # combine all args
   all_vars <- c(
@@ -188,8 +188,10 @@ mv_gen <- function(
     dots
   )
 
-  .mv <- do.call(mapview::mapview, all_vars) +
-    aoi_mv(x, aoi_color)
+  .mv <- suppressWarnings({
+    do.call(mapview::mapview, all_vars) +
+      aoi_mv(x, aoi_color)
+  })
 
   if (!is.null(zoom)) {
     if (zoom_on_aoi) {

@@ -10,16 +10,15 @@
 #' @export
 chewie_setup_cache <- function(
     .dir = chewie_default_dir(),
-    renviron = "user",
+    renviron = c("auto", "user", "project"),
     quiet = FALSE) {
+  renviron <- rlang::arg_match(renviron)
+  assert_bool(quiet)
   dir_parquet <- file.path(.dir, "GEDI-parquet-cache")
   dir_h5 <- file.path(.dir, "GEDI-h5-cache-temp")
   di_find_gedi <- file.path(.dir, "find-gedi-cache")
 
   ovw <- add_env_var("CHEWIE_CACHE_HOME", .dir, renviron)
-  if (!isTRUE(ovw)) {
-    return(invisible())
-  }
 
   check_n_make_dir(dir_parquet)
   check_n_make_dir(dir_h5)

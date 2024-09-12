@@ -11,7 +11,7 @@
 \usage{
 chewie_setup_cache(
   .dir = chewie_default_dir(),
-  renviron = "user",
+  renviron = c("auto", "user", "project"),
   quiet = FALSE
 )
 

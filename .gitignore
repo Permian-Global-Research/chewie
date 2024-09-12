@@ -3,6 +3,7 @@
 .Rdata
 .httr-oauth
 .DS_Store
+.Renviron
 
 DEV/
 dev-cache/
@@ -20,3 +21,5 @@ inst/doc
 /doc/
 /Meta/
 docs
+
+data-raw/chewie-test-cache/*
