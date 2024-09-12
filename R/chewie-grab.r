@@ -268,7 +268,6 @@ download_wrap <- function(
     dd_full_split <- sf::st_drop_geometry(x2d_chunk) |>
       dplyr::mutate(destfile = normalizePath(destfile, mustWork = FALSE)) |>
       dplyr::select(destfile, id) |>
-      # dplyr::mutate(row_num = dplyr::row_number()) |>
       dplyr::right_join(df_down, by = "destfile") |>
       dplyr::group_split(dplyr::row_number())
 
