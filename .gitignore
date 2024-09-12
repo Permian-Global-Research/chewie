@@ -22,4 +22,4 @@ inst/doc
 /Meta/
 docs
 
-**/chewie-test-cache/
+data-raw/chewie-test-cache/*
