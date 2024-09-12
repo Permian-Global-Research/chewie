@@ -70,6 +70,10 @@ add_env_var <- function(
     if (!interactive()) {
       abort_env_set(env_name)
     }
+    if (getOption("chewie.testing")) {
+      remove_env_var(env_name, renviron)
+      return(invisible())
+    }
 
     inform_ask_env_overwrite(env_name)
 
