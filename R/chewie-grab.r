@@ -63,6 +63,12 @@ grab_gedi <- function(
     batchsize = 10, delete_h5 = TRUE,
     compression = getOption("chewie.parquet.codec")) {
   .dir <- getOption("chewie.h5.cache")
+  assert_classes(x, "chewie.find")
+  assert_bool(progress)
+  assert_numeric(timeout)
+  assert_numeric(batchsize)
+  assert_bool(delete_h5)
+
   compression <- rlang::arg_match(
     compression,
     c("zstd", "brotli", "gzip", "snappy", "bz2", "lz4", "lzo", "uncompressed")

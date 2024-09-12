@@ -47,7 +47,13 @@ find_gedi <- function(
     date_end = NULL,
     intersects = TRUE,
     cache = TRUE) {
-  rlang::arg_match(gedi_product)
+  assert_classes(x, c(
+    "sf", "spatVector", "spatRaster", "sfc", "stars", "stars_proxy", "numeric"
+  ))
+  assert_bool(intersects)
+  assert_bool(cache)
+
+  gedi_product <- rlang::arg_match(gedi_product)
 
   bbox <- paste(chewie_bbox(x), collapse = ",")
 
