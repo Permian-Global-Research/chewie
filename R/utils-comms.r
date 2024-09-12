@@ -196,6 +196,17 @@ abort_bool <- function(x) {
   ))
 }
 
+abort_numeric <- function(x) {
+  cli::cli_abort(c(
+    paste0(
+      "The provided value for ",
+      chew_bold_mag("`{x}`"),
+      " is not numeric."
+    ),
+    "i" = "Please provide a numeric value."
+  ))
+}
+
 abort_download_with_log <- function(log_path) {
   cli::cli_abort(c(
     "x" = "Some Downloads have not completed successfully.",

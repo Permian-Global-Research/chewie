@@ -33,3 +33,33 @@ assert_bool <- function(x) {
     abort_bool(x_lab)
   }
 }
+
+assert_numeric <- function(x) {
+  if (is.numeric(x)) {
+    return(invisible())
+  } else {
+    x_lab <- deparse(substitute(x))
+    abort_numeric(x_lab)
+  }
+}
+
+
+
+#' check the class of an object
+#' @param x the object to check the class of
+#' @param classes the classes to check against
+#' @noRd
+#' @keywords internal
+assert_classes <- function(x, classes) {
+  if (!any(class(x) %in% classes)) {
+    obj_name <- deparse(substitute(x))
+    classes_str <- glue::glue(
+      glue::glue_collapse(classes[-length(classes)], sep = c(", ")),
+      " or ", classes[length(classes)]
+    )
+    cli::cli_abort(
+      c("x" = "{.code {obj_name}} must be an object of class
+          {.emph {.field {classes_str}}} class{?es}, not {.emph {.type {x}}}")
+    )
+  }
+}
