@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-The goal of chewie is to make downloading GEDI data as fast and as simple as 
+The goal of chewie is to make downloading GEDI data as simple as 
 possible. This includes the point-level products: 1B, 2A, 2B and 4A.
 Here is a quick summary of design choices that enables {chewie} to 
 achieve this:
@@ -29,9 +29,11 @@ achieve this:
 - Data are downloaded and converted to parquet files which can then be read using 
   [{arrow}](https://arrow.apache.org/docs/r/index.html) and converted to 
   [sf](https://r-spatial.github.io/sf/) objects. This approach is performative 
-  and enables the use of [dplyr](https://dplyr.tidyverse.org/) verbs to `filter`, 
+  as it only requires the entire granule to be loaded into memory once (when 
+  it is converted from hdf5 to parquet). From here on we can 
+  [dplyr](https://dplyr.tidyverse.org/) verbs (or base R) to `filter`, 
   `mutate` and `select` data as required without needing to load all shots, from
-  a given swath/granule, into memory.
+  a given granule, into memory. 
 
 - A system-level cache is used to store the data. This means that once a file
   has been downloaded it will not be downloaded again even if working in a 
@@ -52,6 +54,29 @@ pak::pkg_install("Permian-Global-Research/chewie")
 ```
 
 ## Example
+
+```{r, include=FALSE}
+library(chewie)
+options("chewie.testing" = TRUE)
+temp_dir <- tempdir()
+
+if (!file.exists(".Renviron")) {
+  file.create(".Renviron")
+}
+
+cache_zip <- system.file(
+  "chewie-test-cache.zip",
+  package = "chewie"
+)
+
+utils::unzip(
+  cache_zip,
+  exdir = temp_dir
+)
+temp_cache <- file.path(temp_dir, "chewie-test-cache")
+
+chewie::chewie_setup_cache(temp_cache, renviron = "project")
+```
 
 First, let's load in some libraries. {dplyr} isn't essential but it is 
 recommended as it's an excellent and highly performative option for working with 
@@ -89,8 +114,8 @@ prairie_creek <- sf::read_sf(system.file(
 
 gedi_2a_search <- x <- find_gedi(prairie_creek,
   gedi_product = "2A",
-  date_start = "2022-01-01",
-  date_end = "2022-04-01"
+  date_start = "2023-01-01",
+  date_end = "2023-01-31"
 )
 
 print(gedi_2a_search)

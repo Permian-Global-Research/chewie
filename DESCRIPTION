@@ -29,6 +29,7 @@ Imports:
 URL: https://github.com/Permian-Global-Research/chewie
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
 Suggests: 
+    fs,
     ggplot2,
     knitr,
     leaflet,

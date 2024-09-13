@@ -67,25 +67,29 @@ add_env_var <- function(
     env_name, env_val,
     renviron) {
   if (isTRUE(check_env_var(env_name, renviron))) {
-    if (!interactive()) {
+    if (!interactive() && isFALSE(getOption("chewie.testing"))) {
       abort_env_set(env_name)
     }
-    if (getOption("chewie.testing")) {
+
+    nchar(Sys.getenv(env_name))
+    # this is hidden from the user to allow running tests etc.
+    if (
+      isTRUE(getOption("chewie.testing")) || nchar(Sys.getenv(env_name)) == 0
+    ) {
       remove_env_var(env_name, renviron)
-      return(invisible())
+    } else {
+      inform_ask_env_overwrite(env_name)
+
+      choice <- menu(c(
+        chew_bold_green("Yes"),
+        chew_bold_red("No, are you mad?!")
+      ))
+
+      switch(choice,
+        remove_env_var(env_name, renviron),
+        cli::cli_abort("Environment variable `{env_name}` not set.")
+      )
     }
-
-    inform_ask_env_overwrite(env_name)
-
-    choice <- menu(c(
-      chew_bold_green("Yes"),
-      chew_bold_red("No, are you mad?!")
-    ))
-
-    switch(choice,
-      remove_env_var(env_name, renviron),
-      cli::cli_abort("Environment variable `{env_name}` not set.")
-    )
   }
 
   rr <- read_renv(renviron)

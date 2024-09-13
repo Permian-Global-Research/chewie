@@ -10,15 +10,12 @@ if (!file.exists(".Renviron")) {
 # chewie::chewie_clear_parquet_cache("2A")
 # chewie::chewie_clear_parquet_cache("1B")
 # chewie::chewie_clear_parquet_cache("4A")
-# quit()
 
 library(devtools)
 devtools::load_all()
-# library(furrr)
 
-# chewie_setup_cache("data-raw/chewie-test-cache", renviron = "project")
+chewie_setup_cache("data-raw/chewie-test-cache", renviron = "project")
 chewie_health_check()
-chewie_get_cache()
 # chewie_clear_find_cache()
 
 # --- Download test GEDI data -------------------------------------------------
@@ -71,10 +68,6 @@ gfinds <- list.files(getOption("chewie.find.gedi.cache"),
   recursive = TRUE, full.names = TRUE
 )
 
-getOption("chewie.find.gedi.cache")
-getOption("chewie.parquet.cache")
-getOption("chewie.h5.cache")
-
 
 file.copy(gfinds, cds$find_gedi)
 
@@ -121,11 +114,15 @@ clip_n_save_parquet <- function(x) {
 
 purrr::walk(gfinds, clip_n_save_parquet)
 
-chewie_setup_cache("inst/chewie-test-cache", renviron = "project", quiet = TRUE)
-chewie_get_cache()
+chewie_setup_cache("inst/chewie-test-cache", renviron = "project")
+
 # for now delete the h5 directory.
 unlink(getOption("chewie.h5.cache"), recursive = TRUE)
 
+zip_path <- paste0(chewie_get_cache(), ".zip")
+if (file.exists(zip_path)) {
+  file.remove(zip_path)
+}
 zip::zip(paste0(chewie_get_cache(), ".zip"),
   chewie_get_cache(),
   mode = "cherry-pick"

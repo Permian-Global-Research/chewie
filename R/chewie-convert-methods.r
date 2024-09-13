@@ -70,17 +70,15 @@ l2a_h5_to_dt <- function(beam_id, h5_con) {
     )
   )
 
-  rh <- construct_101_df(l2a_beam, "rh")
+  rh <- construct_101_df(l2a_beam, "rh", sep = "")
 
 
   # --- I think these are unnecessary for now --- TODO: discuss
   # geo_grp <- hdf5r::openGroup(l2a_beam, "geolocation")
-
   # rha_n <- purrr::map(
   #   paste0("rh_a", 1:6),
   #   ~ construct_101_df(geo_grp, .x)
   # )
-
   # mode_list <- purrr::map(
   #   c("elevs_allmodes_a", "lats_allmodes_a", "lons_allmodes_a"),
   #   ~ purrr::map(
@@ -217,12 +215,12 @@ construct_modes_df <- function(beam, col_name, type = "mode") {
 #' @param col_name A character string of the column name to extract.
 #' @noRd
 #' @keywords internal
-construct_101_df <- function(beam, col_name, name_suffix = NULL) {
+construct_101_df <- function(beam, col_name, name_suffix = NULL, sep = "_") {
   df101 <- matrix_2d_as_dt(beam, col_name)
   if (is.null(name_suffix)) {
-    name_vec <- paste(col_name, seq(0, 100), sep = "_")
+    name_vec <- paste(col_name, seq(0, 100), sep = sep)
   } else {
-    name_vec <- paste(col_name, name_suffix, seq(0, 100), sep = "_")
+    name_vec <- paste(col_name, name_suffix, seq(0, 100), sep = sep)
   }
   data.table::setnames(df101, name_vec)
   return(df101)

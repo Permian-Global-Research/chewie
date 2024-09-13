@@ -11,27 +11,28 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-The goal of chewie is to make downloading GEDI data as fast and as
-simple as possible. This includes the point-level products: 1B, 2A, 2B
-and 4A. Here is a quick summary of design choices that enables {chewie}
-to achieve this:
+The goal of chewie is to make downloading GEDI data as simple as
+possible. This includes the point-level products: 1B, 2A, 2B and 4A.
+Here is a quick summary of design choices that enables {chewie} to
+achieve this:
 
-  - Data are downloaded and converted to parquet files which can then be
-    read using [{arrow}](https://arrow.apache.org/docs/r/index.html) and
-    converted to [sf](https://r-spatial.github.io/sf/) objects. This
-    approach is performative and enables the use of
-    [dplyr](https://dplyr.tidyverse.org/) verbs to `filter`, `mutate`
-    and `select` data as required without needing to load all shots,
-    from a given swath/granule, into memory.
+- Data are downloaded and converted to parquet files which can then be
+  read using [{arrow}](https://arrow.apache.org/docs/r/index.html) and
+  converted to [sf](https://r-spatial.github.io/sf/) objects. This
+  approach is performative as it only requires the entire granule to be
+  loaded into memory once (when it is converted from hdf5 to parquet).
+  From here on we can [dplyr](https://dplyr.tidyverse.org/) verbs (or
+  base R) to `filter`, `mutate` and `select` data as required without
+  needing to load all shots, from a given granule, into memory.
 
-  - A system-level cache is used to store the data. This means that once
-    a file has been downloaded it will not be downloaded again even if
-    working in a different project (it is also possible to specify a
-    unique cache location for each project).
+- A system-level cache is used to store the data. This means that once a
+  file has been downloaded it will not be downloaded again even if
+  working in a different project (it is also possible to specify a
+  unique cache location for each project).
 
-  - There is support for spatial filtering of granules that intersect an
-    area of interest and not only by a bounding box; this frequently
-    reduces the amount of irrelevant data that is downloaded.
+- There is support for spatial filtering of granules that intersect an
+  area of interest and not only by a bounding box; this frequently
+  reduces the amount of irrelevant data that is downloaded.
 
 ## Installation
 
@@ -51,7 +52,19 @@ working with arrow datasets.
 ``` r
 library(chewie)
 library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
 library(sf)
+#> Linking to GEOS 3.12.2, GDAL 3.8.4, PROJ 9.3.1; sf_use_s2() is TRUE
+#> WARNING: different compile-time and runtime versions for GEOS found:
+#> Linked against: 3.12.2-CAPI-1.18.2 compiled against: 3.12.1-CAPI-1.18.1
+#> It is probably a good idea to reinstall sf (and maybe lwgeom too)
 ```
 
 Here are some useful helper functions to set up your credentials (using
@@ -81,25 +94,21 @@ prairie_creek <- sf::read_sf(system.file(
 
 gedi_2a_search <- x <- find_gedi(prairie_creek,
   gedi_product = "2A",
-  date_start = "2022-01-01",
-  date_end = "2022-04-01"
+  date_start = "2023-01-01",
+  date_end = "2023-01-31"
 )
 #> ✔ Using cached GEDI find result
 
 print(gedi_2a_search)
 #> 
-#> ── chewie.find ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> ── chewie.find ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #> • GEDI-2A
 #>                     id          time_start            time_end                                                   url cached
 #>                 <char>              <POSc>              <POSc>                                                <char> <lgcl>
-#> 1: G2724056750-LPCLOUD 2022-01-22 01:09:09 2022-01-22 02:42:01 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
-#> 2: G2725123149-LPCLOUD 2022-03-01 09:59:35 2022-03-01 11:32:27 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
-#> 3: G2725124517-LPCLOUD 2022-03-05 08:24:36 2022-03-05 09:57:28 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
-#> 4: G2725130349-LPCLOUD 2022-03-10 12:13:49 2022-03-10 13:46:41 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
-#> 5: G2725131643-LPCLOUD 2022-03-14 10:39:08 2022-03-14 12:12:01 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
+#> 1: G2754665065-LPCLOUD 2023-01-25 05:14:31 2023-01-25 06:47:21 https://data.lpdaac.earthdatacloud.nasa.gov/lp-pro...   TRUE
 #> 1 variable(s) not shown: [geometry <sfc_POLYGON>]
 #> 
-#> ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ```
 
 Whilst there is a `plot` method for *chewie.find* objects, a great
@@ -138,25 +147,25 @@ gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
 #> ✔ All data found in cache
 
 print(gedi_2a_sf)
-#> Simple feature collection with 1067 features and 10 fields
+#> Simple feature collection with 884 features and 10 fields
 #> Geometry type: POINT
 #> Dimension:     XY
-#> Bounding box:  xmin: -124.0764 ymin: 41.34658 xmax: -123.9979 ymax: 41.41663
+#> Bounding box:  xmin: -124.069 ymin: 41.3609 xmax: -123.9959 ymax: 41.43904
 #> Geodetic CRS:  WGS 84
-#> # A tibble: 1,067 × 11
-#>     beam date_time           elev_highestreturn elev_lowestmode   rh0   rh25
-#>  * <int> <dttm>                           <dbl>           <dbl> <dbl>  <dbl>
-#>  1     5 2022-03-05 09:02:19              112.             90.0 -3.52  0.180
-#>  2     1 2022-03-05 09:02:18               89.9            51.2 -1.61 17.1  
-#>  3     1 2022-03-05 09:02:18              124.            112.  -4.08  0.590
-#>  4     1 2022-03-05 09:02:19              138.            124.  -1.87  2.88 
-#>  5     1 2022-03-05 09:02:19              126.             57.5 -2.28  5.99 
-#>  6     1 2022-03-05 09:02:19              106.             90.9 -1.64  3.33 
-#>  7     1 2022-03-05 09:02:19               86.9            24.2 -2.65  0.930
-#>  8     1 2022-03-05 09:02:19              101.             24.9 -1.72 20.7  
-#>  9     1 2022-03-05 09:02:19              137.            120.  -2.09  4    
-#> 10     1 2022-03-05 09:02:19              182.            103.  -1.83 44.8  
-#> # ℹ 1,057 more rows
+#> # A tibble: 884 × 11
+#>     beam date_time           elev_highestreturn elev_lowestmode   rh0    rh25
+#>  * <int> <dttm>                           <dbl>           <dbl> <dbl>   <dbl>
+#>  1     0 2023-01-25 06:09:05             -19.6           -23.8  -3.55 -1.12  
+#>  2     0 2023-01-25 06:09:05             -20.7           -24.2  -3.89 -1.27  
+#>  3     0 2023-01-25 06:09:05             -20.7           -24.2  -3.93 -1.27  
+#>  4     0 2023-01-25 06:09:05              -2.29          -23.3  -3.37 -0.0300
+#>  5     0 2023-01-25 06:09:05              27.7           -15.0  -2.54  9.70  
+#>  6     0 2023-01-25 06:09:05              35.8             4.55 -3.74 12.1   
+#>  7     0 2023-01-25 06:09:05              55.9            12.2  -1.57 16.8   
+#>  8     0 2023-01-25 06:09:05              94.6            41.0  -1.53 25.8   
+#>  9     0 2023-01-25 06:09:05              95.3            42.5  -3.78  6.06  
+#> 10     0 2023-01-25 06:09:05              98.3            33.8  -2.32 29.9   
+#> # ℹ 874 more rows
 #> # ℹ 5 more variables: rh50 <dbl>, rh75 <dbl>, rh95 <dbl>, rh100 <dbl>,
 #> #   geometry <POINT [°]>
 ```
@@ -178,20 +187,20 @@ chewie_show(
 
 ## Other relevant packages/software
 
-  - [{rGEDI}](https://github.com/carlos-alberto-silva/rGEDI) provides
-    the ability download GEDI data but also a great deal of additional
-    functionality for visualisation, post-processing and modelling.
+- [{rGEDI}](https://github.com/carlos-alberto-silva/rGEDI) provides the
+  ability download GEDI data but also a great deal of additional
+  functionality for visualisation, post-processing and modelling.
 
-  - [{GEDI4R}](https://github.com/VangiElia/GEDI4R) which similarly
-    provides a suit of tools for downloading, visualising and modelling
-    GEDI data, but with a focus on the 4A product.
+- [{GEDI4R}](https://github.com/VangiElia/GEDI4R) which similarly
+  provides a suit of tools for downloading, visualising and modelling
+  GEDI data, but with a focus on the 4A product.
 
-  - [pyGEDI](https://github.com/EduinHSERNA/pyGEDI) is a Python package
-    for downloading and visualising GEDI data.
+- [pyGEDI](https://github.com/EduinHSERNA/pyGEDI) is a Python package
+  for downloading and visualising GEDI data.
 
-  - [GEDI-Data-Resources](https://github.com/nasa/GEDI-Data-Resources)
-    is a collection of scripts for both python and R that provide
-    examples of how to download and process GEDI data.
+- [GEDI-Data-Resources](https://github.com/nasa/GEDI-Data-Resources) is
+  a collection of scripts for both python and R that provide examples of
+  how to download and process GEDI data.
 
 Both of these packages have been a great source of inspiration; we would
-like to thank the authors for their great work\!
+like to thank the authors for their great work!
