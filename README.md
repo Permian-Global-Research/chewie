@@ -19,11 +19,11 @@ achieve this:
 - Data are downloaded and converted to parquet files which can then be
   read using [{arrow}](https://arrow.apache.org/docs/r/index.html) and
   converted to [sf](https://r-spatial.github.io/sf/) objects. This
-  approach is performative as it only requires the entire granule to be
+  approach is performative as it only requires each entire granule to be
   loaded into memory once (when it is converted from hdf5 to parquet).
-  From here on we can [dplyr](https://dplyr.tidyverse.org/) verbs (or
-  base R) to `filter`, `mutate` and `select` data as required without
-  needing to load all shots, from a given granule, into memory.
+  From here on we can use [dplyr](https://dplyr.tidyverse.org/) verbs
+  (or base R) to `filter`, `mutate` and `select` data as required
+  without needing to load all shots, from a given granule, into memory.
 
 - A system-level cache is used to store the data. This means that once a
   file has been downloaded it will not be downloaded again even if
@@ -50,21 +50,11 @@ recommended as it’s an excellent and highly performative option for
 working with arrow datasets.
 
 ``` r
-library(chewie)
-library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-library(sf)
-#> Linking to GEOS 3.12.2, GDAL 3.8.4, PROJ 9.3.1; sf_use_s2() is TRUE
-#> WARNING: different compile-time and runtime versions for GEOS found:
-#> Linked against: 3.12.2-CAPI-1.18.2 compiled against: 3.12.1-CAPI-1.18.1
-#> It is probably a good idea to reinstall sf (and maybe lwgeom too)
+suppressPackageStartupMessages({
+  library(chewie)
+  library(dplyr)
+  library(sf)
+})
 ```
 
 Here are some useful helper functions to set up your credentials (using
@@ -82,7 +72,7 @@ Now, let’s search for GEDI 2A data that intersects with the Prairie
 Creek Redwoods State Park, California (the dataset is included with the
 package). We then plot the footprints of the granules that intersect
 with this area to check out what we’ve got. Note that by default, both
-`find_gedi` and `grab_gedi` cache their outputs so when these functions
+`find_gedi` and `grab_gedi` cache their outputs so, when these functions
 are re-run, the data will be loaded from the cache rather than
 downloaded again, even in a different R session.
 
@@ -126,12 +116,12 @@ chewie_show(
 <img src="man/figures/README-show-find-data-1.png" width="100%" />
 
 Now we use `grab_gedi` to download the data - this function internally,
-converts the data to parquet format and stores it in the cache. The data
-is as an arrow dataset. We can then use any {dplyr} verbs to
-`filter`/`select` the data as we wish before finally using
+converts the data to parquet format and stores it in the cache. The
+returned value is an *arrow_dplyr_query* object. We can then use {dplyr}
+verbs to `filter`/`select` the data as we wish before finally using
 `collect_gedi` to convert the data to a sf object. If no
 filtering/selection is carried out then `collect_gedi` will return all
-the available columns/rows.
+the available columns/rows for the AOI.
 
 ``` r
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
@@ -202,5 +192,5 @@ chewie_show(
   a collection of scripts for both python and R that provide examples of
   how to download and process GEDI data.
 
-Both of these packages have been a great source of inspiration; we would
-like to thank the authors for their great work!
+These resources have been a great source of inspiration for this
+package; we would like to thank the authors for their great work!

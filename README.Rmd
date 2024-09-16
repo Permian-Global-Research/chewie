@@ -29,8 +29,8 @@ achieve this:
 - Data are downloaded and converted to parquet files which can then be read using 
   [{arrow}](https://arrow.apache.org/docs/r/index.html) and converted to 
   [sf](https://r-spatial.github.io/sf/) objects. This approach is performative 
-  as it only requires the entire granule to be loaded into memory once (when 
-  it is converted from hdf5 to parquet). From here on we can 
+  as it only requires each entire granule to be loaded into memory once (when 
+  it is converted from hdf5 to parquet). From here on we can use
   [dplyr](https://dplyr.tidyverse.org/) verbs (or base R) to `filter`, 
   `mutate` and `select` data as required without needing to load all shots, from
   a given granule, into memory. 
@@ -83,9 +83,11 @@ recommended as it's an excellent and highly performative option for working with
 arrow datasets.
 
 ```{r load-libs}
-library(chewie)
-library(dplyr)
-library(sf)
+suppressPackageStartupMessages({
+  library(chewie)
+  library(dplyr)
+  library(sf)
+})
 ```
 
 Here are some useful helper functions to set up your credentials (using 
@@ -103,7 +105,7 @@ Now, let's search for GEDI 2A data that intersects with the Prairie
 Creek Redwoods State Park, California (the dataset is included with the package). 
 We then plot the footprints of the granules that intersect with this area to 
 check out what we've got. Note that by default, both `find_gedi` and `grab_gedi` 
-cache their outputs so when these functions are re-run, the data will be loaded 
+cache their outputs so, when these functions are re-run, the data will be loaded 
 from the cache rather than downloaded again, even in a different R session.
 
 ```{r find-data}
@@ -145,11 +147,11 @@ knitr::include_graphics("man/figures/README-show-find-data-1.png")
 ```
 
 Now we use `grab_gedi` to download the data - this function internally, converts
-the data to parquet format and stores it in the cache. The data is as an arrow
-dataset. We can then use any {dplyr} verbs to `filter`/`select` the data as we wish 
-before finally using `collect_gedi` to convert the data to a sf object. If no
-filtering/selection is carried out then `collect_gedi` will return all the 
-available columns/rows.
+the data to parquet format and stores it in the cache. The returned value is 
+an *arrow_dplyr_query* object. We can then use {dplyr} verbs to 
+`filter`/`select` the data as we wish before finally using `collect_gedi` to 
+convert the data to a sf object. If no filtering/selection is carried out then 
+`collect_gedi` will return all the available columns/rows for the AOI.
 
 ```{r collect-data}
 gedi_2a_sf <- grab_gedi(gedi_2a_search) |>
@@ -209,5 +211,5 @@ downloading and visualising GEDI data.
 collection of scripts for both python and R that provide examples of how to
 download and process GEDI data.
 
-Both of these packages have been a great source of inspiration;
-we would like to thank the authors for their great work! 
+These resources have been a great source of inspiration for this package; we
+would like to thank the authors for their great work! 
