@@ -25,7 +25,7 @@ open_gedi <- function(x) {
       dplyr::mutate(date_time = lubridate::as_datetime(.data$delta_time,
         origin = lubridate::ymd_hms("2018-01-01 00:00:00", tz = "UTC")
       )) |>
-      dplyr::relocate(.data$date_time, .after = .data$delta_time)
+      dplyr::relocate("date_time", .after = "delta_time")
   }
 
   if (gedi_prod == "1B") {

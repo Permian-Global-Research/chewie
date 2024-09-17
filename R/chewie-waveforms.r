@@ -48,8 +48,8 @@ extract_waveforms <- function(x) {
 
   xc <- x |>
     dplyr::select(
-      .data$shot_number, .data$date_time, .data$elevation_bin0,
-      .data$elevation_lastbin, .data$rx_sample_count, .data$rxwaveform
+      "shot_number", "date_time", "elevation_bin0",
+      "elevation_lastbin", "rx_sample_count", "rxwaveform"
     ) |>
     sf::st_drop_geometry()
 
