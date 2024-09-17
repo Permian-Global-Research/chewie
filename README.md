@@ -192,5 +192,5 @@ chewie_show(
   a collection of scripts for both python and R that provide examples of
   how to download and process GEDI data.
 
-These resources have been a great source of inspiration for this
-package; we would like to thank the authors for their great work!
+These resources have been a great source of inspiration for {chewie}; we
+would like to thank the authors for their great work!
