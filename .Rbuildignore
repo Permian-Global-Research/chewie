@@ -13,3 +13,4 @@
 ^data-raw$
 ^tests\testthat\.Renviron$
 ^\.github$
+^codecov\.yml$
