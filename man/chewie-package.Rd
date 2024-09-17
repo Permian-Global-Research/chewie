@@ -49,6 +49,7 @@ simple pre processing of GEDI data. See below for a list of these functions.
 Useful links:
 \itemize{
   \item \url{https://github.com/Permian-Global-Research/chewie}
+  \item \url{https://permian-global-research.github.io/chewie/}
   \item Report bugs at \url{https://github.com/Permian-Global-Research/chewie/issues}
 }
 
