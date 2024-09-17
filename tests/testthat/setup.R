@@ -6,6 +6,7 @@ pcreek <- system.file(
   sf::read_sf()
 
 # --- Setup the testing environment.
+aum <- options(arrow.unsafe_metadata = TRUE)
 temp_dir <- tempdir()
 old_chewie_cache <- chewie::chewie_get_cache()
 options("chewie.testing" = TRUE)
@@ -31,6 +32,7 @@ withr::defer(
     chewie::chewie_setup_cache(old_chewie_cache)
     fs::file_delete(unzipped_files)
     options(chewie.testing = NULL)
+    options(aum)
     fs::file_delete(".Renviron")
   },
   envir = teardown_env()
