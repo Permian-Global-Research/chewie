@@ -232,7 +232,7 @@ inform_reg_account <- function() {
     )
   )
   invisible(suppressMessages(
-    browseURL("https://urs.earthdata.nasa.gov/users/new")
+    utils::browseURL("https://urs.earthdata.nasa.gov/users/new")
   ))
 
   return(FALSE)
@@ -423,7 +423,7 @@ cache_clear_check <- function(prod_name = c("1B", "2A", "2B", "4A", "H5")) {
     )
   )
 
-  menu(c(
+  utils::menu(c(
     chew_bold_green("Yes"),
     chew_bold_red("No!")
   ))

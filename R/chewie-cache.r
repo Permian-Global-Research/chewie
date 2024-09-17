@@ -50,7 +50,7 @@ chewie_unset_cache <- function(renviron = "user") {
     )
   )
 
-  choice <- menu(c(
+  choice <- utils::menu(c(
     chew_bold_green("Yes"),
     chew_bold_red("No!")
   ))
@@ -119,7 +119,7 @@ chewie_clear_find_cache <- function() {
     )
   )
 
-  choice <- menu(c(
+  choice <- utils::menu(c(
     chew_bold_green("Yes"),
     chew_bold_red("No!")
   ))

@@ -57,6 +57,7 @@
 #'   prairie_creek_find_2b
 #' )
 #'
+#' @importFrom rlang .data
 grab_gedi <- function(
     x,
     progress = TRUE, timeout = 7200,
@@ -96,11 +97,8 @@ grab_gedi <- function(
           (dplyr::n() /
             (dplyr::n() / batchsize))
       )) |>
-      dplyr::group_by(group) |>
+      dplyr::group_by(.data$group) |>
       dplyr::group_split()
-
-    # TODO: is this needed?
-    # urlchunks <- setNames(x2d_chunks, paste0("chunk_", seq_along(x2d_chunks)))
 
     dl_df <- download_wrap(
       x2d_chunks, .dir, timeout,
@@ -238,6 +236,7 @@ log_staus_codes <- function(x, n) {
 #' @param codec A character vector indicating the compression codec to use.
 #' @noRd
 #' @keywords internal
+#' @importFrom rlang .data
 download_wrap <- function(
     url_batched, dir, timeout,
     progress, gedi_product, delete_h5, codec) {
@@ -262,12 +261,12 @@ download_wrap <- function(
       netrc = TRUE,
       netrc_file = Sys.getenv("CHEWIE_NETRC")
     ) |>
-      dplyr::mutate(destfile = normalizePath(destfile, mustWork = FALSE))
+      dplyr::mutate(destfile = normalizePath(.data$destfile, mustWork = FALSE))
 
 
     dd_full_split <- sf::st_drop_geometry(x2d_chunk) |>
-      dplyr::mutate(destfile = normalizePath(destfile, mustWork = FALSE)) |>
-      dplyr::select(destfile, id) |>
+      dplyr::mutate(destfile = normalizePath(.data$destfile, mustWork = FALSE)) |>
+      dplyr::select(.data$destfile, .data$id) |>
       dplyr::right_join(df_down, by = "destfile") |>
       dplyr::group_split(dplyr::row_number())
 
