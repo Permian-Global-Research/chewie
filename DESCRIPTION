@@ -25,7 +25,9 @@ Imports:
     wk,
     tibble,
     mapview,
-    glue
+    glue,
+    utils,
+    stats
 URL: https://github.com/Permian-Global-Research/chewie, https://permian-global-research.github.io/chewie/
 BugReports: https://github.com/Permian-Global-Research/chewie/issues
 Suggests: 
@@ -36,7 +38,8 @@ Suggests:
     rmarkdown,
     stars,
     terra,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    withr
 Depends: 
     R (>= 4.1.0)
 VignetteBuilder: knitr
