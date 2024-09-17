@@ -1,5 +1,6 @@
-#' @title Download GEDI data or access from cahce
-#' @description Download GEDI data from the NASA Earthdata in hdf5 format.
+#' @title Download and load GEDI data from the Cloud or local cache
+#' @description Download GEDI data from the NASA Earthdata in hdf5 format,
+#' convert it to parquet format and load it as an arrow dataset.
 #' @param x A chewie.find.x object.
 #' dataset. See details.
 #' @param progress A logical indicating whether to show a progress bar.
@@ -34,13 +35,13 @@
 #' For more information on the GEDI hdf5 files and the variables they contain
 #' see the following links:
 #'
-#' 1B: https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
+#' 1B: \url{https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html}
 #'
-#' 2A: https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
+#' 2A: \url{https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html}
 #'
-#' 2B: https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
+#' 2B: \url{https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html}
 #'
-#' 4A: https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
+#' 4A: \url{https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html}
 #'
 #'
 #' @examplesIf interactive()
