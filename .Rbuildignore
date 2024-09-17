@@ -12,3 +12,4 @@
 ^pkgdown$
 ^data-raw$
 ^tests\testthat\.Renviron$
+^\.github$
