@@ -2,4 +2,28 @@ url: https://permian-global-research.github.io/chewie/
 template:
   bootstrap: 5
   bootswatch: minty
-
+reference:
+  - title: Credentials Management
+    contents:
+      - chewie_creds
+      - chewie_clean_netrc
+      - chewie_set_netrc_env
+      - chewie_get_netrc
+  - title: Cache Management
+    contents:
+      - contains("cache")
+  - title: Environment Checks
+    contents:
+      - chewie_health_check
+  - title: Search Data
+    contents:
+      - contains("find")
+  - title: Retrieve Data
+    contents:
+      - grab_gedi
+      - collect_gedi
+      - extract_waveforms
+  - title: Plotting
+    contents:
+      - contains("plot")
+      - contains("show")

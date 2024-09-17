@@ -2,7 +2,7 @@
 % Please edit documentation in R/chewie-grab.r
 \name{grab_gedi}
 \alias{grab_gedi}
-\title{Download GEDI data or access from cahce}
+\title{Download and load GEDI data from the Cloud or local cache}
 \usage{
 grab_gedi(
   x,
@@ -38,7 +38,8 @@ use. Default is \code{getOption("chewie.parquet.codec")}. see
 An arrow_dplyr_query object.
 }
 \description{
-Download GEDI data from the NASA Earthdata in hdf5 format.
+Download GEDI data from the NASA Earthdata in hdf5 format,
+convert it to parquet format and load it as an arrow dataset.
 }
 \details{
 This function is the main handler for gedi data - it checks the cache to see
@@ -73,11 +74,11 @@ prairie_creek_grab_2b <- grab_gedi(
 For more information on the GEDI hdf5 files and the variables they contain
 see the following links:
 
-1B: https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
+1B: \url{https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html}
 
-2A: https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
+2A: \url{https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html}
 
-2B: https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
+2B: \url{https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html}
 
-4A: https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
+4A: \url{https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html}
 }

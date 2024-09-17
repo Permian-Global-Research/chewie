@@ -80,7 +80,7 @@ add_env_var <- function(
     } else {
       inform_ask_env_overwrite(env_name)
 
-      choice <- menu(c(
+      choice <- utils::menu(c(
         chew_bold_green("Yes"),
         chew_bold_red("No, are you mad?!")
       ))

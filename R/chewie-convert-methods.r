@@ -274,10 +274,14 @@ dt_builder <- function(.beam, .l) {
         .x,
         function(.x) {
           if (.y == "beam") {
-            return(setNames(data.table::data.table(.beam[[.x]][]), .x))
+            return(stats::setNames(
+              data.table::data.table(.beam[[.x]][]), .x
+            ))
           } else {
             open_grp <- hdf5r::openGroup(.beam, .y)
-            return(setNames(data.table::data.table(open_grp[[.x]][]), .x))
+            return(stats::setNames(
+              data.table::data.table(open_grp[[.x]][]), .x
+            ))
           }
         }
       )

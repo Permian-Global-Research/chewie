@@ -9,6 +9,7 @@
 #' function, reading only the data that is required based on the bounding box
 #' and swath IDs of the `chewie.find` object.
 #' @return an arrow dataset
+#' @importFrom rlang .data
 open_gedi <- function(x) {
   bounds <- chewie_bbox(attributes(x)$aoi)
   gedi_prod <- find_gedi_product(x)
@@ -21,30 +22,30 @@ open_gedi <- function(x) {
 
   add_time <- function(x) {
     x |>
-      dplyr::mutate(date_time = lubridate::as_datetime(delta_time,
+      dplyr::mutate(date_time = lubridate::as_datetime(.data$delta_time,
         origin = lubridate::ymd_hms("2018-01-01 00:00:00", tz = "UTC")
       )) |>
-      dplyr::relocate(date_time, .after = delta_time)
+      dplyr::relocate("date_time", .after = "delta_time")
   }
 
   if (gedi_prod == "1B") {
     og <- arrow::open_dataset(gp) |>
       dplyr::filter(
-        longitude_bin0 >= bounds$xmin,
-        longitude_bin0 <= bounds$xmax,
-        latitude_bin0 >= bounds$ymin,
-        latitude_bin0 <= bounds$ymax,
-        granule_id %in% x$id
+        .data$longitude_bin0 >= bounds$xmin,
+        .data$longitude_bin0 <= bounds$xmax,
+        .data$latitude_bin0 >= bounds$ymin,
+        .data$latitude_bin0 <= bounds$ymax,
+        .data$granule_id %in% x$id
       ) |>
       add_time()
   } else {
     og <- arrow::open_dataset(gp) |>
       dplyr::filter(
-        lat_lowestmode >= bounds$ymin,
-        lat_lowestmode <= bounds$ymax,
-        lon_lowestmode >= bounds$xmin,
-        lon_lowestmode <= bounds$xmax,
-        granule_id %in% x$id
+        .data$lat_lowestmode >= bounds$ymin,
+        .data$lat_lowestmode <= bounds$ymax,
+        .data$lon_lowestmode >= bounds$xmin,
+        .data$lon_lowestmode <= bounds$xmax,
+        .data$granule_id %in% x$id
       ) |>
       add_time()
   }
@@ -93,6 +94,7 @@ open_gedi <- function(x) {
 #' )
 #' print(prairie_creek_4a_sf)
 #' @export
+#' @importFrom rlang .data
 collect_gedi <- function(
     x, gedi_find,
     intersects = attributes(gedi_find)$intersects,
@@ -104,7 +106,7 @@ collect_gedi <- function(
   if ("shot_number" %in% names(x)) {
     # convert shot_number to from Int64 to character; required if saving with sf
     x <- x |>
-      dplyr::mutate(shot_number = as.character(shot_number))
+      dplyr::mutate(shot_number = as.character(.data$shot_number))
   }
 
   if (find_gedi_product(gedi_find) == "1B") {
@@ -117,8 +119,8 @@ collect_gedi <- function(
     # get the midpoint between the start  and end lat/long of the waveform
     x <- x |>
       dplyr::mutate(
-        latitude_avg = (latitude_bin0 + latitude_lastbin) / 2,
-        longitude_avg = (longitude_bin0 + longitude_lastbin) / 2,
+        latitude_avg = (.data$latitude_bin0 + .data$latitude_lastbin) / 2,
+        longitude_avg = (.data$longitude_bin0 + .data$longitude_lastbin) / 2,
       )
 
     lat_col <- "latitude_avg"

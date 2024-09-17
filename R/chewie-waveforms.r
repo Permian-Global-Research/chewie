@@ -34,6 +34,7 @@
 #' print(prairie_creek_waveforms)
 #'
 #' @export
+#' @importFrom rlang .data
 extract_waveforms <- function(x) {
   if (!"rxwaveform" %in% names(x) ||
     !"shot_number" %in% names(x)) {
@@ -47,8 +48,8 @@ extract_waveforms <- function(x) {
 
   xc <- x |>
     dplyr::select(
-      shot_number, date_time, elevation_bin0,
-      elevation_lastbin, rx_sample_count, rxwaveform
+      "shot_number", "date_time", "elevation_bin0",
+      "elevation_lastbin", "rx_sample_count", "rxwaveform"
     ) |>
     sf::st_drop_geometry()
 

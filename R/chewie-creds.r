@@ -220,7 +220,7 @@ chewie_register <- function() {
     chew_bold_cyan("?"),
     "  Do You Have a NASA Earthdata Login Account?"
   ))
-  choice <- menu(c(
+  choice <- utils::menu(c(
     chew_bold_green("Yes"),
     chew_bold_mag("No, but I want to create an account"),
     chew_bold_red("No, and I don't want one!")
@@ -266,7 +266,7 @@ chewie_clean_netrc <- function(renviron = "auto") {
     )
   )
 
-  choice <- menu(c(
+  choice <- utils::menu(c(
     chew_bold_green("Yes"),
     chew_bold_red("No!")
   ))

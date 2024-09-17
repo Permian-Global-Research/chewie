@@ -1,5 +1,6 @@
-#' @title Download GEDI data or access from cahce
-#' @description Download GEDI data from the NASA Earthdata in hdf5 format.
+#' @title Download and load GEDI data from the Cloud or local cache
+#' @description Download GEDI data from the NASA Earthdata in hdf5 format,
+#' convert it to parquet format and load it as an arrow dataset.
 #' @param x A chewie.find.x object.
 #' dataset. See details.
 #' @param progress A logical indicating whether to show a progress bar.
@@ -34,13 +35,13 @@
 #' For more information on the GEDI hdf5 files and the variables they contain
 #' see the following links:
 #'
-#' 1B: https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html
+#' 1B: \url{https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html}
 #'
-#' 2A: https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html
+#' 2A: \url{https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html}
 #'
-#' 2B: https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html
+#' 2B: \url{https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html}
 #'
-#' 4A: https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html
+#' 4A: \url{https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html}
 #'
 #'
 #' @examplesIf interactive()
@@ -57,6 +58,7 @@
 #'   prairie_creek_find_2b
 #' )
 #'
+#' @importFrom rlang .data
 grab_gedi <- function(
     x,
     progress = TRUE, timeout = 7200,
@@ -96,11 +98,8 @@ grab_gedi <- function(
           (dplyr::n() /
             (dplyr::n() / batchsize))
       )) |>
-      dplyr::group_by(group) |>
+      dplyr::group_by(.data$group) |>
       dplyr::group_split()
-
-    # TODO: is this needed?
-    # urlchunks <- setNames(x2d_chunks, paste0("chunk_", seq_along(x2d_chunks)))
 
     dl_df <- download_wrap(
       x2d_chunks, .dir, timeout,
@@ -238,6 +237,7 @@ log_staus_codes <- function(x, n) {
 #' @param codec A character vector indicating the compression codec to use.
 #' @noRd
 #' @keywords internal
+#' @importFrom rlang .data
 download_wrap <- function(
     url_batched, dir, timeout,
     progress, gedi_product, delete_h5, codec) {
@@ -262,12 +262,12 @@ download_wrap <- function(
       netrc = TRUE,
       netrc_file = Sys.getenv("CHEWIE_NETRC")
     ) |>
-      dplyr::mutate(destfile = normalizePath(destfile, mustWork = FALSE))
+      dplyr::mutate(destfile = normalizePath(.data$destfile, mustWork = FALSE))
 
 
     dd_full_split <- sf::st_drop_geometry(x2d_chunk) |>
-      dplyr::mutate(destfile = normalizePath(destfile, mustWork = FALSE)) |>
-      dplyr::select(destfile, id) |>
+      dplyr::mutate(destfile = normalizePath(.data$destfile, mustWork = FALSE)) |>
+      dplyr::select("destfile", "id") |>
       dplyr::right_join(df_down, by = "destfile") |>
       dplyr::group_split(dplyr::row_number())
 

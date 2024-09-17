@@ -158,3 +158,9 @@ g1b_wvf |>
   wvf_ggplot("mean_wvf", "id", .ylab = "Sequence order") +
   scale_x_reverse()
 ```
+
+```{r cleanup}
+if (file.exists(".Renviron")) {
+  file.remove(".Renviron")
+}
+```
