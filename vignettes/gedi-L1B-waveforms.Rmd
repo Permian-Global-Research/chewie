@@ -12,7 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-
+options(arrow.unsafe_metadata = TRUE)
 options("chewie.testing" = TRUE)
 temp_dir <- tempdir()
 
@@ -39,13 +39,11 @@ extract GEDI Level 1B waveforms.
 
 First let's load the `chewie` package and the `ggplot2` package for plotting.
 
-```{r setup}
-suppressPackageStartupMessages({
-  library(chewie)
-  library(ggplot2)
-  library(sf)
-  library(dplyr)
-})
+```{r setup, message = FALSE}
+library(chewie)
+library(ggplot2)
+library(sf)
+library(dplyr)
 ```
 
 First, we define an area of interest. In this case, we will use prairie creek
@@ -67,7 +65,7 @@ Now we can search for GEDI Level 1B products that intersect with our area of
 interest. We will search for products that were collected between January 1st
 and January 31st, 2023.
 
-```{r find-gedi}
+```{r find-gedi, warning = FALSE}
 g1b_search <- find_gedi(pcreek,
   gedi_product = "1B",
   date_start = "2023-01-01",
@@ -79,6 +77,9 @@ You'll see that only one granule was found. The returned `gedi.find` object
 contains information about the search, including whether or not the files are 
 cached locally.
 
+*Note: this vignette uses a cached granule which has been subset to include only
+3 beams to minimise the size of the package. The full granule contains 8 beams.*
+
 Now we can download the GEDI Level 1B products. However, note that the `grab_gedi()`
 function will not download the products if they are already cached locally. It 
 first checks the cache and grabs the relevant files if they exist. If they do
@@ -86,7 +87,7 @@ not exist, they'll be downloaded from the LPCLOUD bucket. {chewie} will, by
 default only download specific data columns. There are many variables contained
 in the raw hdf5 files.
 
-```{r grab-gedi}
+```{r grab-gedi, warning = FALSE}
 gedi_1b_arrow <- grab_gedi(g1b_search)
 ```
 
@@ -98,13 +99,17 @@ In order to access the data we must first collect the data into a data frame.
 This could be done using `dplyr::collect`. However, the `collect_gedi()` function
 is a wrapper around `dplyr::collect` that also converts the data to an `sf`
 object, immediately providing a spatial context for the data. 
-```{r plot-gedi}
+```{r plot-gedi, warning = FALSE}
 g1b_sf <- collect_gedi(gedi_1b_arrow, g1b_search)
 
 print(g1b_sf)
 
-plot(g1b_sf[0], axes = TRUE)
-plot(attributes(g1b_search)$aoi, add = TRUE, border = "#7700ff")
+ggplot() +
+  geom_sf(data = attributes(g1b_search)$aoi, fill = "#1bbe8086") +
+  geom_sf(data = g1b_sf, aes(colour = elevation_lastbin)) +
+  guides(colour = "none") +
+  scale_color_viridis_c(option = "A") +
+  theme_light()
 ```
 
 So, here's the cool bit about the way the Level-1B data are extracted. We can
@@ -123,7 +128,7 @@ print(g1b_wvf)
 
 And plot them using `ggplot2`...
 
-```{r plot-waveforms}
+```{r plot-waveforms }
 wvf_ggplot <- function(x, wf, z, .ylab = "Elevation (m)") {
   wf <- sym(wf)
   z <- sym(z)
@@ -159,7 +164,7 @@ g1b_wvf |>
   scale_x_reverse()
 ```
 
-```{r cleanup}
+```{r cleanup, include=FALSE}
 if (file.exists(".Renviron")) {
   file.remove(".Renviron")
 }
