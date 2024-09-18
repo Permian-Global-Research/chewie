@@ -4,6 +4,12 @@ if (!file.exists(".Renviron")) {
   file.create(".Renviron")
 }
 
+library(devtools)
+devtools::load_all()
+
+chewie_setup_cache("data-raw/chewie-test-cache", renviron = "project")
+chewie_health_check()
+
 # chewie::chewie_clear_h5_temp_cache()
 # chewie::chewie_clear_find_cache()
 # chewie::chewie_clear_parquet_cache("2B")
@@ -11,11 +17,7 @@ if (!file.exists(".Renviron")) {
 # chewie::chewie_clear_parquet_cache("1B")
 # chewie::chewie_clear_parquet_cache("4A")
 
-library(devtools)
-devtools::load_all()
 
-chewie_setup_cache("data-raw/chewie-test-cache", renviron = "project")
-chewie_health_check()
 # chewie_clear_find_cache()
 
 # --- Download test GEDI data -------------------------------------------------
@@ -99,6 +101,7 @@ clip_n_save_parquet <- function(x) {
 
 
   chewie:::check_n_make_dir(save_dir)
+
 
   arrow::write_parquet(
     dplyr::as_tibble(xc),

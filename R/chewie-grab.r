@@ -148,8 +148,17 @@ chewie_mk_parquet <- function(
     )
     check_n_make_dir(save_dir)
 
+    gedi_tib <- dplyr::as_tibble(gedi_dt)
+
+    # Remove the .internal.selfref attribute
+    attrs <- attributes(gedi_tib)
+    if (".internal.selfref" %in% names(attrs)) {
+      attrs$.internal.selfref <- NULL
+      attributes(gedi_tib) <- attrs
+    }
+
     arrow::write_parquet(
-      dplyr::as_tibble(gedi_dt),
+      gedi_tib,
       file.path(
         save_dir,
         paste0(
@@ -266,7 +275,9 @@ download_wrap <- function(
 
 
     dd_full_split <- sf::st_drop_geometry(x2d_chunk) |>
-      dplyr::mutate(destfile = normalizePath(.data$destfile, mustWork = FALSE)) |>
+      dplyr::mutate(
+        destfile = normalizePath(.data$destfile, mustWork = FALSE)
+      ) |>
       dplyr::select("destfile", "id") |>
       dplyr::right_join(df_down, by = "destfile") |>
       dplyr::group_split(dplyr::row_number())
