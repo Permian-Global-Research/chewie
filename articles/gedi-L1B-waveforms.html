@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>GEDI Level 1B Waveforms • chewie</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="../index.html">chewie</a>
 
@@ -42,6 +42,14 @@
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/Permian-Global-Research/chewie/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
+<li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
+  </ul>
+</li>
       </ul>
 </div>
 
@@ -69,12 +77,10 @@ to download and extract GEDI Level 1B waveforms.</p>
 <p>First let’s load the <code>chewie</code> package and the
 <code>ggplot2</code> package for plotting.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Permian-Global-Research/chewie" class="external-link">chewie</a></span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Permian-Global-Research/chewie" class="external-link">chewie</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
 <p>First, we define an area of interest. In this case, we will use
 prairie creek national park as our area of interest. The
 <code>chewie</code> package provides a number of example spatial vector
@@ -112,6 +118,9 @@ between January 1st and January 31st, 2023.</p>
 <p>You’ll see that only one granule was found. The returned
 <code>gedi.find</code> object contains information about the search,
 including whether or not the files are cached locally.</p>
+<p><em>Note: this vignette uses a cached granule which has been subset
+to include only 3 beams to minimise the size of the package. The full
+granule contains 8 beams.</em></p>
 <p>Now we can download the GEDI Level 1B products. However, note that
 the <code><a href="../reference/grab_gedi.html">grab_gedi()</a></code> function will not download the products if
 they are already cached locally. It first checks the cache and grabs the
@@ -121,13 +130,7 @@ download specific data columns. There are many variables contained in
 the raw hdf5 files.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gedi_1b_arrow</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/grab_gedi.html">grab_gedi</a></span><span class="op">(</span><span class="va">g1b_search</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> All data found in cache</span></span>
-<span><span class="co">#&gt; Warning: Potentially unsafe or invalid elements have been discarded from R metadata.</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">ℹ</span> Type: "externalptr"</span></span>
-<span><span class="co">#&gt; → If you trust the source, you can set `options(arrow.unsafe_metadata = TRUE)` to preserve them.</span></span>
-<span><span class="co">#&gt; Potentially unsafe or invalid elements have been discarded from R metadata.</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">ℹ</span> Type: "externalptr"</span></span>
-<span><span class="co">#&gt; → If you trust the source, you can set `options(arrow.unsafe_metadata = TRUE)` to preserve them.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> All data found in cache</span></span></code></pre></div>
 <p>The <code><a href="../reference/grab_gedi.html">grab_gedi()</a></code> function returns a
 <em>arrow_dplyr_query</em> object. If the user wishes to carry out
 further filtering (for example using quality flags), this should be done
@@ -140,12 +143,6 @@ However, the <code><a href="../reference/collect_gedi.html">collect_gedi()</a></
 data.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g1b_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/collect_gedi.html">collect_gedi</a></span><span class="op">(</span><span class="va">gedi_1b_arrow</span>, <span class="va">g1b_search</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Potentially unsafe or invalid elements have been discarded from R metadata.</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">ℹ</span> Type: "externalptr"</span></span>
-<span><span class="co">#&gt; → If you trust the source, you can set `options(arrow.unsafe_metadata = TRUE)` to preserve them.</span></span>
-<span><span class="co">#&gt; Potentially unsafe or invalid elements have been discarded from R metadata.</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">ℹ</span> Type: "externalptr"</span></span>
-<span><span class="co">#&gt; → If you trust the source, you can set `options(arrow.unsafe_metadata = TRUE)` to preserve them.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">g1b_sf</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Simple feature collection with 349 features and 82 fields</span></span>
@@ -156,16 +153,16 @@ data.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 349 × 83</span></span></span>
 <span><span class="co">#&gt;    all_samples_sum  beam channel delta_time date_time           master_frac</span></span>
 <span><span class="co">#&gt;  <span style="color: #BCBCBC;">*</span>           <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>        15<span style="text-decoration: underline;">977</span>748     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.083<span style="text-decoration: underline;">2</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>        15<span style="text-decoration: underline;">982</span>175     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.091<span style="text-decoration: underline;">5</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>        15<span style="text-decoration: underline;">974</span>693     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.099<span style="text-decoration: underline;">8</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>        15<span style="text-decoration: underline;">983</span>026     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.108 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>        15<span style="text-decoration: underline;">991</span>944     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.116 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>        15<span style="text-decoration: underline;">978</span>705     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.125 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>        15<span style="text-decoration: underline;">973</span>741     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.133 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>        15<span style="text-decoration: underline;">981</span>653     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.141 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>        15<span style="text-decoration: underline;">991</span>093     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.149 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>        15<span style="text-decoration: underline;">999</span>630     0       0 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:05</span>      0.158 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>        15<span style="text-decoration: underline;">740</span>038     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.844</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>        15<span style="text-decoration: underline;">757</span>882     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.852</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>        15<span style="text-decoration: underline;">758</span>137     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.860</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>        15<span style="text-decoration: underline;">771</span>162     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.868</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>        15<span style="text-decoration: underline;">761</span>837     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.877</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>        15<span style="text-decoration: underline;">744</span>387     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.885</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>        15<span style="text-decoration: underline;">746</span>553     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.893</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>        15<span style="text-decoration: underline;">766</span>075     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.901</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>        15<span style="text-decoration: underline;">750</span>489     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.910</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>        15<span style="text-decoration: underline;">737</span>307     2       1 159<span style="text-decoration: underline;">862</span>145. 2023-01-25 <span style="color: #949494;">06:09:04</span>       0.918</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 339 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 77 more variables: master_int &lt;int&gt;, noise_mean_corrected &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   noise_stddev_corrected &lt;dbl&gt;, nsemean_even &lt;dbl&gt;, nsemean_odd &lt;dbl&gt;,</span></span></span>
@@ -174,8 +171,12 @@ data.</p>
 <span><span class="co">#&gt; <span style="color: #949494;">#   selection_stretchers_y &lt;int&gt;, shot_number &lt;chr&gt;, stale_return_flag &lt;int&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   th_left_used &lt;int&gt;, tx_egamplitude &lt;dbl&gt;, tx_egamplitude_error &lt;dbl&gt;, …</span></span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">g1b_sf</span><span class="op">[</span><span class="fl">0</span><span class="op">]</span>, axes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attributes.html" class="external-link">attributes</a></span><span class="op">(</span><span class="va">g1b_search</span><span class="op">)</span><span class="op">$</span><span class="va">aoi</span>, add <span class="op">=</span> <span class="cn">TRUE</span>, border <span class="op">=</span> <span class="st">"#7700ff"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attributes.html" class="external-link">attributes</a></span><span class="op">(</span><span class="va">g1b_search</span><span class="op">)</span><span class="op">$</span><span class="va">aoi</span>, fill <span class="op">=</span> <span class="st">"#1bbe8086"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">g1b_sf</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="va">elevation_lastbin</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_light</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="gedi-L1B-waveforms_files/figure-html/plot-gedi-1.png" width="700"></p>
 <p>So, here’s the cool bit about the way the Level-1B data are
 extracted. We can access the full waveform for every shot in the data
@@ -189,20 +190,20 @@ have multiple granules).</p>
 <code class="sourceCode R"><span><span class="va">g1b_wvf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_waveforms.html">extract_waveforms</a></span><span class="op">(</span><span class="va">g1b_sf</span><span class="op">[</span><span class="fl">100</span><span class="op">:</span><span class="fl">108</span>, <span class="op">]</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">g1b_wvf</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 9,881 × 4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10,204 × 4</span></span></span>
 <span><span class="co">#&gt;    shot_number        date_time           rxelevation rxwaveform</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        457.       247.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        457.       247.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        457.       245.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        457.       243.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        456.       242.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        456.       241.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        456.       242.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        456.       243.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        456.       245.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 233300000300278259 2023-01-25 <span style="color: #949494;">06:09:05</span>        456.       246.</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 9,871 more rows</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        328.       239.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        328.       239.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        328.       238.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        328.       238.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        328.       239.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        328.       239.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        328.       240.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        327.       241.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        327.       241.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 233300200300278449 2023-01-25 <span style="color: #949494;">06:09:05</span>        327.       241.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 10,194 more rows</span></span></span></code></pre></div>
 <p>And plot them using <code>ggplot2</code>…</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wvf_ggplot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">wf</span>, <span class="va">z</span>, <span class="va">.ylab</span> <span class="op">=</span> <span class="st">"Elevation (m)"</span><span class="op">)</span> <span class="op">{</span></span>
@@ -238,11 +239,6 @@ in a single dataset.</em></p>
 <span>  <span class="fu">wvf_ggplot</span><span class="op">(</span><span class="st">"mean_wvf"</span>, <span class="st">"id"</span>, .ylab <span class="op">=</span> <span class="st">"Sequence order"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="gedi-L1B-waveforms_files/figure-html/plot-mean-waveforms-1.png" width="700"></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="st">".Renviron"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.remove</a></span><span class="op">(</span><span class="st">".Renviron"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
   </main>
 </div>
 
@@ -253,7 +249,7 @@ in a single dataset.</em></p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer>
