@@ -51,12 +51,14 @@ details.
 }
 \examples{
 \dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+
 humboldt <- sf::read_sf(
   system.file("geojson", "humboldt.geojson", package = "chewie")
 )
 humboldt_find_2a <- find_gedi(humboldt,
   gedi_product = "2A",
-  date_start = "2022-01-01", date_end = "2022-04-01",
+  date_start = "2022-01-01",
+  date_end = "2022-04-01",
   cache = FALSE
 )
 print(humboldt_find_2a)
