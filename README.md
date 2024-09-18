@@ -53,11 +53,9 @@ recommended as it’s an excellent and highly performative option for
 working with arrow datasets.
 
 ``` r
-suppressPackageStartupMessages({
-  library(chewie)
-  library(dplyr)
-  library(sf)
-})
+library(chewie)
+library(dplyr)
+library(sf)
 ```
 
 Here are some useful helper functions to set up your credentials (using

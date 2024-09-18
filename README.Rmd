@@ -84,12 +84,10 @@ First, let's load in some libraries. {dplyr} isn't essential but it is
 recommended as it's an excellent and highly performative option for working with 
 arrow datasets.
 
-```{r load-libs}
-suppressPackageStartupMessages({
-  library(chewie)
-  library(dplyr)
-  library(sf)
-})
+```{r load-libs, message = FALSE}
+library(chewie)
+library(dplyr)
+library(sf)
 ```
 
 Here are some useful helper functions to set up your credentials (using 
