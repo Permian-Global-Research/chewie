@@ -1,7 +1,10 @@
 url: https://permian-global-research.github.io/chewie/
 template:
   bootstrap: 5
-  bootswatch: minty
+  light-switch: true
+  theme: gruvbox-light
+  theme-dark: gruvbox-dark
+
 reference:
   - title: Credentials Management
     contents:
