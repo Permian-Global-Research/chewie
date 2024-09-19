@@ -37,7 +37,7 @@ download_tzdata_on_windows <- function(tzdir = NULL) {
 
   # Check if the file exists
   if (!file.exists(tzdata_compressed)) {
-    stop("Failed to download the timezone database.")
+    cli::cli_abort("Failed to download the timezone database.")
   }
 
   # Extract the tar.gz file
@@ -50,6 +50,17 @@ download_tzdata_on_windows <- function(tzdir = NULL) {
   )
   windows_zones_path <- file.path(tzdata_path, "windowsZones.xml")
   utils::download.file(windows_zones_url, windows_zones_path, mode = "wb")
+
+  # Find the "northamerica" file and replace "April" with "Apr"
+  northamerica_file <- file.path(tzdata_path, "northamerica")
+  if (file.exists(northamerica_file)) {
+    file_contents <- readLines(northamerica_file)
+    file_contents <- gsub("April", "Apr", file_contents)
+    writeLines(file_contents, northamerica_file)
+  } else {
+    cli::cli_warn("northamerica file not found in tzdata_path")
+  }
+
   return(tzdata_path)
 }
 
