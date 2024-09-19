@@ -6,7 +6,7 @@ pcreek <- system.file(
   sf::read_sf()
 
 # --- Setup the testing environment.
-windows_tz_dir <- chewie:::download_tzdata_on_windows()
+windows_tz_dir <- chewie:::download_tzdata_on_windows_gha()
 aum <- options(arrow.unsafe_metadata = TRUE)
 temp_dir <- tempdir()
 old_chewie_cache <- chewie::chewie_get_cache()

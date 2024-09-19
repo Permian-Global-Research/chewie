@@ -6,7 +6,7 @@
 #' database on Windows. It is used in tests and vignettes.
 #' @noRd
 #' @keywords internal
-download_tzdata_on_windows <- function() {
+download_tzdata_on_windows <- function(tzdir = NULL) {
   if (.Platform$OS.type != "windows") {
     cli::cli_alert_info(
       "Timezone database is already provided by {(.Platform)$OS.type}"
@@ -15,9 +15,13 @@ download_tzdata_on_windows <- function() {
   }
 
   # Define paths
-  tzdata_path <- path.expand(
-    file.path(Sys.getenv("USERPROFILE"), "Downloads", "tzdata")
-  )
+  if (is.null(tzdir)) {
+    tzdata_path <- path.expand(
+      file.path(Sys.getenv("USERPROFILE"), "Downloads", "tzdata")
+    )
+  } else {
+    tzdata_path <- tzdir
+  }
   tzdata_compressed <- file.path(tzdata_path, "tzdata.tar.gz")
 
   # Create directory if it doesn't exist
@@ -47,4 +51,18 @@ download_tzdata_on_windows <- function() {
   windows_zones_path <- file.path(tzdata_path, "windowsZones.xml")
   utils::download.file(windows_zones_url, windows_zones_path, mode = "wb")
   return(tzdata_path)
+}
+
+#' wrapper for download_tzdata_on_windows for GitHub Actions
+#' @noRd
+#' @keywords internal
+download_tzdata_on_windows_gha <- function() {
+  if (Sys.getenv("RUNNER_OS") == "Windows") {
+    return(download_tzdata_on_windows("C:/Users/runneradmin/Downloads/tzdata"))
+  } else {
+    cli::cli_alert_info(
+      "Not running on Windows GitHub Action"
+    )
+    return(NULL)
+  }
 }
