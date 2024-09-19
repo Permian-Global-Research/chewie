@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+windows_tz_dir <- chewie:::download_tzdata_on_windows_gha()
 options(arrow.unsafe_metadata = TRUE)
 options("chewie.testing" = TRUE)
 temp_dir <- tempdir()
