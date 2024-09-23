@@ -67,7 +67,7 @@
 
 <p>The goal of chewie is to make downloading GEDI data as simple as possible. This includes the point-level products: 1B, 2A, 2B and 4A. Here is a quick summary of design choices that enables {chewie} to achieve this:</p>
 <ul>
-<li><p>Data are downloaded and converted to parquet files which can then be read using <a href="https://arrow.apache.org/docs/r/index.html" class="external-link">{arrow}</a> and converted to <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> objects. This approach is performative as it only requires each entire granule to be loaded into memory once (when it is converted from hdf5 to parquet). From here on we can use <a href="https://dplyr.tidyverse.org/" class="external-link">dplyr</a> verbs (or base R) to <code>filter</code>, <code>mutate</code> and <code>select</code> data as required without needing to load all shots, from a given granule, into memory.</p></li>
+<li><p>Data are downloaded and converted to parquet files which can then be read using <a href="https://arrow.apache.org/docs/r/index.html" class="external-link">{arrow}</a> and converted to <a href="https://r-spatial.github.io/sf/" class="external-link">sf</a> objects. This approach is performant as it only requires each entire granule to be loaded into memory once (when it is converted from hdf5 to parquet). From here on we can use <a href="https://dplyr.tidyverse.org/" class="external-link">dplyr</a> verbs (or base R) to <code>filter</code>, <code>mutate</code> and <code>select</code> data as required without needing to load all shots, from a given granule, into memory.</p></li>
 <li><p>A system-level cache is used to store the data. This means that once a file has been downloaded it will not be downloaded again even if working in a different project (it is also possible to specify a unique cache location for each project).</p></li>
 <li><p>There is support for spatial filtering of granules that intersect an area of interest and not only by a bounding box; this frequently reduces the amount of irrelevant data that is downloaded.</p></li>
 </ul>
@@ -170,9 +170,10 @@
 <p><img src="reference/figures/README-show-2a-data-1.png" width="100%"></p>
 </div>
 <div class="section level2">
-<h2 id="other-relevant-packagessoftware">Other relevant packages/software<a class="anchor" aria-label="anchor" href="#other-relevant-packagessoftware"></a>
+<h2 id="other-relevant-software">Other relevant software<a class="anchor" aria-label="anchor" href="#other-relevant-software"></a>
 </h2>
 <ul>
+<li><p><a href="https://github.com/MAAP-Project/gedi-subsetter" class="external-link">gedi-subsetter</a> provides a selection of python tools for querying and downloading GEDI data. Its scope is similar to {chewie} but it also provides direct access to the hdf5 files for nasa affiliates with access to the MAAP platform.</p></li>
 <li><p><a href="https://github.com/carlos-alberto-silva/rGEDI" class="external-link">{rGEDI}</a> provides the ability download GEDI data but also a great deal of additional functionality for visualisation, post-processing and modelling.</p></li>
 <li><p><a href="https://github.com/VangiElia/GEDI4R" class="external-link">{GEDI4R}</a> which similarly provides a suit of tools for downloading, visualising and modelling GEDI data, but with a focus on the 4A product.</p></li>
 <li><p><a href="https://github.com/EduinHSERNA/pyGEDI" class="external-link">pyGEDI</a> is a Python package for downloading and visualising GEDI data.</p></li>
