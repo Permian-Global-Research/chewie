@@ -22,7 +22,7 @@ achieve this:
 - Data are downloaded and converted to parquet files which can then be
   read using [{arrow}](https://arrow.apache.org/docs/r/index.html) and
   converted to [sf](https://r-spatial.github.io/sf/) objects. This
-  approach is performative as it only requires each entire granule to be
+  approach is performant as it only requires each entire granule to be
   loaded into memory once (when it is converted from hdf5 to parquet).
   From here on we can use [dplyr](https://dplyr.tidyverse.org/) verbs
   (or base R) to `filter`, `mutate` and `select` data as required
@@ -176,7 +176,13 @@ chewie_show(
 
 <img src="man/figures/README-show-2a-data-1.png" width="100%" />
 
-## Other relevant packages/software
+## Other relevant software
+
+- [gedi-subsetter](https://github.com/MAAP-Project/gedi-subsetter)
+  provides a selection of python tools for querying and downloading GEDI
+  data. Its scope is similar to {chewie} but it also provides direct
+  access to the hdf5 files for nasa affiliates with access to the MAAP
+  platform.
 
 - [{rGEDI}](https://github.com/carlos-alberto-silva/rGEDI) provides the
   ability download GEDI data but also a great deal of additional
