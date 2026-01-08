@@ -25,3 +25,5 @@ docs
 data-raw/chewie-test-cache/*
 
 /*.tif
+
+scratch.R
