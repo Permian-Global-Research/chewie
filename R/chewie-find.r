@@ -43,15 +43,25 @@
 #'
 #' @export
 find_gedi <- function(
+  x,
+  gedi_product = c("1B", "2A", "2B", "4A"),
+  date_start = NULL,
+  date_end = NULL,
+  intersects = TRUE,
+  cache = TRUE
+) {
+  assert_classes(
     x,
-    gedi_product = c("1B", "2A", "2B", "4A"),
-    date_start = NULL,
-    date_end = NULL,
-    intersects = TRUE,
-    cache = TRUE) {
-  assert_classes(x, c(
-    "sf", "spatVector", "spatRaster", "sfc", "stars", "stars_proxy", "numeric"
-  ))
+    c(
+      "sf",
+      "SpatVector",
+      "SpatRaster",
+      "sfc",
+      "stars",
+      "stars_proxy",
+      "numeric"
+    )
+  )
   assert_bool(intersects)
   assert_bool(cache)
 
@@ -95,8 +105,6 @@ find_gedi <- function(
     }
   }
 
-
-
   request_url <- build_req_url(
     gedi_product[1],
     bbox,
@@ -107,7 +115,9 @@ find_gedi <- function(
   page <- 1
   repeat {
     gedi_response <- request_gedi(request_url, page)
-    if (length(gedi_response) == 0) break
+    if (length(gedi_response) == 0) {
+      break
+    }
     sf_polygon <- build_sf_set(gedi_response)
     sf_list[[page]] <- sf_polygon
     page <- page + 1
@@ -117,13 +127,11 @@ find_gedi <- function(
     abort_no_gedi_data()
   }
 
-
   sf_list <- sf_rbindlist(sf_list)
   data.table::setcolorder(
     sf_list,
     c("id", "time_start", "time_end", "url", "geometry")
   )
-
 
   if (isTRUE(intersects)) {
     sf_list <- get_swath_intersect(x, sf_list)
@@ -157,6 +165,19 @@ request_gedi <- function(.url, .page) {
   if (response$status_code != 200) {
     abort_gedi_request(result$errors)
   }
+
+  if (is.null(result$feed$entry)) {
+    cli::cli_warn(
+      c(
+        "!" = "Reponse was successful but the `entry` list was empty.",
+        "i" = "This may be an issue on the server side...",
+        "i" = "The API query that generated this response was:",
+        " " = "{result$feed$id}",
+        ">" = "Report to https://github.com/Permian-Global-Research/chewie/issues and;",
+        ">" = "check for updates at https://forum.earthdata.nasa.gov/"
+      )
+    )
+  }
   return(result$feed$entry)
 }
 
@@ -177,7 +198,6 @@ build_sf_set <- function(gedi_response) {
       ) |>
         sf::st_as_sf(crs = "EPSG:4326")
 
-
       poly$url <- x$links[[1]]$href
       poly$time_start <- lubridate::as_datetime(x$time_star)
       poly$time_end <- lubridate::as_datetime(x$time_end)
@@ -190,7 +210,8 @@ build_sf_set <- function(gedi_response) {
 
 
 gedi_code_lookup <- function(.gprod) {
-  switch(paste0("G", .gprod),
+  switch(
+    paste0("G", .gprod),
     G1B = "C2142749196-LPCLOUD",
     G2A = "C2142771958-LPCLOUD",
     G2B = "C2142776747-LPCLOUD",
@@ -238,7 +259,6 @@ build_date_range <- function(.sd, .ed) {
     abort_date_range()
   }
 
-
   return(c(.sd, .ed))
 }
 
@@ -270,7 +290,12 @@ print.chewie.find <- function(x, ...) {
 #' @param ... arguments passed to `print.sf`
 #' @return a base R plot.
 #' @export
-plot.chewie.find <- function(x, swath_col = "#903ca586", aoi_col = "#cecece", ...) {
+plot.chewie.find <- function(
+  x,
+  swath_col = "#903ca586",
+  aoi_col = "#cecece",
+  ...
+) {
   plot(attributes(x)$aoi, col = aoi_col, axes = TRUE)
   plot(x[0], col = swath_col, add = TRUE)
 }
