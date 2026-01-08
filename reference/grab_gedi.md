@@ -1,0 +1,105 @@
+# Download and load GEDI data from the Cloud or local cache
+
+Download GEDI data from the NASA Earthdata in hdf5 format, convert it to
+parquet format and load it as an arrow dataset.
+
+## Usage
+
+``` r
+grab_gedi(
+  x,
+  progress = TRUE,
+  timeout = 7200,
+  batchsize = 10,
+  delete_h5 = TRUE,
+  compression = getOption("chewie.parquet.codec")
+)
+```
+
+## Arguments
+
+- x:
+
+  A chewie.find.x object. dataset. See details.
+
+- progress:
+
+  A logical indicating whether to show a progress bar.
+
+- timeout:
+
+  A numeric indicating the timeout in seconds.
+
+- batchsize:
+
+  A numeric indicating the number of files to download in parallel.
+  where batchsize is less than the number of files to download, the
+  files will be downloaded in chunks of batchsize.
+
+- delete_h5:
+
+  A logical indicating whether to delete the hdf5 file after conversion
+  to parquet. Default is TRUE. these files are saved in
+  `getOption("chewie.h5.cache")`.
+
+- compression:
+
+  A character vector indicating the compression codec to use. Default is
+  `getOption("chewie.parquet.codec")`. see
+  [`?arrow::write_parquet`](https://arrow.apache.org/docs/r/reference/write_parquet.html).
+  must be one of: "zstd", "brotli", "gzip", "snappy", "bz2", "lz4",
+  "lzo" or "uncompressed".
+
+## Value
+
+An arrow_dplyr_query object.
+
+## Details
+
+This function is the main handler for gedi data - it checks the cache to
+see if the required GEDI data are already downloaded, and if not,
+downloads them from the NASA Earthdata cloud. Once downloaded each file
+is converted to parquet format and saved in the cache directory. This
+saves a huge amount of disk space and enables dynamic reading and
+filtering of the returned "open" arrow dataset.
+
+{chewie} will only cache specific variables made available in the GEDI
+hdf5 files. This is in part to reduce disk space but also to improve
+performance and make working with these data simpler. If you require
+additional variables to be cached, please raise an issue on the {chewie}
+GitHub repository.
+
+## See also
+
+For more information on the GEDI hdf5 files and the variables they
+contain see the following links:
+
+1B:
+<https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html>
+
+2A:
+<https://lpdaac.usgs.gov/documents/982/gedi_l2a_dictionary_P003_v2.html>
+
+2B:
+<https://lpdaac.usgs.gov/documents/587/gedi_l2b_dictionary_P001_v1.html>
+
+4A: <https://daac.ornl.gov/GEDI/guides/GEDI_L4A_AGB_Density_V2_1.html>
+
+## Examples
+
+``` r
+if (FALSE) { # interactive()
+prairie_creek <- sf::read_sf(
+  system.file("geojson", "prairie-creek.geojson", package = "chewie")
+)
+prairie_creek_find_2b <- find_gedi(prairie_creek,
+  gedi_product = "2B",
+  date_start = "2022-01-01", date_end = "2022-04-01",
+  cache = FALSE
+)
+
+prairie_creek_grab_2b <- grab_gedi(
+  prairie_creek_find_2b
+)
+}
+```
